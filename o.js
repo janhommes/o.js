@@ -89,12 +89,14 @@ function oData(res,config){
 			routeCallback=callback;
 		}
 		var tempBase=base;
-		//TODO: Is there any way to use the build in on hash update function?!
+		
+		//TODO: Is there any way to use the build an on hash update function?! Onhaschange can't be bound multiple times. Also a problem: if the hash is called a second time the route is not triggered
 		var prevHash = window.location.hash;
 		setInterval(function () {
 			if (window.location.hash != prevHash) {
 				prevHash = window.location.hash;
-				tempBase.triggerRoute(window.location.hash,routeCallback);
+				//tempBase.triggerRoute(window.location.hash,routeCallback);
+				checkRoute(window.location.hash);
 			} 
 		}, 100);
 		
@@ -108,47 +110,7 @@ function oData(res,config){
 	// triggers a route
 	// +++
 	base.triggerRoute=function(hash) {
-		var tempRoute=(startsWith(hash,'#')?'#':'')+routeName;
-		var isAutoParameter=false;
-		
-		if(endsWith(tempRoute,'?')) {
-			tempRoute=tempRoute.substring(0,tempRoute.length-1)
-			isAutoParameter=true;
-		}	
-		
-		//check if hash is equal route
-		if(!isAutoParameter && tempRoute===hash) { 			
-			//start the request
-			startRouteRequest(routeCallback);
-		}
-
-		//check if we have a auto parameter route (marked with a question mark at the end)
-		if(isAutoParameter && startsWith(hash,tempRoute)) {
-			//auto parameter
-			var routeParameter=hash.substring(tempRoute.length+1).split('\/');
-			var m=0;
-			base.param=[];
-			for(var i=0;i<resource.path.length;i++) {
-				if(resource.path[i].get!==null) {
-					resource.path[i].get=routeParameter[m];
-					m=i;
-				}
-			}
-			
-			for(var i=0;i<resource.queryList.length;i++) {
-				if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format') {
-					if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
-						resource.queryList[i].value=routeParameter[m];
-						base.param.push(routeParameter[m]);
-					}
-					m++;
-				}
-			}	
-
-			//start the request if there is a resource defined
-			startRouteRequest(routeCallback);			
-		}
-		
+		checkRoute(hash);
 		return(base);
 	}
 	
@@ -185,7 +147,7 @@ function oData(res,config){
 	// +++
 	base.first=function() {
 		if(!isQueryThrowEx(['$top','$first'])) {
-			addQuery('$top',1);
+			addQuery('$top',1,'$first');
 		}
 		return(base);
 	}
@@ -319,6 +281,52 @@ function oData(res,config){
 	}
 	
 	// ---------------------+++ INTERNALS +++----------------------------
+	
+	// +++
+	// checks if a route exist and starts the request and adds the parameters
+	// +++
+	function checkRoute(hash) {
+		var tempRoute=(startsWith(hash,'#')?'#':'')+routeName;
+		var isAutoParameter=false;
+		
+		if(endsWith(tempRoute,'?')) {
+			tempRoute=tempRoute.substring(0,tempRoute.length-1)
+			isAutoParameter=true;
+		}	
+		
+		//check if hash is equal route
+		if(!isAutoParameter && tempRoute===hash) { 			
+			//start the request
+			startRouteRequest(routeCallback);
+		}
+
+		//check if we have a auto parameter route (marked with a question mark at the end)
+		if(isAutoParameter && startsWith(hash,tempRoute)) {
+			//auto parameter
+			var routeParameter=hash.substring(tempRoute.length+1).split('\/');
+			var m=0;
+			base.param=[];
+			for(var i=0;i<resource.path.length;i++) {
+				if(resource.path[i].get!==null) {
+					resource.path[i].get=routeParameter[m];
+					m=i;
+				}
+			}
+			
+			for(var i=0;i<resource.queryList.length;i++) {
+				if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format') {
+					if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
+						resource.queryList[i].value=routeParameter[m];
+						base.param.push(routeParameter[m]);
+					}
+					m++;
+				}
+			}	
+
+			//start the request if there is a resource defined
+			startRouteRequest(routeCallback);			
+		}
+	}
 	
 	// +++
 	// performs a deep copy on an object with JSON
@@ -538,9 +546,9 @@ function oData(res,config){
 	// +++
 	// internal function to add a query parameter
 	// +++
-	function addQuery(queryName,queryValue) {
+	function addQuery(queryName,queryValue,queryPseudonym) {
 		resource.queryList.push({name:queryName,value:queryValue});
-		resource.query[queryName]=resource.queryList.length-1;
+		resource.query[queryPseudonym || queryName]=resource.queryList.length-1;
 	}
 	
 	// +++
@@ -901,7 +909,12 @@ function oData(res,config){
 			if(JSON) {
 				var data=JSON.parse(response);
 				if(data.hasOwnProperty('value')) {
-					tempBase.data=data.value;
+					if(isQuery(['$first']) && data.value.length && data.value.length<=1) {
+						tempBase.data=data.value[0];
+					}
+					else {
+						tempBase.data=data.value;
+					}
 					if(data.hasOwnProperty('odata.count')) {
 						tempBase.inlinecount=data['odata.count'];
 					}

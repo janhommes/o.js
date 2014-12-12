@@ -97,7 +97,6 @@ body {
 	overflow:hidden;
 }
 .products .description {
-	
 	text-overflow:ellipsis;
 	overflow:hidden;
 	min-height:60px;

@@ -46,13 +46,13 @@
 	  <div class="spacer" data-bind="css: { opacity20: isLoading()}">
 		  <div class="jumbotron" data-bind="visible:route()==='Home'">
 			<h1>o.js Example</h1>
-			<p class="lead">This shows how easy you can use o.js routing function in combination with knockout and bootstrap to make a stunning SPA webpage.</p>
-			<p> <a class="btn btn-lg btn-primary" href="#" role="button">Try ...</a> <a class="btn btn-lg btn-success" href="#" role="button">Get o.js</a></p>
+			<p class="lead">This example shows how easy you can use o.js routing function in combination with knockout, <a href="http://www.pointsale.de">Pointsale</a> and bootstrap to make a stunning SPA webpage.</p>
+			<p> <a class="btn btn-lg btn-primary" href="http://www.pointsale.de" role="button">Try Pointsale</a> <a class="btn btn-lg btn-success" href="https://github.com/janhommes/o.js" role="button">Get o.js</a></p>
 		  </div>
 		  
 		  <div class="jumbotron" data-bind="visible:route()==='Detail',with:detailProduct">
 			<h1 data-bind="text:Name">o.js Example</h1>
-			<p class="lead" data-bind="text:Description"></p>
+			<p class="lead" data-bind="text:(Description || 'No Description')"></p>
 			<!--<p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>-->
 		  </div>
 		  
@@ -61,10 +61,10 @@
 				<div class="col-md-4">
 					<div class="products">
 						<h4 data-bind="text:Name"></h4>
-						<div class="description" data-bind="text:Description"></div>
+						<div class="description" data-bind="text:(Description || 'No Description')"></div>
 						<div class="price" data-bind="$:Price"></div>
 						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
-						<a role="button" class="btn btn-success" data-bind="attr { href:'#AddToCard/'+id }">Add</a>
+						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
 					</div>
 				</div>
 			<!-- /ko -->
@@ -75,10 +75,10 @@
 				<div class="col-md-4">
 					<div class="products">
 						<h4 data-bind="text:Name"></h4>
-						<div class="description" data-bind="text:Description"></div>
+						<div class="description" data-bind="text:(Description || 'No Description')"></div>
 						<div class="price" data-bind="currency:Price"></div>
 						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
-						<a role="button" class="btn btn-success" data-bind="attr { href:'#AddToCard/'+id }">Add</a>
+						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
 					</div>
 				</div>
 			<!-- /ko -->

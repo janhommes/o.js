@@ -21,23 +21,27 @@
 // strict mode is disabled to display errors in the console log instead of throwing them as an exception
 
 o().config({
-	//endpoint:"https://secure.pointsale.de/Service.svc",
-	endpoint:"http://localhost:64595/SPDataService.svc/",
+	endpoint:"https://secure.pointsale.de/Service.svc",
 	version:3,
 	strictMode:true
 });
 
-o("callIncident(14063)").route("Test",function(data) {
+o("Product").first().route("",function(data) {
 	console.log(data);
 });
 
-o("callIncident(14063)").route("Change",function() {
+o("Product").route("Change",function(data) {
+	console.log(data);
+});
+
+/*
+o("Product(1)").route("Change",function() {
 	this.data.Identifier=Math.random()+"";
 	console.log(this.data.Identifier);
 	this.save(function(data) {
 		//console.log(data);
 	});
-});
+});*/
 
 
 

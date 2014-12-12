@@ -10,6 +10,7 @@ function ViewModel() {
 	self.total=ko.observable(0);
 	self.detailProduct=ko.observable();
 	self.isLoading=ko.observable(false);
+	//self.isSuccess=ko.observable(false);
 	
 	// a complex observable used for the shopping card
 	self.shoppingCard={
@@ -69,11 +70,12 @@ function ViewModel() {
 	});
 	
 	//add to shopping card
-	o("Product").find(0).route("AddToCard?",function(data) {
+	self.addToCard=function(product) {
+		//TODO: Check for duplicates!
 		//push a temp ProductOrder element into the items. When the order is checked in, we will Post it to the dataservice
 		self.shoppingCard.items.push({ 
 			Amount:ko.observable(1),
-			Product:data,
+			Product:product,
 			Total:function() {
 				return(this.Amount()*this.Product.Price);
 			},
@@ -82,7 +84,7 @@ function ViewModel() {
 				self.shoppingCard.items.splice(index, 1);
 			}
 		});
-	});
+	}
 }
 
 //append the viewmodel
