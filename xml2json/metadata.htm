@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>datajs metadata</title>
+<style type="text/css">
+body {
+    color: #444444;
+    font-family: Calibri, Verdana;
+}
+input {
+	width:80%;
+	border:1px solid #000;
+	padding:10px;
+}
+#metadataDownload,button {
+	width:10%;
+	border:1px solid #000;
+	padding:10px;
+	background-color:#444;
+	color:#FFF;
+}
+#metadataDownload {
+	cursor:pointer;
+	text-decoration:none;
+}
+#metadataDownloadWrapper {
+	display:none;
+}
+
+</style>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.1.min.js"></script>
+<script type="text/javascript" src="datajs-1.1.2.js"></script>
+<script type="text/javascript">
+
+    // This should point to the metadata on your server.
+    //var metadataUrl = "https://secure.pointsale.de/Service.svc/$metadata";
+
+    $(function () {
+		$("#metadataButton").click(function() {
+			$("#metadataBox").text("Loading ...");
+			
+			OData.read($("#metadataUrl").val(), function (data) {
+				var text = "var o().metadata(" + JSON.stringify(data) + ");";
+				$("#metadataBox").text(text);
+				var blob = new Blob([text], {type: "application/json"});
+				var url  = URL.createObjectURL(blob);
+				$("#metadataDownloadWrapper").slideDown();
+				$("#metadataDownload").attr("href",url).attr("download","o.metadata.js").fadeIn();
+			}, function (err) {
+				$("#metadataDownloadWrapper").fadeOut();
+				$("#metadataBox").css("color", "red").text(JSON.stringify(err));
+			}, OData.metadataHandler);
+		});
+    });
+</script>
+</head>
+<body>
+
+<h1>o.js metadata generator</h1>
+<p>
+	Because o.js is designed to keep small, we did not implement a XML-Parser. However you can use this utile to parse your $metadata. Just type in your metadata-url (e.g. http://MyDomain/myService.svc/$metadata) in the input box and click generate. 
+	If your Service does not support CORS or only runs in a local enviorment, <a href="todo">download</a> the util and run it locally. 
+</p>
+<p>
+	<input id="metadataUrl" type="text" placeholder="http://MyDomain/myService.svc/$metadata" />
+	<button id="metadataButton">Generate</button>
+</p>
+<div id="metadataBox" style="font-family: Consolas, Lucida Console, Courier New; overflow-y:scroll; height:300px; border:1px solid #444;"></div>
+<div id="metadataDownloadWrapper"> 
+	<h1>And now?</h1>
+	<p>Download the file and implement it into your site right after o.js. You are now type save. For further information, read the <a href="todo">doc</a>.</p>
+	<a id="metadataDownload">Download o.metadata.js</a>
+</div>
+</body>
+</html>

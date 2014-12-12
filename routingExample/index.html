@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>o.js Productpage Example</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/custom.css" rel="stylesheet">
+
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" data-bind="css: { active: route()==='Home' }" class="active"><a href="#">Home</a></li>
+            <li role="presentation" data-bind="css: { active: route()==='Product' }"><a href="#Product">Products</a></li>
+            <li role="presentation" data-bind="css: { active: route()==='Card' }"><a href="#Card">Card <span data-bind="text:'('+shoppingCard.items().length+')',visible:shoppingCard.items().length>0"></span></a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">o.js</h3>
+      </div>
+	  
+	  <div class="loading" data-bind="visible:isLoading()"> 
+		  <div class="jumbotron" >
+			<img src="img/ajax-loader.gif" alt="Loading ...">
+			<p>Loading ...</p>
+		  </div>
+	  </div>
+	  
+	  <div class="spacer" data-bind="css: { opacity20: isLoading()}">
+		  <div class="jumbotron" data-bind="visible:route()==='Home'">
+			<h1>o.js Example</h1>
+			<p class="lead">This shows how easy you can use o.js routing function in combination with knockout and bootstrap to make a stunning SPA webpage.</p>
+			<p> <a class="btn btn-lg btn-primary" href="#" role="button">Try ...</a> <a class="btn btn-lg btn-success" href="#" role="button">Get o.js</a></p>
+		  </div>
+		  
+		  <div class="jumbotron" data-bind="visible:route()==='Detail',with:detailProduct">
+			<h1 data-bind="text:Name">o.js Example</h1>
+			<p class="lead" data-bind="text:Description"></p>
+			<!--<p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>-->
+		  </div>
+		  
+		  <div class="row marketing" data-bind="visible:route()==='Home'">
+			<!-- ko foreach: products -->
+				<div class="col-md-4">
+					<div class="products">
+						<h4 data-bind="text:Name"></h4>
+						<div data-bind="text:Description"></div>
+						<div class="price" data-bind="$:Price"></div>
+						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
+						<a role="button" class="btn btn-success" data-bind="attr { href:'#AddToCard/'+id }">Add</a>
+					</div>
+				</div>
+			<!-- /ko -->
+		  </div>
+		  
+		  <div class="row marketing" data-bind="visible:route()==='Product'">
+			<!-- ko foreach: products -->
+				<div class="col-md-4">
+					<div class="products">
+						<h4 data-bind="text:Name"></h4>
+						<div data-bind="text:Description"></div>
+						<div class="price" data-bind="currency:Price"></div>
+						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
+						<a role="button" class="btn btn-success" data-bind="attr { href:'#AddToCard/'+id }">Add</a>
+					</div>
+				</div>
+			<!-- /ko -->
+		  </div>
+		  
+		 <div class="row marketing" data-bind="visible:route()==='Product'">
+			<div class="col-md-4">
+				<a  data-bind="attr: { href: '#Product/Page/'+(skip()-9) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
+			</div>
+			<div class="col-md-4 text-center">
+				<span data-bind="text:parseInt(skip()/9)+1"></span> of <span data-bind="text:parseInt(total()/9)+1"></span>
+			</div>
+			<div class="col-md-4">
+				<a data-bind="attr: { href: '#Product/Page/'+(skip()+9) },visible:(skip()+9)<total()" class="btn btn-default pull-right" role="button">Next</a>
+			</div>
+		</div>
+		
+		 <div class="row marketing" data-bind="visible:route()==='Card'">
+			<h3 data-bind="visible:shoppingCard.items().length===0">Your card is empty :(</h3>
+			<div data-bind="visible:shoppingCard.items().length>0">
+				<table class="table table-hover">
+				  <thead>
+					<tr>
+					  <th>#</th>
+					  <th>Name</th>
+					  <th></th>
+					  <th class="text-center">Amount</th>
+					</tr>
+				  </thead>
+				  <tbody>
+					<!-- ko foreach: shoppingCard.items -->
+					<tr>
+						<td style="vertical-align:middle;" data-bind="text:($index()+1)"></td>
+						<td style="vertical-align:middle;" data-bind="text:Product.Name"></td>
+						<td style="width:10%;">
+							<input class="form-control text-center" type="text" value="" data-bind="value:Amount">
+						</td>
+						<td style="vertical-align:middle;" class="text-right" data-bind="currency:Total()"></td>
+						<td style="width:20%;" class="text-right">
+							<a role="button" class="btn btn-danger" data-bind="click:Remove">x</a>
+						</td>
+					</tr>
+					<!-- /ko -->
+					<tr class="success">
+						<td colspan="4" class="text-right">
+							<strong data-bind="currency:shoppingCard.total()"></strong>
+						</td>
+						<td class="text-left">Total</td>
+					</tr>
+				  </tbody>
+				</table>
+				<a role="button" class="btn btn-success pull-right" href="#Order">Order now</a>
+			</div>
+		</div>
+	  </div>
+
+      <footer class="footer">
+        <p>&copy; Company 2014</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="../o.js"></script>
+	<script src="js/knockout-3.2.0.js"></script>
+	<script src="js/knockout.bindinghandlers.js"></script>
+	<script src="app.js"></script>
+  </body>
+</html>
