@@ -26,22 +26,22 @@ o().config({
 	strictMode:true
 });
 
-o("Product").first().route("",function(data) {
+/*o("Product").first().route("",function(data) {
 	console.log(data);
 });
 
 o("Product").route("Change",function(data) {
 	console.log(data);
-});
+});*/
 
-/*
-o("Product(1)").route("Change",function() {
+
+o("Product").first().route("Change",function() {
 	this.data.Identifier=Math.random()+"";
 	console.log(this.data.Identifier);
 	this.save(function(data) {
 		//console.log(data);
 	});
-});*/
+});
 
 
 
@@ -91,11 +91,10 @@ o("Group").route(function(data) {
 
 
 //auto expand in combination with batch 
+/*o("Shop").find(4).get(function(data) {
+	console.log(this);
+});*/
 /*
-o("Product/ProductGroup/Group").batch("Feedback").get(function(data) {
-	console.log(data);
-});
-
 //test .first()
 o("Group").first().get(function(data) {
 	console.log(data);

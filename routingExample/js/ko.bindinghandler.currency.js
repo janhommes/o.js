@@ -25,7 +25,6 @@ ko.bindingHandlers.euro = {
 		var bindings=ko.utils.unwrapObservable(allBindingsAccessor());
 		bindings['digitGroupSeparator']=bindings['digitGroupSeparator'] || 'point';
 		bindings['currencyUnit']=bindings['currencyUnit'] || '€';
-		//console.log(allBindingsAccessor());
 		ko.bindingHandlers.currency.update(element, valueAccessor, ko.observable(bindings));
 	}
 }

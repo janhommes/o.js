@@ -25,7 +25,10 @@ function ViewModel() {
 	
 	//o.js init
 	o().config({
-		endpoint:"https://secure.pointsale.de/Service.svc",
+		//endpoint:"https://secure.pointsale.de/Service.svc",
+		endpoint:"http://localhost:1000/Service.svc",
+		username:"PSAPI",
+		password:"ca20f67a-bc22-4046-a57a-bc474acc253e",
 		version:3,
 		strictMode:true,
 		start:function() {

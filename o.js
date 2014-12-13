@@ -18,7 +18,9 @@ function o(res) {
 		strictMode:true, 	//strict mode throws exception, non strict mode only logs them
 		start:null, 		//a function which is executed on loading
 		ready:null,			//a function which is executed on ready
-		headers:[]		// a array of additional headers [{name:'headername',value:'headervalue'}]
+		headers:[],			// a array of additional headers [{name:'headername',value:'headervalue'}]
+		username:null, 		//the basic auth username
+		password:null		//the basic auth password
 	};
 	
 	// +++
@@ -881,7 +883,7 @@ function oData(res,config){
 		}
 		
 		// start the ajax request
-		ajaxRequest.open(method, query, true);
+		ajaxRequest.open(method, query, true, base.oConfig.username, base.oConfig.password);
 		if(headers) {
 			//normal headers
 			for(var i=0;i<headers.length;i++) {
