@@ -62,7 +62,7 @@
 					<div class="products">
 						<h4 data-bind="text:Name"></h4>
 						<div class="description" data-bind="text:(Description || 'No Description')"></div>
-						<div class="price" data-bind="$:Price"></div>
+						<div class="price" data-bind="$:PriceOnline"></div>
 						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
 						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
 					</div>
@@ -76,7 +76,7 @@
 					<div class="products">
 						<h4 data-bind="text:Name"></h4>
 						<div class="description" data-bind="text:(Description || 'No Description')"></div>
-						<div class="price" data-bind="currency:Price"></div>
+						<div class="price" data-bind="currency:PriceOnline"></div>
 						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+id+'/'+Name }">Details</a>
 						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
 					</div>

@@ -1,12 +1,13 @@
 // +++
-// o.js  v0.2a
+// o.js  v0.3a
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations: 
 // .find() / .first() / .add() / .take() / .skip() / .filter() / .search() (only oData v4) / .remove() / .orderBy() / .orderByDesc() / .select() // .count()
 //
 // By Jan Hommes 
-// Date: 09.12.2014
+// Date: 13.12.2014
 // +++
+
 function o(res) {
 	base=this;
 
@@ -20,7 +21,8 @@ function o(res) {
 		ready:null,			//a function which is executed on ready
 		headers:[],			// a array of additional headers [{name:'headername',value:'headervalue'}]
 		username:null, 		//the basic auth username
-		password:null		//the basic auth password
+		password:null,		//the basic auth password
+		isAsync:true		//?
 	};
 	
 	// +++
@@ -161,6 +163,17 @@ function oData(res,config){
 	base.filter=function(filterStr) {
 		//if(!isQueryThrowEx('$first')) {
 			addQuery('$filter',checkEmpty(filterStr));
+		//}
+		return(base);
+	}
+	
+	// +++
+	// add a filter
+	//TODO: parse a JavaScript function to it)
+	// +++
+	base.orderBy=function(orderStr) {
+		//if(!isQueryThrowEx('$first')) {
+			addQuery('$orderBy',checkEmpty(orderStr));
 		//}
 		return(base);
 	}
@@ -802,26 +815,14 @@ function oData(res,config){
 	function startAjaxReq(method,query,data,callback,isBatch,headers) {
 		if(base.oConfig.start) 
 			base.oConfig.start();
-		var ajaxRequest;  // The variable that makes Ajax possible!
-	
-		//AJAX compatibility check
-		try{
-			// Opera 8.0+, Firefox, Safari
-			ajaxRequest = new XMLHttpRequest();
-		} catch (e){
-			// Internet Explorer Browsers
-			try{
-				ajaxRequest = new ActiveXObject('Msxml2.XMLHTTP');
-			} catch (e) {
-				try{
-					ajaxRequest = new ActiveXObject('Microsoft.XMLHTTP');
-				} catch (e){
-					// Something went wrong
-					throwEx('Your browser does not support AJAX.');
-					return false;
-				}
-			}
-		}
+		//var ajaxRequest=getAjaxRequest(); 
+		var ajaxRequest=createCORSRequest(method,query);
+		// start the ajax request
+		//base.oConfig.isAsync
+		//ajaxRequest.open(method, query);
+			
+		//debug
+		//console.log(method, query, base.oConfig.isAsync, base.oConfig.username, base.oConfig.password);
 		
 		//is a callback defined?
 		if(!callback) 
@@ -867,32 +868,43 @@ function oData(res,config){
 						tempBase.oConfig.ready();
 				}
 				else {
-					var errResponse=ajaxRequest.responseText;
-					if(JSON)
-						errResponse=JSON.parse(ajaxRequest.responseText);
+					try {
+						var errResponse=ajaxRequest.responseText;
 						
-					if(errResponse['odata.error']) {
-						var errorMsg=errResponse['odata.error'].message.value +' | HTTP Status: '+ajaxRequest.status+' | oData Code: '+errResponse['odata.error'].code;
-						throwEx(errorMsg);
+						if(JSON && ajaxRequest.responseText!="")
+							errResponse=JSON.parse(ajaxRequest.responseText);
+							
+						if(errResponse['odata.error']) {
+							var errorMsg=errResponse['odata.error'].message.value +' | HTTP Status: '+ajaxRequest.status+' | oData Code: '+errResponse['odata.error'].code;
+							throwEx(errorMsg);
+						}
+						else
+							throwEx('Request failed with HTTP status '+ajaxRequest.status+' on ready state '+ajaxRequest.readyState);
+					}catch(ex) {
+						throwEx(ajaxRequest.responseText);
 					}
-					else
-						throwEx('Request failed with HTTP status '+ajaxRequest.status+' on ready state '+ajaxRequest.readyState);
-					
 				}
 			}
 		}
 		
-		// start the ajax request
-		ajaxRequest.open(method, query, true, base.oConfig.username, base.oConfig.password);
+		//check if we need to preflight the request (only if basic auth and isAsync)
+		if(base.oConfig.username && base.oConfig.password) {
+			//ajaxRequest.withCredentials=true;
+			ajaxRequest.setRequestHeader('Authorization', 'Basic '+encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
+		}
+		
 		if(headers) {
 			//normal headers
 			for(var i=0;i<headers.length;i++) {
 				ajaxRequest.setRequestHeader(headers[i].name,headers[i].value);
 			}
-			//additional headers 
+		}
+		
+		//additional headers 
+		if(base.oConfig.headers.length>0) {
 			//TODO: merge both normal and additional headers?!
 			for(var i=0;i<base.oConfig.headers.length;i++) {
-				ajaxRequest.setRequestHeader(base.oConfig.headers[i].name,headers[i].value);
+				ajaxRequest.setRequestHeader(base.oConfig.headers[i].name,base.oConfig.headers[i].value);
 			}
 		}
 		ajaxRequest.send(data); 
@@ -931,6 +943,133 @@ function oData(res,config){
 			}
 		}
 		
+	}
+	
+	// +++
+	// Create the XHR object with CORS support
+	// +++
+	function createCORSRequest(method, url) {
+		var xhr = new XMLHttpRequest();
+		if ("withCredentials" in xhr) {
+			// XHR for Chrome/Firefox/Opera/Safari.
+			xhr.open(method, url, base.oConfig.isAsync);
+		} 
+		else if (typeof XDomainRequest != "undefined") {
+			// XDomainRequest for IE.
+			xhr = new XDomainRequest();
+			xhr.open(method, url);
+		} else {
+			// CORS not supported.
+			xhr = null;
+		}
+		return xhr;
+	}
+	
+	// +++
+	// returns a XMLHttpRequest 
+	// +++
+	/*function getAjaxRequest() {
+		var xhr=null;
+		//AJAX compatibility check
+		try{
+			// Opera 8.0+, Firefox, Safari
+			xhr = new XMLHttpRequest();
+		} catch (e){
+			// Internet Explorer Browsers
+			try{
+				xhr = new ActiveXObject('Msxml2.XMLHTTP');
+			} catch (e) {
+				try{
+					xhr = new ActiveXObject('Microsoft.XMLHTTP');
+				} catch (e){
+					// Something went wrong
+					throwEx('Your browser does not support AJAX.');
+					return false;
+				}
+			}
+		}
+
+		//check cors
+		if (!('withCredentials' in xhr) && typeof XDomainRequest !== 'undefined') {
+
+			return(new XDomainRequest());
+		}
+		return(xhr);
+	}*/
+	
+	//+++
+	// encode a string to base64
+	// +++
+	function encodeBase64(str) {
+		var Base64 = {
+
+			// private property
+			_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+			// public method for encoding
+			encode : function (input) {
+				var output = "";
+				var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+				var i = 0;
+
+				input = Base64._utf8_encode(input);
+
+				while (i < input.length) {
+
+					chr1 = input.charCodeAt(i++);
+					chr2 = input.charCodeAt(i++);
+					chr3 = input.charCodeAt(i++);
+
+					enc1 = chr1 >> 2;
+					enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+					enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+					enc4 = chr3 & 63;
+
+					if (isNaN(chr2)) {
+						enc3 = enc4 = 64;
+					} else if (isNaN(chr3)) {
+						enc4 = 64;
+					}
+
+					output = output +
+					this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+					this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+
+				}
+
+				return output;
+			},
+
+
+			// private method for UTF-8 encoding
+			_utf8_encode : function (string) {
+				string = string.replace(/\r\n/g,"\n");
+				var utftext = "";
+
+				for (var n = 0; n < string.length; n++) {
+
+					var c = string.charCodeAt(n);
+
+					if (c < 128) {
+						utftext += String.fromCharCode(c);
+					}
+					else if((c > 127) && (c < 2048)) {
+						utftext += String.fromCharCode((c >> 6) | 192);
+						utftext += String.fromCharCode((c & 63) | 128);
+					}
+					else {
+						utftext += String.fromCharCode((c >> 12) | 224);
+						utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+						utftext += String.fromCharCode((c & 63) | 128);
+					}
+
+				}
+
+				return utftext;
+			}
+		}
+		
+		return(Base64.encode(str));
 	}
 	
 	return(init(res));
