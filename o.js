@@ -329,7 +329,7 @@ function oData(res,config){
 			}
 			
 			for(var i=0;i<resource.queryList.length;i++) {
-				if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format') {
+				if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format' && resource.queryList[i].name!=='$expand') {
 					if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
 						resource.queryList[i].value=routeParameter[m];
 						base.param.push(routeParameter[m]);

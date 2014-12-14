@@ -20,11 +20,11 @@
 // strict mode is disabled to display errors in the console log instead of throwing them as an exception
 
 o().config({
-	endpoint:'http://localhost:1000/Api.svc',
+	endpoint:'http://localhost:1000/Service.svc',
 	version:3,
 	strictMode:true,
-	username:'PSAPI',
-	password:'rewerse'
+	username:'demo@pointsale.de',
+	password:'demo'
 	//headers:[{name:'X-Custom-Headers', value: 'value'}]
 });
 
@@ -36,17 +36,18 @@ o("Product").route("Change",function(data) {
 	console.log(data);
 });*/
 
-o("Product").take(10).get(function(data) {
-	console.log(data);
+o("Product").filter("Name eq 'bla'").get(function(data) {
+
 });
 
-/*o("Product").first().route("Change",function() {
-	this.data.Identifier=Math.random()+"";
+o("Product").expand("ProductGroup").take(0).route("Change?",function(data) {
+	/*this.data.Identifier=Math.random()+"";
 	console.log(this.data.Identifier);
 	this.save(function(data) {
 		//console.log(data);
-	});
-});*/
+	});*/
+	console.log(data);
+});
 
 
 
