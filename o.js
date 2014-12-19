@@ -15,11 +15,11 @@ function o(res) {
 	base.oConfig  = base.oConfig || {
 		endpoint:null,
 		json:true, 			//currently only json is supported
-		version:3, 			// currently only tested for Version 3, this var is not used at the moment, but can be used for special version futures
+		version:3, 			//currently only tested for Version 3, this config is not used at the moment, but can be used for special version futures
 		strictMode:true, 	//strict mode throws exception, non strict mode only logs them
 		start:null, 		//a function which is executed on loading
 		ready:null,			//a function which is executed on ready
-		headers:[],			// a array of additional headers [{name:'headername',value:'headervalue'}]
+		headers:[],			//a array of additional headers [{name:'headername',value:'headervalue'}]
 		username:null, 		//the basic auth username
 		password:null,		//the basic auth password
 		isAsync:true		//?
@@ -27,10 +27,17 @@ function o(res) {
 	
 	// +++
 	// Configuration of the oData endpoint
+	//
 	// endpoint: Name of the endpoint e.g. http(s)://MyDomain/ServiceName.svc
-	// json: use json, true or false (currently only json supported)
-	// version: define the oData Version. (currently only Version 3 and 4 are supported)
-	// strictMode: in strict mode exceptios are thrown, else they are logged
+	// json: Use json, true or false (currently only json supported)
+	// version: Define the oData Version. (currently only Version 3 and 4 are supported)
+	// strictMode: In strict mode exceptios are thrown, else they are logged
+	// start: A function which is executed on loading
+	// ready: A function which is executed on finished loading
+	// headers: An array of additional headers [{name:'headername',value:'headervalue'}]
+	// username: The basic auth username
+	// password: The basic auth password
+	// isAsync: If set to dalse, the request are done sync. Default is true.
 	// +++
 	base.config=function(config) {
 		base.oConfig=merge(base.oConfig,config);
@@ -78,6 +85,7 @@ function oData(res,config){
 	base.inlinecount=null; 
 	base.param=[];
 	base.oConfig=config;
+	base.promise=null;
 	
 	// ---------------------+++ PUBLICS +++----------------------------
 	
@@ -129,7 +137,7 @@ function oData(res,config){
 	// +++
 	// returns the top x objects
 	// +++
-	base.take=function(takeAmount) {
+	base.top=base.take=function(takeAmount) {
 		if(!isQueryThrowEx(['$top'])) {
 			addQuery('$top',checkIntAndPos(takeAmount,'take()'));
 		}
@@ -220,11 +228,36 @@ function oData(res,config){
 	// This function actually queries the oData service with a GET request
 	// TODO: maybe add some pseudonyms...
 	// +++
-	base.get = function(callback) {		
+	base.get=function(callback) {
 		//start the request
+		base.promise=Q.defer();
 		startRequest(callback,false);
-
-		return(base);
+		return(base.promise.promise);
+	}
+	
+	// +++
+	// adds a dataset to the current selected resource 
+	// if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
+	// +++
+	base.save = function(callback) {
+		//if base.data is set and the user saves, we copying this resource as a Patch
+		//this allows a fast edit mode after a get request
+		if(resource.method==='GET' && base.data!==null)  {
+			var newResource=deepCopy(resource);
+			//set the method and data
+			newResource.method='PATCH';
+			newResource.data=base.data;
+			addNewResource(newResource);
+			
+			/*console.log("------------");
+			console.log(resourceList);
+			console.log(resource);*/
+		}
+		
+		//start the request
+		base.promise=Q.defer();
+		startRequest(callback,true);
+		return(base.promise.promise);
 	}
 	
 	// +++
@@ -262,31 +295,6 @@ function oData(res,config){
 
 		return(base);
 	}	
-	
-	// +++
-	// adds a dataset to the current selected resource 
-	// if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
-	// +++
-	base.save = function(callback) {
-		//if base.data is set and the user saves, we copying this resource as a Patch
-		//this allows a fast edit mode after a get request
-		if(resource.method==='GET' && base.data!==null)  {
-			var newResource=deepCopy(resource);
-			//set the method and data
-			newResource.method='PATCH';
-			newResource.data=base.data;
-			addNewResource(newResource);
-			
-			console.log("------------");
-			console.log(resourceList);
-			console.log(resource);
-		}
-		
-		//start the request
-		startRequest(callback,true);
-
-		return(base);
-	}
 	
 	// +++
 	// Returns the current query 
@@ -379,6 +387,12 @@ function oData(res,config){
 	// starts a request to the service
 	// +++
 	function startRequest(callback,isSave) {
+		
+		//validate callback
+		if(!callback || typeof callback !=='function') {
+			callback=function() {  };
+		}
+	
 		//check if resource is defined
 		if(resource===null) {
 			throwEx('You must define a resource to perform a get(), post(), put() or delete() function. Define a resource with o("YourODataResource").');
@@ -391,8 +405,7 @@ function oData(res,config){
 		else {
 			//add the last resource to the history
 			resourceList.push(resource);
-			
-			console.log(resource);
+
 			//check if we only have one request
 			if(countMethod(['POST','PATCH','DELETE'])<=1 && isSave) {
 				startAjaxReq(resource.method,buildQuery(),stringify(resource.data),callback,false,
@@ -813,22 +826,16 @@ function oData(res,config){
 	// start a ajax request. data should be null if nothing to send
 	// +++
 	function startAjaxReq(method,query,data,callback,isBatch,headers) {
+		//if start loading function is set call it
 		if(base.oConfig.start) 
 			base.oConfig.start();
-		//var ajaxRequest=getAjaxRequest(); 
-		var ajaxRequest=createCORSRequest(method,query);
-		// start the ajax request
-		//base.oConfig.isAsync
-		//ajaxRequest.open(method, query);
-			
-		//debug
-		//console.log(method, query, base.oConfig.isAsync, base.oConfig.username, base.oConfig.password);
 		
-		//is a callback defined?
-		if(!callback) 
-			callback=function(data) {};
-			
+		//create a CORS ajax Request
+		var ajaxRequest=createCORSRequest(method,query);
+		
+		//save the base element into a temp base element
 		var tempBase=base;
+		
 		// The on ready state event handler
 		ajaxRequest.onreadystatechange = function(){
 			//check the http status
@@ -837,16 +844,15 @@ function oData(res,config){
 					
 					//handling no-content returns
 					if(ajaxRequest.status===204) {
-						callback.call(tempBase,tempBase.data);
+						//callback.call(tempBase,tempBase.data);
 					}
 					//dealing with normal response
 					else if(!isBatch) {
 						parseResponse(ajaxRequest.responseText,tempBase);
-						callback.call(tempBase,tempBase.data);
+						//callback.call(tempBase,tempBase.data);
 					}
 					//else, handling a $batch response
-					else {
-											
+					else {			
 						//split every line and look for startsWith({)
 						var batchLines=ajaxRequest.responseText.split('\n');
 						var resCount=0;
@@ -860,8 +866,15 @@ function oData(res,config){
 						}
 						tempBase.data=dataArray;
 						
-						callback.call(tempBase,dataArray);
+						//callback.call(tempBase,dataArray);
 					}
+					
+					//call the Callback (check for Q-promise)
+					if(tempBase.promise) {
+						tempBase.promise.resolve(tempBase);
+					}
+					callback.call(tempBase,tempBase.data);
+					
 					
 					//call the basic ready method
 					if(tempBase.oConfig.ready) 
@@ -870,16 +883,22 @@ function oData(res,config){
 				else {
 					try {
 						var errResponse=ajaxRequest.responseText;
-						
+							
 						if(JSON && ajaxRequest.responseText!="")
 							errResponse=JSON.parse(ajaxRequest.responseText);
 							
-						if(errResponse['odata.error']) {
-							var errorMsg=errResponse['odata.error'].message.value +' | HTTP Status: '+ajaxRequest.status+' | oData Code: '+errResponse['odata.error'].code;
-							throwEx(errorMsg);
+						if(typeof callback === 'function') {
+								
+							if(errResponse['odata.error']) {
+								var errorMsg=errResponse['odata.error'].message.value +' | HTTP Status: '+ajaxRequest.status+' | oData Code: '+errResponse['odata.error'].code;
+								throwEx(errorMsg);
+							}
+							else
+								throwEx('Request failed with HTTP status '+ajaxRequest.status+' on ready state '+ajaxRequest.readyState);
 						}
-						else
-							throwEx('Request failed with HTTP status '+ajaxRequest.status+' on ready state '+ajaxRequest.readyState);
+						else {
+							base.promise.reject(errResponse);
+						}
 					}catch(ex) {
 						throwEx(ajaxRequest.responseText);
 					}
@@ -964,38 +983,6 @@ function oData(res,config){
 		}
 		return xhr;
 	}
-	
-	// +++
-	// returns a XMLHttpRequest 
-	// +++
-	/*function getAjaxRequest() {
-		var xhr=null;
-		//AJAX compatibility check
-		try{
-			// Opera 8.0+, Firefox, Safari
-			xhr = new XMLHttpRequest();
-		} catch (e){
-			// Internet Explorer Browsers
-			try{
-				xhr = new ActiveXObject('Msxml2.XMLHTTP');
-			} catch (e) {
-				try{
-					xhr = new ActiveXObject('Microsoft.XMLHTTP');
-				} catch (e){
-					// Something went wrong
-					throwEx('Your browser does not support AJAX.');
-					return false;
-				}
-			}
-		}
-
-		//check cors
-		if (!('withCredentials' in xhr) && typeof XDomainRequest !== 'undefined') {
-
-			return(new XDomainRequest());
-		}
-		return(xhr);
-	}*/
 	
 	//+++
 	// encode a string to base64

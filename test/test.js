@@ -20,11 +20,11 @@
 // strict mode is disabled to display errors in the console log instead of throwing them as an exception
 
 o().config({
-	endpoint:'http://localhost:1000/Service.svc',
+	endpoint:'https://secure.pointsale.de/Service.svc',
 	version:3,
 	strictMode:true,
-	username:'demo@pointsale.de',
-	password:'demo'
+	//username:'demo@pointsale.de',
+	//password:'demo'
 	//headers:[{name:'X-Custom-Headers', value: 'value'}]
 });
 
@@ -36,20 +36,42 @@ o("Product").route("Change",function(data) {
 	console.log(data);
 });*/
 
-o("Product").filter("Name eq 'bla'").get(function(data) {
+/*o("Product").take(5).get(function(data) {
+	console.log(data);
+});*/
 
-});
-
-o("Product").expand("ProductGroup").take(0).route("Change?",function(data) {
-	/*this.data.Identifier=Math.random()+"";
+/*o("Product").expand("ProductGroup").take(0).route("Change?",function(data) {
+	this.data.Identifier=Math.random()+"";
 	console.log(this.data.Identifier);
 	this.save(function(data) {
 		//console.log(data);
-	});*/
+	});
 	console.log(data);
+});*/
+
+//prommise test
+
+/*o("Product(1)").get().then(function(o) {
+	console.log(o.data);
+	o.data.Name="YZX";
+	console.log("Save added");
+	o.save();
+}).then(function() {
+	console.log("DRIN 2 :)");
+}).fail(function(err) {
+	console.log(err);
+});*/
+
+var test=null
+Q.all([
+	o("Product(1)").get(test),
+	o("Group").get()
+]).then(function(o) {
+	//console.log(o[0].data);
+	//console.log(o[1].data);
+	
+	console.log(test);
 });
-
-
 
 
 
@@ -57,7 +79,7 @@ o("Product").expand("ProductGroup").take(0).route("Change?",function(data) {
 		console.log(data);
 });*/
 
-/*o("Product").post({Name:'XXXX',Description:'AAA'}).post({Name:'XXXX2',Description:'AAA'}).save(function(data) {
+/*o("Product").post({Name:'Testprodukt 1',Description:'AAA',Price:12.22}).post({Name:'XXXX2',Description:'AAA',Description:'AAA',Price:12.22}).save(function(data) {
 	//console.log(data);
 	//console.log(this);
 });*/
@@ -128,8 +150,8 @@ o("meertelSP?$filter=(SMSMT_WinLogon eq 'hommejan')").get(function(data) {
 //test resource identifier
 o("Feedback?$filter=(userid eq 'hommejan')").get(function(data) {
 	console.log(data);
-})
-*/;
+});
+*/
 
 /*
 //test .take()
