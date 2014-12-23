@@ -259,9 +259,13 @@ function oData(res,config){
 	// +++
 	base.get=function(callback) {
 		//start the request
-		base.promise=Q.defer();
+		if(typeof Q !== 'undefined')
+			base.promise=Q.defer();
 		startRequest(callback,false);
-		return(base.promise.promise);
+		if(typeof Q !== 'undefined')
+			return(base.promise.promise);
+		else
+			return(base);
 	}
 	
 	// +++

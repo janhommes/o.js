@@ -4,12 +4,14 @@ function ViewModel() {
 	
 	//ko observables
 	self.products=ko.observableArray([]);
+	self.groups=ko.observableArray([]);
 	self.currentProduct=ko.observable(null);
 	self.route=ko.observable("");
 	self.skip=ko.observable(0);
 	self.total=ko.observable(0);
 	self.detailProduct=ko.observable();
 	self.isLoading=ko.observable(false);
+	self.rootGroup=ko.observable();
 	//self.isSuccess=ko.observable(false);
 	
 	// a complex observable used for the shopping card
@@ -38,6 +40,10 @@ function ViewModel() {
 			self.isLoading(false);
 		}
 	});
+	
+	o("Group").filter("Name eq '$root'").first().get(function(data) {
+		self.rootGroup(data);
+	});
 
 	//get top 3 products on start TODO: At filter for best selling!
 	o("Product").take(3).route("",function(data) {
@@ -65,6 +71,13 @@ function ViewModel() {
 	o("Product").find(0).route("Product/Detail?",function(data) {
 		self.route("Detail");
 		self.detailProduct(data);
+	});
+	
+	//get a product list on product click
+	o("ProductGroup/Group").filter("Group/Parent_fk eq 2").route("Group",function(data) {
+		console.log(data);
+		self.route("Group");
+		self.groups(data);
 	});
 
 	//open the shopping card

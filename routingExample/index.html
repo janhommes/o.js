@@ -30,6 +30,7 @@
           <ul class="nav nav-pills pull-right">
             <li role="presentation" data-bind="css: { active: route()==='Home' }" class="active"><a href="#">Home</a></li>
             <li role="presentation" data-bind="css: { active: route()==='Product' }"><a href="#Product">Products</a></li>
+			<li role="presentation" data-bind="css: { active: route()==='Group' }"><a href="#Group">Groups</a></li>
             <li role="presentation" data-bind="css: { active: route()==='Card' }"><a href="#Card">Card <span data-bind="text:'('+shoppingCard.items().length+')',visible:shoppingCard.items().length>0"></span></a></li>
           </ul>
         </nav>
@@ -70,6 +71,17 @@
 			<!-- /ko -->
 		  </div>
 		  
+		  <div class="row marketing" data-bind="visible:route()==='Group'">
+			<!-- ko foreach: groups -->
+				<div class="col-md-4">
+					<div class="products">
+						<a role="button" class="btn btn-primary pull-right" data-bind="attr { href:'#Product/Detail/'+id+'/'+Group.Name }">Open</a>
+						<h4 data-bind="text:Group.Name"></h4>
+					</div>
+				</div>
+			<!-- /ko -->
+		  </div>
+		  
 		  <div class="row marketing" data-bind="visible:route()==='Product'">
 			<!-- ko foreach: products -->
 				<div class="col-md-4">
@@ -89,7 +101,7 @@
 				<a  data-bind="attr: { href: '#Product/Page/'+(skip()-9) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
 			</div>
 			<div class="col-md-4 text-center">
-				<span data-bind="text:parseInt(skip()/9)+1"></span> of <span data-bind="text:parseInt(total()/9)+1"></span>
+				<span data-bind="text:Math.ceil((skip()/9)+1)"></span> of <span data-bind="text:Math.ceil(total()/9)"></span>
 			</div>
 			<div class="col-md-4">
 				<a data-bind="attr: { href: '#Product/Page/'+(skip()+9) },visible:(skip()+9)<total()" class="btn btn-default pull-right" role="button">Next</a>
