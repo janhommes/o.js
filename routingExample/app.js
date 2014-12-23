@@ -25,10 +25,10 @@ function ViewModel() {
 	
 	//o.js init
 	o().config({
-		//endpoint:"https://secure.pointsale.de/Api.svc",
-		endpoint:"http://localhost:1000/Api.svc",
+		endpoint:"https://secure.pointsale.de/Service.svc",
+		/*endpoint:"http://localhost:1000/Api.svc",
 		username:"PSAPI",
-		password:"demo",
+		password:"demo",*/
 		version:3,
 		strictMode:true,
 		start:function() {
@@ -80,7 +80,7 @@ function ViewModel() {
 			Amount:ko.observable(1),
 			Product:product,
 			Total:function() {
-				return(this.Amount()*this.Product.Price);
+				return(this.Amount()*this.Product.PriceOnline);
 			},
 			Remove:function() {
 				var index = self.shoppingCard.items.indexOf(this);

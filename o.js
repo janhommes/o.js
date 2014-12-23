@@ -73,47 +73,76 @@ function o(res) {
 function oData(res,config){
 	base=this;
 	
+	// --------------------+++ VARIABLES +++---------------------------
+	
 	//base internal variables
-	var resource=null; //the main resource string
-	var resourceList=[];
-	var routeName="";
-	var routeCallback=null;
-	var isEndpoint=true;
+	var resource=null; 			//the main resource string
+	var resourceList=[]; 		//an array list of all resource used
+	var routeList=[]; 			//an array list of all routes used
+	var isEndpoint=true;		//true if an endpoint is configured
+	
 	
 	//base external variables 
-	base.data=[];
-	base.inlinecount=null; 
-	base.param=[];
-	base.oConfig=config;
-	base.promise=null;
+	base.data=[];				//holds the data after an callback
+	base.inlinecount=null; 		//if inlinecount is set, here the counting is gold
+	base.param=[];				//in a route with a '?', this array holds all parameter after the '?' separated by a dash
+	base.oConfig=config;		// the internal config, passed over from the o function
+	base.promise=null;			//if promise (Q.js) is used, we hold it here
+	
 	
 	// ---------------------+++ PUBLICS +++----------------------------
 	
 	// +++
 	// route is a little extra function to enable rest-like routing on the client side
 	// +++
-	base.route=function(route,callback) {
-		if(typeof callback==='undefined') {
-			routeCallback=route;
+	base.routes=base.route=function(routes,callback) {
+		//if not a array, make it one
+		if(!isArray(routes)) {
+			routes=[routes];
 		}
-		else {
-			routeName=route;
-			routeCallback=callback;
-		}
-		var tempBase=base;
 		
-		//TODO: Is there any way to use the build an on hash update function?! Onhaschange can't be bound multiple times. Also a problem: if the hash is called a second time the route is not triggered
+		//var tempBase=base;
 		var prevHash = window.location.hash;
-		setInterval(function () {
-			if (window.location.hash != prevHash) {
-				prevHash = window.location.hash;
-				//tempBase.triggerRoute(window.location.hash,routeCallback);
-				checkRoute(window.location.hash);
-			} 
-		}, 100);
+		
+		//literate over every rout and add a interval to check if the route is triggered
+		for(var i=0;i<routes.length;i++) {
+			if(typeof callback!=='undefined') {
+				
+				//Push the routes in the routeList
+				//TODO: Is there any way to use the build an on hash update function?! Onhaschange can't be bound multiple times. Also a problem: if the hash is called a second time the route is not triggered
+				routeList.push({
+					routeName:routes[i],
+					callback:callback,
+					interval:setInterval(function () {
+						//console.log("interval?");
+						if (window.location.hash != prevHash) {
+							prevHash = window.location.hash;
+							checkRoute(window.location.hash);
+						}
+					},100)
+				});
+				//routeList[i].routeName=routes;
+				//routeList[i].callback=callback;
+			
+			
+
+				
+				/*routeList[i].interval=setInterval(function () {
+					if (window.location.hash != prevHash) {
+						prevHash = window.location.hash;
+
+						console.log("CHECK: "+window.location.hash);
+						checkRoute(window.location.hash);
+					} 
+				}, 100);*/
+			}
+			else {
+				throwEx('Routes without a callback are not supported. Please define a function like .route("YourRoute", function() { }).');
+			}
+		}
 		
 		//trigger on init if the hash is the same like current
-		tempBase.triggerRoute(window.location.hash,routeCallback);
+		base.triggerRoute(window.location.hash);
 
 		return(base);
 	}
@@ -262,7 +291,7 @@ function oData(res,config){
 	
 	// +++
 	// adds a dataset to the current selected resource 
-	// if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
+	// o("Product/ProductGroup").post(...) will post a dataset to the Product resource
 	// alternative you can define a new resource by using .post({data},'OtherResource');
 	// +++
 	base.post=function(data,res) {
@@ -303,51 +332,59 @@ function oData(res,config){
 		return(buildQuery(overrideRes));
 	}
 	
+	
+	
 	// ---------------------+++ INTERNALS +++----------------------------
 	
 	// +++
 	// checks if a route exist and starts the request and adds the parameters
 	// +++
 	function checkRoute(hash) {
-		var tempRoute=(startsWith(hash,'#')?'#':'')+routeName;
-		var isAutoParameter=false;
-		
-		if(endsWith(tempRoute,'?')) {
-			tempRoute=tempRoute.substring(0,tempRoute.length-1)
-			isAutoParameter=true;
-		}	
-		
-		//check if hash is equal route
-		if(!isAutoParameter && tempRoute===hash) { 			
-			//start the request
-			startRouteRequest(routeCallback);
-		}
-
-		//check if we have a auto parameter route (marked with a question mark at the end)
-		if(isAutoParameter && startsWith(hash,tempRoute)) {
-			//auto parameter
-			var routeParameter=hash.substring(tempRoute.length+1).split('\/');
-			var m=0;
-			base.param=[];
-			for(var i=0;i<resource.path.length;i++) {
-				if(resource.path[i].get!==null) {
-					resource.path[i].get=routeParameter[m];
-					m=i;
-				}
-			}
+		for(var r=0;r<routeList.length;r++) {
+			var tempRoute=(startsWith(hash,'#')?'#':'')+routeList[r].routeName;
+			var isAutoParameter=false;
 			
-			for(var i=0;i<resource.queryList.length;i++) {
-				if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format' && resource.queryList[i].name!=='$expand') {
-					if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
-						resource.queryList[i].value=routeParameter[m];
-						base.param.push(routeParameter[m]);
-					}
-					m++;
-				}
+			//if ends with '?' operator substring the question mark and set isAutoParameter to true
+			if(endsWith(tempRoute,'?')) {
+				tempRoute=tempRoute.substring(0,tempRoute.length-1)
+				isAutoParameter=true;
 			}	
+			
+			//debug routes
+			//console.log(hash+" === "+tempRoute);
+			
+			//check if hash is equal route
+			if(!isAutoParameter && tempRoute===hash) { 
+				//start the request
+				startRouteRequest(routeList[r].callback);
+			}
 
-			//start the request if there is a resource defined
-			startRouteRequest(routeCallback);			
+			//check if we have a auto parameter route (marked with a question mark at the end)
+			if(isAutoParameter && startsWith(hash,tempRoute)) {
+				//auto parameter
+				var routeParameter=hash.substring(tempRoute.length+1).split('\/');
+				var m=0;
+				base.param=[];
+				for(var i=0;i<resource.path.length;i++) {
+					if(resource.path[i].get!==null) {
+						resource.path[i].get=routeParameter[m];
+						m=i;
+					}
+				}
+				
+				for(var i=0;i<resource.queryList.length;i++) {
+					if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format' && resource.queryList[i].name!=='$expand') {
+						if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
+							resource.queryList[i].value=routeParameter[m];
+							base.param.push(routeParameter[m]);
+						}
+						m++;
+					}
+				}	
+
+				//start the request if there is a resource defined
+				startRouteRequest(routeList[r].callback);			
+			}
 		}
 	}
 	

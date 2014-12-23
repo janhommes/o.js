@@ -19,6 +19,7 @@
 //o configuration
 // strict mode is disabled to display errors in the console log instead of throwing them as an exception
 
+
 o().config({
 	endpoint:'https://secure.pointsale.de/Service.svc',
 	version:3,
@@ -28,13 +29,13 @@ o().config({
 	//headers:[{name:'X-Custom-Headers', value: 'value'}]
 });
 
-/*o("Product").first().route("",function(data) {
+o("Product").first().route("",function(data) {
 	console.log(data);
 });
 
-o("Product").route("Change",function(data) {
+o("Product").take(20).route(["Change?","Foo","Bar"],function(data) {
 	console.log(data);
-});*/
+});
 
 /*o("Product").take(5).get(function(data) {
 	console.log(data);
@@ -62,6 +63,7 @@ o("Product").route("Change",function(data) {
 	console.log(err);
 });*/
 
+/*
 var test=null
 Q.all([
 	o("Product(1)").get(test),
@@ -71,7 +73,7 @@ Q.all([
 	//console.log(o[1].data);
 	
 	console.log(test);
-});
+});*/
 
 
 
