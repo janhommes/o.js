@@ -4,19 +4,30 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content="">
-		<meta name="author" content="">
+		<meta name="description" content="o.js unit tests with qunit.">
+		<meta name="author" content="Jan Hommes">
 
-		<title>o.js Test page</title>
+		<title>o.js - Test page</title>
 		
-		<script src="q.js"></script>
-		<script src="../o.js"></script>
-		<script src="test.js"></script>
+		<!-- Styles -->
+		<link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.16.0.css">
+		
 	</head>
 	<body>
-		<a href="#Foo">Foo</a><br />
-		<a href="#Bar">Bar</a><br />
-		<a href="#Change/5">Change</a>
-
+		<!-- Content -->
+		<!--a href="#AddProduct">AddProduct</a><br />
+		<a href="#ChangeProduct">ChangeProduct</a><br />
+		<a href="#GetProducts">GetProducts</a><br />-->
+		
+		<!-- qunit -->
+		<div id="qunit"></div>
+		<div id="qunit-fixture"></div>
+		
+		
+		<!-- Scripts -->
+		<script src="q.js"></script>
+		<script src="../o.js"></script>
+		<script src="http://code.jquery.com/qunit/qunit-1.16.0.js"></script>
+		<script src="test.js"></script>
 	</body>
 </html>

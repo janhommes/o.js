@@ -1,11 +1,12 @@
 // +++
-// o.js  v0.3a
+// o.js  v0.4a
+//
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations: 
-// .find() / .first() / .add() / .take() / .skip() / .filter() / .search() (only oData v4) / .remove() / .orderBy() / .orderByDesc() / .select() // .count()
+// .get() / .post() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count()
 //
 // By Jan Hommes 
-// Date: 13.12.2014
+// Date: 05.01.2014
 // +++
 
 function o(res) {
@@ -37,10 +38,17 @@ function o(res) {
 	// headers: An array of additional headers [{name:'headername',value:'headervalue'}]
 	// username: The basic auth username
 	// password: The basic auth password
-	// isAsync: If set to dalse, the request are done sync. Default is true.
+	// isAsync: If set to false, the request are done sync. Default is true.
 	// +++
 	base.config=function(config) {
 		base.oConfig=merge(base.oConfig,config);
+	}
+	
+	// +++
+	// indicates if a endpoint is configured
+	// +++
+	base.isEndpoint=function() {
+		return(base.oConfig.endpoint!==null);
 	}
 	
 	// +++
@@ -80,14 +88,14 @@ function oData(res,config){
 	var resourceList=[]; 		//an array list of all resource used
 	var routeList=[]; 			//an array list of all routes used
 	var isEndpoint=true;		//true if an endpoint is configured
+	var currentPromise=null;	//if promise (Q.js) is used, we hold it here
 	
 	
 	//base external variables 
 	base.data=[];				//holds the data after an callback
 	base.inlinecount=null; 		//if inlinecount is set, here the counting is gold
 	base.param=[];				//in a route with a '?', this array holds all parameter after the '?' separated by a dash
-	base.oConfig=config;		// the internal config, passed over from the o function
-	base.promise=null;			//if promise (Q.js) is used, we hold it here
+	base.oConfig=config;		//the internal config, passed over from the o function
 	
 	
 	// ---------------------+++ PUBLICS +++----------------------------
@@ -145,6 +153,13 @@ function oData(res,config){
 		base.triggerRoute(window.location.hash);
 
 		return(base);
+	}
+	
+	// +++
+	// indicates if a endpoint is configured
+	// +++
+	base.isEndpoint=function() {
+		return(isEndpoint);
 	}
 		
 	// +++
@@ -260,10 +275,10 @@ function oData(res,config){
 	base.get=function(callback) {
 		//start the request
 		if(typeof Q !== 'undefined')
-			base.promise=Q.defer();
+			currentPromise=Q.defer();
 		startRequest(callback,false);
 		if(typeof Q !== 'undefined')
-			return(base.promise.promise);
+			return(currentPromise.promise);
 		else
 			return(base);
 	}
@@ -272,14 +287,14 @@ function oData(res,config){
 	// adds a dataset to the current selected resource 
 	// if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
 	// +++
-	base.save = function(callback) {
+	base.save=function(callback) {
 		//if base.data is set and the user saves, we copying this resource as a Patch
 		//this allows a fast edit mode after a get request
-		if(resource.method==='GET' && base.data!==null)  {
+		if(resource.method==='GET' && resource.data!==null)  {
 			var newResource=deepCopy(resource);
 			//set the method and data
 			newResource.method='PATCH';
-			newResource.data=base.data;
+			newResource.data=resource.data;
 			addNewResource(newResource);
 			
 			/*console.log("------------");
@@ -287,10 +302,17 @@ function oData(res,config){
 			console.log(resource);*/
 		}
 		
-		//start the request
-		base.promise=Q.defer();
-		startRequest(callback,true);
-		return(base.promise.promise);
+		//start the request with promise
+		if(currentPromise) {
+			currentPromise=Q.defer();
+			startRequest(callback,true);
+			return(currentPromise.promise);
+		}
+		//start the request without promise
+		else {
+			startRequest(callback,true);
+			return(base);
+		}
 	}
 	
 	// +++
@@ -430,9 +452,9 @@ function oData(res,config){
 	function startRequest(callback,isSave) {
 		
 		//validate callback
-		if(!callback || typeof callback !=='function') {
+		/*if(!callback || typeof callback !=='function') {
 			callback=function() {  };
-		}
+		}*/
 	
 		//check if resource is defined
 		if(resource===null) {
@@ -587,8 +609,8 @@ function oData(res,config){
 			var querySplit=query.split('&');
 			for(var i=0;i<querySplit.length;i++) {
 				var pair = querySplit[i].split('=');
-				//addQuery(pair[0],querySplit[i]);
-				reqObj.query[pair[0]]=querySplit[i];
+				reqObj.queryList.push({name:pair[0],value:pair[1]});
+				reqObj.query[pair[0]]=reqObj.queryList.length-1;
 			}
 		}
 		
@@ -886,6 +908,7 @@ function oData(res,config){
 					//handling no-content returns
 					if(ajaxRequest.status===204) {
 						//callback.call(tempBase,tempBase.data);
+						//parseResponse(tempBase.data,tempBase);
 					}
 					//dealing with normal response
 					else if(!isBatch) {
@@ -911,15 +934,12 @@ function oData(res,config){
 					}
 					
 					//call the Callback (check for Q-promise)
-					if(tempBase.promise) {
-						tempBase.promise.resolve(tempBase);
+					if(currentPromise) {
+						currentPromise.resolve(tempBase);
 					}
-					callback.call(tempBase,tempBase.data);
-					
-					
-					//call the basic ready method
-					if(tempBase.oConfig.ready) 
-						tempBase.oConfig.ready();
+					if(typeof callback === 'function') {
+						callback.call(tempBase,tempBase.data);
+					}
 				}
 				else {
 					try {
@@ -927,7 +947,7 @@ function oData(res,config){
 							
 						if(JSON && ajaxRequest.responseText!="")
 							errResponse=JSON.parse(ajaxRequest.responseText);
-							
+						
 						if(typeof callback === 'function') {
 								
 							if(errResponse['odata.error']) {
@@ -938,12 +958,19 @@ function oData(res,config){
 								throwEx('Request failed with HTTP status '+ajaxRequest.status+' on ready state '+ajaxRequest.readyState);
 						}
 						else {
-							base.promise.reject(errResponse);
+							if(currentPromise) {
+								currentPromise.reject(errResponse);
+							}
 						}
 					}catch(ex) {
 						throwEx(ajaxRequest.responseText);
 					}
 				}
+				
+				//call the basic ready method
+				if(tempBase.oConfig.ready) 
+					tempBase.oConfig.ready();
+				
 			}
 		}
 		
@@ -997,6 +1024,7 @@ function oData(res,config){
 				else {
 					tempBase.data=data;
 				}
+				resource.data=tempBase.data;
 			}
 			else {
 				tempBase.data=response;
@@ -1010,11 +1038,11 @@ function oData(res,config){
 	// +++
 	function createCORSRequest(method, url) {
 		var xhr = new XMLHttpRequest();
-		if ("withCredentials" in xhr) {
+		if ('withCredentials' in xhr) {
 			// XHR for Chrome/Firefox/Opera/Safari.
 			xhr.open(method, url, base.oConfig.isAsync);
 		} 
-		else if (typeof XDomainRequest != "undefined") {
+		else if (typeof XDomainRequest !== 'undefined') {
 			// XDomainRequest for IE.
 			xhr = new XDomainRequest();
 			xhr.open(method, url);
@@ -1032,11 +1060,11 @@ function oData(res,config){
 		var Base64 = {
 
 			// private property
-			_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+			_keyStr : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
-			// public method for encoding
+			// private method for encoding
 			encode : function (input) {
-				var output = "";
+				var output = '';
 				var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
 				var i = 0;
 
@@ -1071,8 +1099,8 @@ function oData(res,config){
 
 			// private method for UTF-8 encoding
 			_utf8_encode : function (string) {
-				string = string.replace(/\r\n/g,"\n");
-				var utftext = "";
+				string = string.replace(/\r\n/g,'\n');
+				var utftext = '';
 
 				for (var n = 0; n < string.length; n++) {
 
