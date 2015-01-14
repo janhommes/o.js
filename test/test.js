@@ -5,7 +5,7 @@
 // http://qunitjs.com/
 //
 // By Jan Hommes 
-// Date: 07.01.2015
+// Date: 14.01.2015
 // +++
 
 //helper function for debuging
@@ -23,11 +23,12 @@ function printResult(o,data) {
 function configureEndpoint() {
 	if(!o().isEndpoint()) {
 		o().config({
-			endpoint:'https://secure.pointsale.de/Service.svc',
+			//endpoint:'https://secure.pointsale.de/Service.svc',
+			endpoint:'http://localhost:1000/Api.svc',
 			version:3,
 			strictMode:true,
-			//username:'demo@pointsale.de',
-			//password:'demo'
+			username:'psapi',
+			password:'demo'
 			//headers:[{name:'X-Custom-Headers', value: 'value'}]
 		});
 	}
@@ -91,7 +92,7 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('GET Product - no endpoint - query: $filter=Price lt 10 and $top=1', function(assert) {
+	QUnit.test('GET Product - no endpoint - query: $filter=Price lt 100 and $top=1', function(assert) {
 		var done = assert.async();
 		o('https://secure.pointsale.de/Service.svc/Product?$filter=Price lt 100&$top=1').get(function(data) {
 			assert.ok(data.length === 1, printResult(this,data));
@@ -142,8 +143,11 @@ function startEndpointTests() {
 	QUnit.test('GET Product(4) and  Group with q.js promise all - endpoint - no query', function(assert) {
 		var done = assert.async();
 		Q.all([
-			o('Product(4)').get(),
-			o('Group').get()
+			/*o('Product(4)').get(),
+			o('Group').get()*/
+			o('Shop').expand('Address').get(),
+			o('Group').get(),
+			o('Product').filter('IsHighlighted eq true').get()
 		]).then(function(o) {
 			assert.ok(o[0].data.id === 4, printResult(o[0],o[0].data));
 			assert.ok(o[1].data.length >=0, printResult(o[1],o[1].data));

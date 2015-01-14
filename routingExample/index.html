@@ -30,11 +30,11 @@
           <ul class="nav nav-pills pull-right">
             <li role="presentation" data-bind="css: { active: route()==='Home' }" class="active"><a href="#">Home</a></li>
             <li role="presentation" data-bind="css: { active: route()==='Product' }"><a href="#Product">Products</a></li>
-			<li role="presentation" data-bind="css: { active: route()==='Group' }"><a href="#Group">Groups</a></li>
+			<li role="presentation" data-bind="css: { active: route()==='Group' }"><a href="#Group/2/Na/3">Groups</a></li>
             <li role="presentation" data-bind="css: { active: route()==='Card' }"><a href="#Card">Card <span data-bind="text:'('+shoppingCard.items().length+')',visible:shoppingCard.items().length>0"></span></a></li>
           </ul>
         </nav>
-        <h3 class="text-muted">o.js</h3>
+        <h3 class="text-muted" data-bind="text:(shop()?shop().Name:' ')"></h3>
       </div>
 	  
 	  <div class="loading" data-bind="visible:isLoading()"> 
@@ -158,6 +158,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
+	<script src="js/q.js"></script>
 	<script src="../o.js"></script>
 	<script src="js/knockout-3.2.0.js"></script>
 	<script src="js/ko.bindinghandler.currency.js"></script>

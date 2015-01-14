@@ -6,7 +6,7 @@
 // .get() / .post() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count()
 //
 // By Jan Hommes 
-// Date: 05.01.2014
+// Date: 14.01.2014
 // +++
 
 function o(res) {
@@ -80,7 +80,7 @@ function o(res) {
 
 function oData(res,config){
 	base=this;
-	
+
 	// --------------------+++ VARIABLES +++---------------------------
 	
 	//base internal variables
@@ -129,20 +129,6 @@ function oData(res,config){
 						}
 					},100)
 				});
-				//routeList[i].routeName=routes;
-				//routeList[i].callback=callback;
-			
-			
-
-				
-				/*routeList[i].interval=setInterval(function () {
-					if (window.location.hash != prevHash) {
-						prevHash = window.location.hash;
-
-						console.log("CHECK: "+window.location.hash);
-						checkRoute(window.location.hash);
-					} 
-				}, 100);*/
 			}
 			else {
 				throwEx('Routes without a callback are not supported. Please define a function like .route("YourRoute", function() { }).');
@@ -296,10 +282,6 @@ function oData(res,config){
 			newResource.method='PATCH';
 			newResource.data=resource.data;
 			addNewResource(newResource);
-			
-			/*console.log("------------");
-			console.log(resourceList);
-			console.log(resource);*/
 		}
 		
 		//start the request with promise
@@ -376,9 +358,6 @@ function oData(res,config){
 				isAutoParameter=true;
 			}	
 			
-			//debug routes
-			//console.log(hash+" === "+tempRoute);
-			
 			//check if hash is equal route
 			if(!isAutoParameter && tempRoute===hash) { 
 				//start the request
@@ -388,9 +367,9 @@ function oData(res,config){
 			//check if we have a auto parameter route (marked with a question mark at the end)
 			if(isAutoParameter && startsWith(hash,tempRoute)) {
 				//auto parameter
-				var routeParameter=hash.substring(tempRoute.length+1).split('\/');
+				base.param=hash.substring(tempRoute.length+1).split('\/');
 				var m=0;
-				base.param=[];
+				//base.param=[];
 				for(var i=0;i<resource.path.length;i++) {
 					if(resource.path[i].get!==null) {
 						resource.path[i].get=routeParameter[m];
@@ -400,13 +379,25 @@ function oData(res,config){
 				
 				for(var i=0;i<resource.queryList.length;i++) {
 					if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format' && resource.queryList[i].name!=='$expand') {
-						if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
-							resource.queryList[i].value=routeParameter[m];
-							base.param.push(routeParameter[m]);
+						if(typeof base.param[m] !== 'undefined' && base.param[m]!=="") { 
+							
+							//exclude the string params
+							if(resource.queryList[i].name!=='$filter') {
+								resource.queryList[i].value=base.param[m];
+							}
+							//base.param.push(routeParameter[m]);
+							
 						}
 						m++;
 					}
 				}	
+				
+				//format filter if set
+				if(resource.query.$filter!==null) {
+					//console.log(resource.queryList[resource.query.$filter].value);
+					resource.queryList[resource.query.$filter].value=strFormat(resource.queryList[resource.query.$filter].value,base.param);
+					//console.log(resource.queryList[resource.query.$filter].value);
+				}
 
 				//start the request if there is a resource defined
 				startRouteRequest(routeList[r].callback);			
@@ -1051,6 +1042,19 @@ function oData(res,config){
 			xhr = null;
 		}
 		return xhr;
+	}
+	
+	// +++
+	// helper function like string.format in c#. Used in routes
+	// +++
+	function strFormat() {
+		var str = arguments[0];
+		var para = arguments[1];
+		for(var i=0;i<para.length;i++) {
+			var regex = new RegExp("{["+i+"]}","g");
+			str = str.replace(regex,para[i]);
+		}
+		return str;
 	}
 	
 	//+++
