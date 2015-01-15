@@ -532,7 +532,7 @@ function oData(res,config){
 	// +++
 	function expandResource(expandStr) {
 		if(isQuery('$expand')) {
-			resource.queryList[resource.query.$expand]+=(endsWith(resource.queryList[resource.query.$expand],'/')?'':'/')+expandStr;
+			resource.queryList[resource.query.$expand].value+=(endsWith(resource.queryList[resource.query.$expand].value,',')?'':',')+expandStr;
 		}
 		else {
 			addQuery('$expand',expandStr);
