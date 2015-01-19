@@ -23,7 +23,8 @@ function o(res) {
 		headers:[],			//a array of additional headers [{name:'headername',value:'headervalue'}]
 		username:null, 		//the basic auth username
 		password:null,		//the basic auth password
-		isAsync:true		//?
+		isAsync:true,		//?
+		openAjaxRequests:0	//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
 	};
 	
 	// +++
@@ -393,7 +394,7 @@ function oData(res,config){
 				}	
 				
 				//format filter if set
-				if(resource.query.$filter!==null) {
+				if(typeof resource.query.$filter!=="undefined") {
 					//console.log(resource.queryList[resource.query.$filter].value);
 					resource.queryList[resource.query.$filter].value=strFormat(resource.queryList[resource.query.$filter].value,base.param);
 					//console.log(resource.queryList[resource.query.$filter].value);
@@ -881,8 +882,10 @@ function oData(res,config){
 	// +++
 	function startAjaxReq(method,query,data,callback,isBatch,headers) {
 		//if start loading function is set call it
-		if(base.oConfig.start) 
+		if(base.oConfig.start) {
+			base.oConfig.openAjaxRequests++;
 			base.oConfig.start();
+		}
 		
 		//create a CORS ajax Request
 		var ajaxRequest=createCORSRequest(method,query);
@@ -959,8 +962,16 @@ function oData(res,config){
 				}
 				
 				//call the basic ready method
-				if(tempBase.oConfig.ready) 
-					tempBase.oConfig.ready();
+				if(tempBase.oConfig.ready) {
+					tempBase.oConfig.openAjaxRequests--;
+					if(tempBase.oConfig.openAjaxRequests<=0) {
+						tempBase.oConfig.ready();
+					}
+				}
+				//TODO: Add a done function to the config which is executed on every finished ajax request. Test the following:
+				/*if(tempBase.oConfig.then) {
+					tempBase.oConfig.then(tempBase);
+				}*/
 				
 			}
 		}
