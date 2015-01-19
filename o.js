@@ -190,7 +190,7 @@ function oData(res,config){
 	// +++
 	base.first=function() {
 		if(!isQueryThrowEx(['$top','$first'])) {
-			addQuery('$top',1,'$first');
+			addQuery('$top',1,null,'$first');
 		}
 		return(base);
 	}
@@ -201,7 +201,7 @@ function oData(res,config){
 	// +++
 	base.filter=function(filterStr) {
 		//if(!isQueryThrowEx('$first')) {
-			addQuery('$filter',checkEmpty(filterStr));
+			addQuery('$filter',checkEmpty(filterStr),filterStr);
 		//}
 		return(base);
 	}
@@ -368,9 +368,8 @@ function oData(res,config){
 			//check if we have a auto parameter route (marked with a question mark at the end)
 			if(isAutoParameter && startsWith(hash,tempRoute)) {
 				//auto parameter
-				base.param=hash.substring(tempRoute.length+1).split('\/');
+				var routeParameter=hash.substring(tempRoute.length+1).split('\/');
 				var m=0;
-				//base.param=[];
 				for(var i=0;i<resource.path.length;i++) {
 					if(resource.path[i].get!==null) {
 						resource.path[i].get=routeParameter[m];
@@ -380,13 +379,13 @@ function oData(res,config){
 				
 				for(var i=0;i<resource.queryList.length;i++) {
 					if(resource.query[resource.queryList[i].name]!==null && resource.queryList[i].name!=='$format' && resource.queryList[i].name!=='$expand') {
-						if(typeof base.param[m] !== 'undefined' && base.param[m]!=="") { 
+						if(typeof routeParameter[m] !== 'undefined' && routeParameter[m]!=="") { 
 							
 							//exclude the string params
 							if(resource.queryList[i].name!=='$filter') {
-								resource.queryList[i].value=base.param[m];
+								resource.queryList[i].value=routeParameter[m];
 							}
-							//base.param.push(routeParameter[m]);
+							base.param.push(routeParameter[m]);
 							
 						}
 						m++;
@@ -394,11 +393,13 @@ function oData(res,config){
 				}	
 				
 				//format filter if set
-				if(typeof resource.query.$filter!=="undefined") {
-					//console.log(resource.queryList[resource.query.$filter].value);
-					resource.queryList[resource.query.$filter].value=strFormat(resource.queryList[resource.query.$filter].value,base.param);
-					//console.log(resource.queryList[resource.query.$filter].value);
+				if(typeof resource.query.$filter!=='undefined') {
+					resource.queryList[resource.query.$filter].value=strFormat(resource.queryList[resource.query.$filter].original,routeParameter);
 				}
+				
+				//set the base.param to make it accesable from extern.
+				base.param=[];
+				base.param=routeParameter;
 
 				//start the request if there is a resource defined
 				startRouteRequest(routeList[r].callback);			
@@ -533,7 +534,7 @@ function oData(res,config){
 	// +++
 	function expandResource(expandStr) {
 		if(isQuery('$expand')) {
-			resource.queryList[resource.query.$expand].value+=(endsWith(resource.queryList[resource.query.$expand].value,',')?'':',')+expandStr;
+			resource.queryList[resource.query.$expand]+=(endsWith(resource.queryList[resource.query.$expand],'/')?'':'/')+expandStr;
 		}
 		else {
 			addQuery('$expand',expandStr);
@@ -629,8 +630,9 @@ function oData(res,config){
 	// +++
 	// internal function to add a query parameter
 	// +++
-	function addQuery(queryName,queryValue,queryPseudonym) {
-		resource.queryList.push({name:queryName,value:queryValue});
+	function addQuery(queryName,queryValue,queryOriginal,queryPseudonym) {
+		queryOriginal=queryOriginal || null;
+		resource.queryList.push({name:queryName,value:queryValue,original:queryOriginal});
 		resource.query[queryPseudonym || queryName]=resource.queryList.length-1;
 	}
 	
