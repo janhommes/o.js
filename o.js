@@ -218,6 +218,14 @@ function oData(res,config){
 	}
 	
 	// +++
+	// ?
+	// +++
+	base.select=function(selectStr) {
+		addQuery('$select',checkEmpty(selectStr));
+		return(base);
+	}
+	
+	// +++
 	// returns the first object which is found
 	// +++
 	base.count=function() {
@@ -965,6 +973,7 @@ function oData(res,config){
 				
 				//call the basic ready method
 				if(tempBase.oConfig.ready) {
+					console.log(openAjaxRequests);
 					tempBase.oConfig.openAjaxRequests--;
 					if(tempBase.oConfig.openAjaxRequests<=0) {
 						tempBase.oConfig.ready();
