@@ -334,6 +334,9 @@ function oData(res,config){
 		//add the resource
 		if(res)
 			addNewResource(res);
+
+		if(!resource.path[0] || !resource.path[0].get)
+			throwEx('Bulk updates are not supported. You need to query a unique resource with find() to patch/put it.');
 		
 		//set the method and data
 		resource.method='PATCH';
@@ -341,6 +344,25 @@ function oData(res,config){
 
 		return(base);
 	}	
+	
+	// +++
+	// does a delete with the given Data to the current dataset
+	// +++
+	base.delete=function(res) {
+	
+		//add the resource
+		if(res)
+			addNewResource(res);
+
+		if(!resource.path[0] || !resource.path[0].get)
+			throwEx('Bulk deletes are not supported. You need to query a unique resource with find() to delete it.');
+		
+		//set the method
+		resource.method='DELETE';
+		//resource.data=null;
+
+		return(base);
+	}
 	
 	// +++
 	// Returns the current query 

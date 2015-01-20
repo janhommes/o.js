@@ -23,12 +23,12 @@ function printResult(o,data) {
 function configureEndpoint() {
 	if(!o().isEndpoint()) {
 		o().config({
-			//endpoint:'https://secure.pointsale.de/Service.svc',
-			endpoint:'http://localhost:1000/Api.svc',
+			endpoint:'https://secure.pointsale.de/Service.svc',
+			//endpoint:'http://localhost:1000/Api.svc',
 			version:3,
 			strictMode:true,
-			username:'psapi',
-			password:'demo'
+			/*username:'psapi',
+			password:'demo'*/
 			//headers:[{name:'X-Custom-Headers', value: 'value'}]
 		});
 	}
@@ -70,10 +70,26 @@ QUnit.test('GET Product - no endpoint - query: $top=1', function(assert) {
 QUnit.test('CONFIG PS - endpoint', function(assert) {
 	configureEndpoint();
 	assert.ok(o().isEndpoint(), 'Passed! Endpoint is: '+o('').query());
-	startEndpointTests();
+	createTestData();
 });
 
 // ------------------------------------------------- Endpoint tests -------------------------------------------------------------
+
+//create test data with a test
+var testProduct=null;
+function createTestData() {
+	QUnit.test('POST Product as the test product - endpoint - no query', function(assert) {
+		var done = assert.async();
+		o('Product').post({Name:'Yeah',Price:'99.00'}).save(function(o) {
+			assert.ok(o.Name=='Yeah', printResult(this,o));
+			done();
+			testProduct=o;
+			console.log(testProduct);
+			startEndpointTests();
+		});
+	});
+}
+	
 // Start this test if the endpoint is configured
 function startEndpointTests() {
 	QUnit.test('GET Product - endpoint - no query', function(assert) {
@@ -100,18 +116,18 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('GET Product(4) - no endpoint - query: $filter=Price lt 100', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') - no endpoint - query: $filter=Price lt 100', function(assert) {
 		var done = assert.async();
-		o('https://secure.pointsale.de/Service.svc/Product(4)?$filter=Price lt 100').get(function(data) {
-			assert.ok(data.id === 4, printResult(this,data));
+		o('https://secure.pointsale.de/Service.svc/Product('+testProduct.id+')?$filter=Price lt 100').get(function(data) {
+			assert.ok(data.id === testProduct.id, printResult(this,data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product(4) - endpoint - query: $filter=Price lt 100', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') - endpoint - query: $filter=Price lt 100', function(assert) {
 		var done = assert.async();
-		o('Product(4)?$filter=Price lt 100').get(function(data) {
-			assert.ok(data.id === 4, printResult(this,data));
+		o('Product('+testProduct.id+')?$filter=Price lt 100').get(function(data) {
+			assert.ok(data.id === testProduct.id, printResult(this,data));
 			done();
 		});
 	});
@@ -132,41 +148,38 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('GET Product(4) with q.js promise - endpoint - no query', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') with q.js promise - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('Product(4)').get().then(function(o) {
-			assert.ok(o.data.id === 4, printResult(o,o.data));
+		o('Product('+testProduct.id+')').get().then(function(o) {
+			assert.ok(o.data.id === testProduct.id, printResult(o,o.data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product(4) and  Group with q.js promise all - endpoint - no query', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') and  Group with q.js promise all - endpoint - no query', function(assert) {
 		var done = assert.async();
 		Q.all([
-			/*o('Product(4)').get(),
-			o('Group').get()*/
-			o('Shop').expand('Address').get(),
-			o('Group').get(),
-			o('Product').filter('IsHighlighted eq true').get()
+			o('Product('+testProduct.id+')').get(),
+			o('Product?$filter=Price lt 100')
 		]).then(function(o) {
-			assert.ok(o[0].data.id === 4, printResult(o[0],o[0].data));
+			assert.ok(o[0].data.id==testProduct.id, printResult(o[0],o[0].data));
 			assert.ok(o[1].data.length >=0, printResult(o[1],o[1].data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product(2) and PATCH Product(2), change and save() it with q.js promise - endpoint - no query', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') and PATCH Product(2), change and save() it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();	
 		var name='Test_'+Math.random();
 		
-		o('Product(2)').get().then(function(o) {
+		o('Product('+testProduct.id+')').get().then(function(o) {
 			o.data.Name=name;
-			assert.ok(o.data.id===2, printResult(o,o.data));
+			assert.ok(o.data.id===testProduct.id, printResult(o,o.data));
 			done1();
 			return(o.save());
 		}).then(function(o) {
-			assert.ok(o.data.id === 2 && o.data.Name===name, printResult(o,o.data));
+			assert.ok(o.data.id === testProduct.id && o.data.Name===name, printResult(o,o.data));
 			done2();
 		});
 		/*.fail(function(err) {
@@ -174,17 +187,17 @@ function startEndpointTests() {
 		});*/
 	});
 	
-	QUnit.test('GET Product(2) and PATCH Product(2), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
+	QUnit.test('GET Product('+testProduct.id+') and PATCH Product(2), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();	
 		var name='Test_'+Math.random();
 		
-		o('Product(2)').get().then(function(o) {
+		o('Product('+testProduct.id+')').get().then(function(o) {
 			o.data.Name=name;
 			//this is not allowed, must be:
 			//o.data.Price='12.12';
 			o.data.Price=12.12;
-			assert.ok(o.data.id===2, printResult(o,o.data));
+			assert.ok(o.data.id===testProduct.id, printResult(o,o.data));
 			done1();
 			return(o.save());
 		}).then(function(o) {
@@ -195,12 +208,37 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('PATCH Product(1) - endpoint - no query', function(assert) {
+	QUnit.test('PATCH Product('+testProduct.id+') - endpoint - no query', function(assert) {
 		var done = assert.async();
 		var name='Test_'+Math.random();
-		o('Product(1)').patch({Name:name}).save(function(data) {
+		o('Product('+testProduct.id+')').patch({Name:name}).save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
 			done();
+		});
+	});
+	
+	QUnit.test('PATCH Product and provoke error because of bulk updates are not supported - endpoint - no query', function(assert) {
+		var done = assert.async();
+		var name='Test_'+Math.random();
+		try {
+			o('Product').patch({Name:name}).save(function(data) {
+								
+			});
+		}
+		catch(ex) {
+			assert.ok(true, ex);
+			done();
+		}
+	});
+	
+	
+	//DELETES the test data, move it to the end of this file!
+	QUnit.test('DELETE Product('+testProduct.id+') - endpoint - no query', function(assert) {
+		var done = assert.async();
+		var name='Test_'+Math.random();
+		o('Product('+testProduct.id+')').delete().save(function(data) {
+			assert.ok(data.length===0, printResult(this,data));
+			done();			
 		});
 	});
 }
