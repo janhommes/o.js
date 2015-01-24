@@ -207,6 +207,24 @@ function oData(res,config){
 	}
 	
 	// +++
+	// add a filter by defining the value and a list to compare
+	// REMARK: http://www.sitepoint.com/javascript-fast-string-concatenation/
+	// TODO: - replace expressions like ne, eq with the mathematical equivalent and add it as parameter to the function call
+	//       - replace expressions for logik like or, and, xor a.s.o with the math equivalent and add it as parameter to the function call
+	// +++
+	base.filterByList=function(value, filterList) {
+		if(isArray(filterList)){
+			var l=filterList.length, i=0, filterStr="", arr=[];
+			for(i;i<l;++i){
+				arr[i] = '('+value+' ne '+filterList[i][value]+')';
+			}
+			filterStr=arr.join(' and ');
+			addQuery('$filter',checkEmpty(filterStr),filterStr);
+		}
+		return (base);
+	}
+	
+	// +++
 	// add a filter
 	//TODO: parse a JavaScript function to it)
 	// +++
