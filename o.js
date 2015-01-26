@@ -89,7 +89,8 @@ function oData(res,config){
 	var resourceList=[]; 		//an array list of all resource used
 	var routeList=[]; 			//an array list of all routes used
 	var isEndpoint=true;		//true if an endpoint is configured
-	var currentPromise=null;	//if promise (Q.js) is used, we hold it here
+	var currentPromise = null;	//if promise (Q.js) is used, we hold it here
+	var overideLoading = null;  //if set, this resource call don't use the global loading function
 	
 	
 	//base external variables 
@@ -123,7 +124,6 @@ function oData(res,config){
 					routeName:routes[i],
 					callback:callback,
 					interval:setInterval(function () {
-						//console.log("interval?");
 						if (window.location.hash != prevHash) {
 							prevHash = window.location.hash;
 							checkRoute(window.location.hash);
@@ -212,7 +212,7 @@ function oData(res,config){
 	// +++
 	base.orderBy=function(orderStr) {
 		//if(!isQueryThrowEx('$first')) {
-			addQuery('$orderBy',checkEmpty(orderStr));
+			addQuery('$orderby',checkEmpty(orderStr));
 		//}
 		return(base);
 	}
@@ -230,7 +230,8 @@ function oData(res,config){
 	// +++
 	base.count=function() {
 		removeQuery('$format');
-		resource.appending='$count';
+		resource.appending = '$count';
+		//addQuery('$count', 'count');
 		return(base);
 	}	
 	
@@ -260,6 +261,20 @@ function oData(res,config){
 	base.expand=function(expandStr) {
 		expandResource(expandStr);
 		return(base);
+	}
+
+    // +++
+    // set to false to disabel loading, set two functions to overide loading
+    // +++
+	base.loading = function (func1, func2) {
+	    func2 = func2 || func1;
+	    if (!func1)
+	        overideLoading = [function () { }, function () { }];
+	    else {
+	        overideLoading = [func1, func2];
+	    }
+	    
+	    return (base);
 	}
 	
 	
@@ -311,9 +326,12 @@ function oData(res,config){
 	// o("Product/ProductGroup").post(...) will post a dataset to the Product resource
 	// alternative you can define a new resource by using .post({data},'OtherResource');
 	// +++
-	base.post=function(data,res) {
+	base.post = function (data, res) {
+	    //test: remove the $filter attribute
+	    removeQuery('format');
+
 		//add a new resource as a copy of the current resource // or use the given resource
-		res=res || resource.path[0].resource;
+	    res = res || resource.path[0].resource;
 
 		//add the resource
 		addNewResource(res);
@@ -495,8 +513,8 @@ function oData(res,config){
 			//check if we only have one request
 			if(countMethod(['POST','PATCH','DELETE'])<=1 && isSave) {
 				startAjaxReq(resource.method,buildQuery(),stringify(resource.data),callback,false,
-					[{name:'Accept',value:'application/json;'},
-					{name:'Content-Type',value:'application/json;'},
+					[{ name: 'Accept', value: 'application/json' },
+					{name:'Content-Type',value:'application/json'},
 					{name:'Content-Length',value:stringify(resource.data).length}]
 				);
 				//because the post/put/delete is done, we remove the resource to assume that it will not be posted again
@@ -523,7 +541,6 @@ function oData(res,config){
 	// starts a request triggered by a route
 	// +++
 	function startRouteRequest(callback) {
-		//console.log(resource.path[0].resource);
 		if(resource.path[0].resource!=="")
 			startRequest(callback);
 		else {
@@ -670,17 +687,17 @@ function oData(res,config){
 	// internal function to remove a query parameter
 	// +++
 	function removeQuery(queryName) {
-		resource.queryList.splice(resource.query[queryName],1);
-		resource.query[queryName]=null;
+	    //resource.queryList.splice(resource.query[queryName], 1);
+	    resource.query[queryName]=null;
 	}
 	
 	// +++
 	// internal function which builds the url get parameter
 	// +++
 	function getQuery() {
-		var tempStr='';
-		for(queryName in resource.query) {
-			if(resource.query.hasOwnProperty(queryName) && resource.query[queryName]!=null) {
+	    var tempStr = '';
+		for (queryName in resource.query) {
+		    if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
 				tempStr+='&'+resource.queryList[resource.query[queryName]].name+'='+resource.queryList[resource.query[queryName]].value;
 			}
 		}
@@ -763,15 +780,15 @@ function oData(res,config){
 	function tryParseInt(str,defaultValue) {
 		if(typeof str === 'number')
 			return(str);
-		 var retValue = defaultValue;
-		 if(str) {
+		var retValue = defaultValue;
+		if(str) {
 			 if(str.length > 0) {
-				 if (!isNaN(str)) {
+			     if (!isNaN(str)) {
 					 retValue = parseInt(str);
 				 }
 			 }
-		 }
-		 return(retValue);
+		}
+		return(retValue);
 	}
 	
 	// +++
@@ -914,10 +931,13 @@ function oData(res,config){
 	// +++
 	function startAjaxReq(method,query,data,callback,isBatch,headers) {
 		//if start loading function is set call it
-		if(base.oConfig.start) {
+	    if (base.oConfig.start && overideLoading==null) {
 			base.oConfig.openAjaxRequests++;
 			base.oConfig.start();
-		}
+	    }
+	    if (overideLoading && overideLoading[0]) {
+	        overideLoading[0](true);
+	    }
 		
 		//create a CORS ajax Request
 		var ajaxRequest=createCORSRequest(method,query);
@@ -937,7 +957,7 @@ function oData(res,config){
 						//parseResponse(tempBase.data,tempBase);
 					}
 					//dealing with normal response
-					else if(!isBatch) {
+					else if (!isBatch) {
 						parseResponse(ajaxRequest.responseText,tempBase);
 						//callback.call(tempBase,tempBase.data);
 					}
@@ -994,12 +1014,14 @@ function oData(res,config){
 				}
 				
 				//call the basic ready method
-				if(tempBase.oConfig.ready) {
-					console.log(openAjaxRequests);
+				if (tempBase.oConfig.ready && overideLoading == null) {
 					tempBase.oConfig.openAjaxRequests--;
 					if(tempBase.oConfig.openAjaxRequests<=0) {
 						tempBase.oConfig.ready();
 					}
+				}
+				if (overideLoading && overideLoading[1]) {
+				    overideLoading[1](false);
 				}
 				//TODO: Add a done function to the config which is executed on every finished ajax request. Test the following:
 				/*if(tempBase.oConfig.then) {
@@ -1036,14 +1058,13 @@ function oData(res,config){
 	// this function parses a normal response to a JSON response
 	// +++
 	function parseResponse(response,tempBase) {
-		var count = tryParseInt(response, null); 
-		if(count) {
-			//base.data=count;
-			return(count);
+	    var count = tryParseInt(response, -1);
+		if(count!==-1) {
+		    tempBase.data=count;
 		}
 		else {
-			if(JSON) {
-				var data=JSON.parse(response);
+		    if (JSON) {
+			    var data = JSON.parse(response);
 				if(data.hasOwnProperty('value')) {
 					if(isQuery(['$first']) && data.value.length && data.value.length<=1) {
 						tempBase.data=data.value[0];
@@ -1054,7 +1075,6 @@ function oData(res,config){
 					if(data.hasOwnProperty('odata.count')) {
 						tempBase.inlinecount=data['odata.count'];
 					}
-					//return(data.value);
 				}
 				else {
 					tempBase.data=data;
