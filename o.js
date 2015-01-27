@@ -1,12 +1,12 @@
 // +++
-// o.js  v0.4a
+// o.js  v0.5a
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations: 
-// .get() / .post() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count()
+// .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() 
 //
 // By Jan Hommes 
-// Date: 14.01.2014
+// Date: 27.01.2014
 // +++
 
 function o(res) {
@@ -16,7 +16,7 @@ function o(res) {
 	base.oConfig  = base.oConfig || {
 		endpoint:null,
 		json:true, 			//currently only json is supported
-		version:3, 			//currently only tested for Version 3, this config is not used at the moment, but can be used for special version futures
+		version:3, 			//currently only tested for Version 3 and 4
 		strictMode:true, 	//strict mode throws exception, non strict mode only logs them
 		start:null, 		//a function which is executed on loading
 		ready:null,			//a function which is executed on ready
@@ -236,13 +236,21 @@ function oData(res,config){
 	}	
 	
 	// +++
-	// returns the first object which is found
+	// adds a inline count
 	// +++
-	base.inlineCount=function(countOption) {
-		countOption=countOption||'allpages';
-		if(!isQueryThrowEx('$inlinecount')) {
-			addQuery('$inlinecount',countOption);
-		}
+	base.inlineCount = function (countOption) {
+	    if (oConfig.version == 4) {
+	        countOption = countOption || 'true';
+	        if (!isQueryThrowEx('$count')) {
+	            addQuery('$count', countOption);
+	        }
+	    }
+	    else {
+	        countOption = countOption || 'allpages';
+	        if (!isQueryThrowEx('$inlinecount')) {
+	            addQuery('$inlinecount', countOption);
+	        }
+	    }
 		return(base);
 	}
 	
@@ -388,10 +396,57 @@ function oData(res,config){
 	base.query = function(overrideRes) {
 		return(buildQuery(overrideRes));
 	}
+
+    // +++
+    // search for the degined columns
+    // +++
+	base.search = function (searchColumns, searchWord, searchFunc, isSupported) {
+
+	    var searchStr = buildSearchFilter(searchColumns, searchWord, searchFunc);
+
+	    if (oConfig.version == 4 && isSupported) {
+	        if (!isQueryThrowEx('$search')) {
+	            addQuery('$search', searchWord, searchWord);
+	        }
+	    }
+	    else {
+	        if (!isQueryThrowEx('$filter')) {
+	            addQuery('$filter', searchStr, searchStr, '$search');
+	        }
+	    }
+	    return (base);
+	}
 	
 	
 	
-	// ---------------------+++ INTERNALS +++----------------------------
+    // ---------------------+++ INTERNALS +++----------------------------
+
+    // +++
+    //
+    // ++++
+	function buildSearchFilter(searchColumns, searchWord, searchFunc) {
+	    var searchStr = "";
+	    var searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
+	    var searchWordSplit = searchWord.split(' ');
+
+	    if (searchFunc === 'contains' || searchFunc === 'substringof') {
+	        for (var i = 0; i < searchColumns.length; i++) {
+	            searchStr += 'or (';
+	            var searchWordStr = "";
+	            for (var m = 0; m < searchWordSplit.length; m++) {
+	                searchWordStr += 'and ' + searchFunc + '(' + searchColumns[i] + ', \'' + searchWordSplit[m] + '\')';
+	            }
+	            searchStr += searchWordStr.substring(3, searchWordStr.length) + ')';
+	        }
+	    }
+	    else {
+	        for (var i = 0; i < searchColumns.length; i++) {
+	            searchStr += 'or (' + searchColumns[i] + ' ' + searchFunc + ' \'' + searchWord + '\')';
+	        }
+	    }
+	    searchStr = searchStr.substring(2, searchStr.length);
+	    return (searchStr);
+	}
 	
 	// +++
 	// checks if a route exist and starts the request and adds the parameters
@@ -443,6 +498,15 @@ function oData(res,config){
 				//format filter if set
 				if(typeof resource.query.$filter!=='undefined') {
 					resource.queryList[resource.query.$filter].value=strFormat(resource.queryList[resource.query.$filter].original,routeParameter);
+				}
+                //format a search if set -> Splits a given Parameter to extend the search
+				else if (typeof resource.query.$search !== 'undefined') {
+				    var split = routeParameter[0].split(' ');
+				    resource.queryList[resource.query.$search].value = "";
+				    for (var i = 0; i < split.length; i++) {
+				        resource.queryList[resource.query.$search].value += '(' + strFormat(resource.queryList[resource.query.$search].original, split[i]) + ') and ';
+				    }
+				    resource.queryList[resource.query.$search].value = resource.queryList[resource.query.$search].value.substring(0, resource.queryList[resource.query.$search].value.length - 4)
 				}
 				
 				//set the base.param to make it accesable from extern.
@@ -1072,8 +1136,8 @@ function oData(res,config){
 					else {
 						tempBase.data=data.value;
 					}
-					if(data.hasOwnProperty('odata.count')) {
-						tempBase.inlinecount=data['odata.count'];
+					if (data.hasOwnProperty('odata.count') || data.hasOwnProperty('@odata.count')) {
+					    tempBase.inlinecount = data['odata.count'] || data['@odata.count'];
 					}
 				}
 				else {
@@ -1114,9 +1178,16 @@ function oData(res,config){
 	function strFormat() {
 		var str = arguments[0];
 		var para = arguments[1];
-		for(var i=0;i<para.length;i++) {
-			var regex = new RegExp("{["+i+"]}","g");
-			str = str.replace(regex,para[i]);
+        
+		if (para.lenght) {
+		    for (var i = 0; i < para.length; i++) {
+		        var regex = new RegExp("{[" + i + "]}", "g");
+		        str = str.replace(regex, para[i]);
+		    }
+		}
+		else {
+		    var regex = new RegExp("{[0]}", "g");
+		    str = str.replace(regex, para);
 		}
 		return str;
 	}
