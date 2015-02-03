@@ -6,7 +6,7 @@
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() 
 //
 // By Jan Hommes 
-// Date: 30.01.2014
+// Date: 03.02.2014
 // +++
 
 function o(res) {
@@ -23,7 +23,8 @@ function o(res) {
         headers: [],		//a array of additional headers [{name:'headername',value:'headervalue'}]
         username: null, 	//the basic auth username
         password: null,		//the basic auth password
-        isAsync: true,		//?
+        isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth
+        isCors:true,        //set this to false to disable CORS
         openAjaxRequests: 0	//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
     };
 
@@ -86,18 +87,19 @@ function oData(res, config) {
 
     //base internal variables
     var resource = null; 			//the main resource string
-    var resourceList = []; 		//an array list of all resource used
+    var resourceList = []; 		    //an array list of all resource used
     var routeList = []; 			//an array list of all routes used
-    var isEndpoint = true;		//true if an endpoint is configured
-    var currentPromise = null;	//if promise (Q.js) is used, we hold it here
-    var overideLoading = null;  //if set, this resource call don't use the global loading function
+    var isEndpoint = true;		    //true if an endpoint is configured
+    var currentPromise = null;	    //if promise (Q.js) is used, we hold it here
+    var overideLoading = null;      //if set, this resource call don't use the global loading function
+    var isXDomainRequest = false;    //this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
     var opertionMapping = {
         '==': 'eq',
         '===': 'eq',
         '!=': 'ne',
         '!==': 'ne',
         '>': 'gt',
-        '>=':'ge',
+        '>=': 'ge',
         '<': 'lt',
         '<=': 'le',
         '&&': 'and',
@@ -107,8 +109,8 @@ function oData(res, config) {
         '-': 'sub',
         '*': 'mul',
         '/': 'div',
-        '%':'mod'
-        };
+        '%': 'mod'
+    };
 
 
     //base external variables 
@@ -180,7 +182,7 @@ function oData(res, config) {
     // returns the object with the given id
     // +++
     base.find = function (getId) {
-        resource.path[resource.path.length - 1].get = checkIntAndPos(getId, 'get()');
+        resource.path[resource.path.length - 1].get = checkIntAndPos(getId, 'find()');
         return (base);
     }
 
@@ -219,8 +221,9 @@ function oData(res, config) {
     //TODO: parse a JavaScript function to it)
     // +++
     base.filter = function (filterStr) {
-        if(!isQueryThrowEx('$filter')) {
-            addQuery('$filter', checkEmpty(jsToOdata(filterStr)), filterStr);
+        if (!isQueryThrowEx('$filter')) {
+            var value = checkEmpty(jsToOdata(filterStr));
+            addQuery('$filter', value, value);
         }
         return (base);
     }
@@ -393,7 +396,7 @@ function oData(res, config) {
     // +++
     // does a delete with the given Data to the current dataset
     // +++
-    base.delete = function (res) {
+    base['delete'] = function (res) {
 
         //add the resource
         if (res)
@@ -484,7 +487,7 @@ function oData(res, config) {
         var searchStr = "";
         var searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
         var searchWordSplit = searchWord.split(' ');
-        var isNotExactSearch=(searchFunc === 'contains' || searchFunc === 'substringof');
+        var isNotExactSearch = (searchFunc === 'contains' || searchFunc === 'substringof');
 
         var columnArr = [];
         for (var i = 0; i < searchColumns.length; i++) {
@@ -500,28 +503,6 @@ function oData(res, config) {
             columnArr.push('(' + wordArr.join('and') + ')');
         }
         return (columnArr.join('or'));
-
-
-
-
-
-        /*if (searchFunc === 'contains' || searchFunc === 'substringof') {
-            for (var i = 0; i < searchColumns.length; i++) {
-                searchStr += 'or (';
-                var searchWordStr = "";
-                for (var m = 0; m < searchWordSplit.length; m++) {
-                    searchWordStr += 'and ' + searchFunc + '(' + searchColumns[i] + ', \'' + searchWordSplit[m] + '\')';
-                }
-                searchStr += searchWordStr.substring(3, searchWordStr.length) + ')';
-            }
-        }
-        else {
-            for (var i = 0; i < searchColumns.length; i++) {
-                searchStr += 'or (' + searchColumns[i] + ' ' + searchFunc + ' \'' + searchWord + '\')';
-            }
-        }*/
-        //searchStr = searchStr.substring(2, searchStr.length);
-        //return (searchStr);
     }
 
     // +++
@@ -546,9 +527,9 @@ function oData(res, config) {
             }
 
             //check if we have a auto parameter route (marked with a question mark at the end)
-            if (isAutoParameter && startsWith(hash, (endsWith(tempRoute, '/')?tempRoute:tempRoute+'/'))) {
+            if (isAutoParameter && startsWith(hash, (endsWith(tempRoute, '/') ? tempRoute : tempRoute + '/'))) {
                 //auto parameter
-                var routeParameter = hash.substring(tempRoute.length+1).split('\/');
+                var routeParameter = hash.substring(tempRoute.length + 1).split('\/');
                 var m = 0;
 
                 //for get direct (.find())
@@ -578,7 +559,7 @@ function oData(res, config) {
                 if (typeof resource.query.$filter !== 'undefined') {
                     resource.queryList[resource.query.$filter].value = strFormat(resource.queryList[resource.query.$filter].original, routeParameter);
                 }
-                //format a search if set -> Splits a given Parameter to extend the search
+                    //format a search if set -> Splits a given Parameter to extend the search
                 else if (typeof resource.query.$search !== 'undefined') {
                     var split = [routeParameter[0]];
                     if (typeof routeParameter[0] === 'string')
@@ -621,7 +602,7 @@ function oData(res, config) {
         }
         return (str);
     }
-    
+
 
     // +++
     // adds an new resource to the resouce list
@@ -647,7 +628,6 @@ function oData(res, config) {
     // starts a request to the service
     // +++
     function startRequest(callback, isSave) {
-
         //validate callback
         /*if(!callback || typeof callback !=='function') {
 			callback=function() {  };
@@ -658,17 +638,21 @@ function oData(res, config) {
             throwEx('You must define a resource to perform a get(), post(), put() or delete() function. Define a resource with o("YourODataResource").');
         }
 
+        //create a CORS ajax Request
+
         if (resourceList.length === 0 && !isSave) {
-            startAjaxReq('GET', buildQuery(), null, callback, false);
+            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, false);
         }
-            //else check if we need to make a $batch request
+        //else check if we need to make a $batch request
         else {
             //add the last resource to the history
             resourceList.push(resource);
 
-            //check if we only have one request
-            if (countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) {
-                startAjaxReq(resource.method, buildQuery(), stringify(resource.data), callback, false,
+            //build a ajax request
+            var ajaxReq=createCORSRequest(resource.method, buildQuery());
+            //check if we only have one request or we need to force batch because of isXDomainRequest
+            if ((countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) && !isXDomainRequest) {
+                startAjaxReq(ajaxReq, stringify(resource.data), callback, false,
 					[{ name: 'Accept', value: 'application/json' },
 					{ name: 'Content-Type', value: 'application/json' },
 					{ name: 'Content-Length', value: stringify(resource.data).length }]
@@ -676,15 +660,16 @@ function oData(res, config) {
                 //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                 removeResource(['POST', 'PATCH', 'DELETE']);
             }
-                //do a $batch request
+            //do a $batch request
             else {
                 //generate a uui for this batch
                 var guid = generateUUID();
                 //start the request
-                startAjaxReq('POST', base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch', buildBatchBody(guid, isSave), callback, true,
-					//add the necessary headers
-					[{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }]
-				);
+                startAjaxReq(createCORSRequest('POST', base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch'), buildBatchBody(guid, isSave), callback, true,
+                     //add the necessary headers
+                    [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }]
+                );
+                //{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }
                 if (isSave) {
                     //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                     removeResource(['POST', 'PUT', 'DELETE']);
@@ -1001,7 +986,7 @@ function oData(res, config) {
     function isArray(obj) {
         //fall back for older browsers
         if (typeof Array.isArray === 'undefined') {
-            return (Object.toString.call(obj) === '[object Array]');
+            return (obj.toString() === '[object Array]');
         }
         //the checking
         return (Array.isArray(obj));
@@ -1047,7 +1032,6 @@ function oData(res, config) {
             body += '--batch_' + batchGuid + '\n';
             body += 'Content-Type: multipart/mixed; boundary=changeset_' + changsetGuid + '\n\n';
         }
-
         //loop over the resourceList
         for (var i = 0; i < resourceList.length; i++) {
             var res = resourceList[i];
@@ -1063,11 +1047,12 @@ function oData(res, config) {
             }
                 //do POST if the base.save() function was called
                 //TODO:  || res.method==='PUT' || res.method==='DELETE'
-            else if ((res.method === 'POST') && isSave) {
+            else if ((res.method === 'POST' || res.method === 'PUT' || res.method === 'PATCH' || res.method === 'DELETE') && isSave) {
                 var stringData = stringify(res.data);
                 body += '--changeset_' + changsetGuid + '\n';
                 body += 'Content-Type: application/http\n';
-                body += 'Content-Transfer-Encoding: binary\n\n';
+                body += 'Content-Transfer-Encoding: binary\n';
+                body += 'Content-ID:' + i+1 + '\n\n';         //This ID can be referenced $1/Customer 
                 body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
                 body += 'Host: ' + base.oConfig.endpoint + '\n';
                 body += 'Content-Type: application/json\n';
@@ -1086,7 +1071,7 @@ function oData(res, config) {
     // +++
     // start a ajax request. data should be null if nothing to send
     // +++
-    function startAjaxReq(method, query, data, callback, isBatch, headers) {
+    function startAjaxReq(ajaxRequest, data, callback, isBatch, headers) {
         //if start loading function is set call it
         if (base.oConfig.start && overideLoading == null) {
             base.oConfig.openAjaxRequests++;
@@ -1096,13 +1081,22 @@ function oData(res, config) {
             overideLoading[0](true);
         }
 
-        //create a CORS ajax Request
-        var ajaxRequest = createCORSRequest(method, query);
-
         //save the base element into a temp base element
         var tempBase = base;
 
-        // The on ready state event handler
+        // for ie 9 and 8
+        if (isXDomainRequest) {
+            ajaxRequest.onload = function (e) {
+                ajaxRequest.readyState = 4;
+                ajaxRequest.status = 200;
+                ajaxRequest.onreadystatechange();
+            };
+            ajaxRequest.onerror = function (e) {
+                ajaxRequest.readyState = 0;
+                ajaxRequest.status = 400;
+                ajaxRequest.onreadystatechange();
+            };
+        }
         ajaxRequest.onreadystatechange = function () {
             //check the http status
             if (ajaxRequest.readyState === 4) {
@@ -1191,21 +1185,28 @@ function oData(res, config) {
         //check if we need to preflight the request (only if basic auth and isAsync)
         if (base.oConfig.username && base.oConfig.password) {
             //ajaxRequest.withCredentials=true;
+            if (isXDomainRequest) {
+                throwEx('CORS is not supported for IE <= 9. Try to set isCors:false in the OData config if you do not need CORS support.');
+            }
             ajaxRequest.setRequestHeader('Authorization', 'Basic ' + encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
         }
 
-        if (headers) {
-            //normal headers
-            for (var i = 0; i < headers.length; i++) {
-                ajaxRequest.setRequestHeader(headers[i].name, headers[i].value);
+        //check if not IE 9 or 8 
+        if (!isXDomainRequest) {
+            //set headers
+            if (headers) {
+                //normal headers
+                for (var i = 0; i < headers.length; i++) {
+                    ajaxRequest.setRequestHeader(headers[i].name, headers[i].value);
+                }
             }
-        }
 
-        //additional headers 
-        if (base.oConfig.headers.length > 0) {
-            //TODO: merge both normal and additional headers?!
-            for (var i = 0; i < base.oConfig.headers.length; i++) {
-                ajaxRequest.setRequestHeader(base.oConfig.headers[i].name, base.oConfig.headers[i].value);
+            //additional headers 
+            if (base.oConfig.headers.length > 0) {
+                //TODO: merge both normal and additional headers?!
+                for (var i = 0; i < base.oConfig.headers.length; i++) {
+                    ajaxRequest.setRequestHeader(base.oConfig.headers[i].name, base.oConfig.headers[i].value);
+                }
             }
         }
         ajaxRequest.send(data);
@@ -1249,18 +1250,25 @@ function oData(res, config) {
     // Create the XHR object with CORS support
     // +++
     function createCORSRequest(method, url) {
+        // TODO: Add older browser fallback here!
         var xhr = new XMLHttpRequest();
-        if ('withCredentials' in xhr) {
+        if (base.oConfig.isCors && 'withCredentials' in xhr) {
             // XHR for Chrome/Firefox/Opera/Safari.
             xhr.open(method, url, base.oConfig.isAsync);
         }
-        else if (typeof XDomainRequest !== 'undefined') {
+        else if (base.oConfig.isCors && typeof XDomainRequest !== 'undefined') {
             // XDomainRequest for IE.
             xhr = new XDomainRequest();
-            xhr.open(method, url);
-        } else {
-            // CORS not supported.
-            xhr = null;
+            // does not support PUT PATCH operations -> Switch to batch
+            isXDomainRequest = true;
+            if (method == 'GET')
+                xhr.open(method, url);
+            else
+                xhr.open('POST', url);
+        }
+        else {
+            // CORS not supported or forced
+            xhr.open(method, url, base.oConfig.isAsync);
         }
         return xhr;
     }
