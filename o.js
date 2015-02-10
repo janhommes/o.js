@@ -3,10 +3,10 @@
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations: 
-// .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() 
+// .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes 
-// Date: 03.02.2014
+// Date: 10.02.2014
 // +++
 
 function o(res) {
@@ -15,11 +15,12 @@ function o(res) {
     //base config object
     base.oConfig = base.oConfig || {
         endpoint: null,
-        json: true, 		//currently only json is supported
-        version: 3, 		//currently only tested for Version 3 and 4
+        format: 'json', 	//The media format. Default is JSON.
+        version: 4, 		//currently only tested for Version 4. Most will work in version 3 as well.
         strictMode: true, 	//strict mode throws exception, non strict mode only logs them
         start: null, 		//a function which is executed on loading
         ready: null,		//a function which is executed on ready
+        error: null,		//a function which is executed on error
         headers: [],		//a array of additional headers [{name:'headername',value:'headervalue'}]
         username: null, 	//the basic auth username
         password: null,		//the basic auth password
@@ -41,6 +42,7 @@ function o(res) {
     // username: The basic auth username
     // password: The basic auth password
     // isAsync: If set to false, the request are done sync. Default is true.
+    // IsCors: set this to false to disable CORS
     // +++
     base.config = function (config) {
         base.oConfig = merge(base.oConfig, config);
@@ -108,7 +110,8 @@ function oData(res, config) {
         '+': 'add',
         '-': 'sub',
         '*': 'mul',
-        '/': 'div',
+        //'/': 'div',
+        '.':'/',
         '%': 'mod'
     };
 
@@ -221,9 +224,26 @@ function oData(res, config) {
     //TODO: parse a JavaScript function to it)
     // +++
     base.filter = function (filterStr) {
-        if (!isQueryThrowEx('$filter')) {
-            var value = checkEmpty(jsToOdata(filterStr));
-            addQuery('$filter', value, value);
+        var filterVal = checkEmpty(jsToOdata(filterStr));
+        if (isQuery('$filter')) {
+            appendQuery('$filter', filterVal, filterVal);
+        }
+        else {
+            addQuery('$filter', filterVal, filterVal);
+        }
+        return (base);
+    }
+
+    // +++
+    // Applies a any filter
+    // +++
+    base.any = function (res, filter) {
+        var filterVal= res + '/any(x:x/' + jsToOdata(checkEmpty(filter)) + ')'
+        if (isQuery('$filter')) {
+            appendQuery('$filter', filterVal, filterVal);
+        }
+        else {
+            addQuery('$filter', filterVal, filterVal);
         }
         return (base);
     }
@@ -307,16 +327,71 @@ function oData(res, config) {
         return (base);
     }
 
+    // +++
+    // appends a navigation property to an existing resource
+    // +++
+    base.ref = base.link = function (navPath, id) {
+        removeQuery("$format");
+        if (resource == null || resource.get) {
+            throwEx("You need to define a resource with the find() method to append an navigation property");
+        }
+        if(oConfig.version<4){
+            resource.method = 'POST';
+            resource.path.push('$link');
+            resource.path.push({ resource: navPath, get: null });
+        }
+        else {
+            resource.method = 'POST';
+            resource.path.push({ resource: navPath, get: null });
+            resource.appending = '$ref';
+        }
+        var newResource = parseUri(navPath);
+        newResource.path[newResource.path.length - 1].get = id;
+        var baseRes=buildQuery(newResource);
+        resource.data = { '@odata.id': baseRes.substring(0,baseRes.length-1) };
+        return (base);
+    }
+
+    // +++
+    // deletes a referenced entity relation
+    // +++
+    base.removeRef = base.deleteRef = function (navPath, id) {
+        removeQuery("$format");
+        if (resource == null || resource.get) {
+            throwEx("You need to define a resource with the find() method to append an navigation property");
+        }
+        if (oConfig.version < 4) {
+            resource.method = 'POST';
+            resource.path.push('$link');
+            resource.path.push({ resource: navPath, get: null });
+        }
+        else {
+            resource.method = 'POST';
+            resource.path.push({ resource: navPath, get: null });
+            resource.appending = '$ref';
+        }
+        if (id) {
+            var newResource = parseUri(navPath);
+            newResource.path[newResource.path.length - 1].get = id;
+            var baseRes = buildQuery(newResource);
+            addQuery('$id', baseRes.substring(0, baseRes.length - 1));
+        }
+        //set the method
+        resource.method = 'DELETE';
+
+        return (base);
+    }
+
 
     // +++
     // This function actually queries the oData service with a GET request
     // TODO: maybe add some pseudonyms...
     // +++
-    base.get = function (callback) {
+    base.get = function (callback,errorCallback) {
         //start the request
         if (typeof Q !== 'undefined')
             currentPromise = Q.defer();
-        startRequest(callback, false);
+        startRequest(callback, errorCallback, false);
         if (typeof Q !== 'undefined')
             return (currentPromise.promise);
         else
@@ -327,7 +402,7 @@ function oData(res, config) {
     // adds a dataset to the current selected resource 
     // if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
     // +++
-    base.save = function (callback) {
+    base.save = function (callback,errorCallback) {
         //if base.data is set and the user saves, we copying this resource as a Patch
         //this allows a fast edit mode after a get request
         if (resource.method === 'GET' && resource.data !== null) {
@@ -339,14 +414,14 @@ function oData(res, config) {
         }
 
         //start the request with promise
-        if (currentPromise) {
+        if (currentPromise || typeof callback==='undefined') {
             currentPromise = Q.defer();
-            startRequest(callback, true);
+            startRequest(callback, errorCallback, true);
             return (currentPromise.promise);
         }
             //start the request without promise
         else {
-            startRequest(callback, true);
+            startRequest(callback, errorCallback, true);
             return (base);
         }
     }
@@ -357,14 +432,16 @@ function oData(res, config) {
     // alternative you can define a new resource by using .post({data},'OtherResource');
     // +++
     base.post = function (data, res) {
-        //test: remove the $filter attribute
-        removeQuery('format');
-
-        //add a new resource as a copy of the current resource // or use the given resource
-        res = res || resource.path[0].resource;
+        //test: remove the $format attribute
+        removeQuery('$format');
 
         //add the resource
-        addNewResource(res);
+        if (res) {
+            addNewResource(res);
+        }
+
+        //if (!resource.path[0] || !resource.path[0].get)
+        //    throwEx('Bulk inserts are not supported. You need to query a unique resource with find() to post it.');
 
         //set the method and data
         resource.method = 'POST';
@@ -380,8 +457,9 @@ function oData(res, config) {
     base.patch = base.put = function (data, res) {
 
         //add the resource
-        if (res)
+        if (res) {
             addNewResource(res);
+        }
 
         if (!resource.path[0] || !resource.path[0].get)
             throwEx('Bulk updates are not supported. You need to query a unique resource with find() to patch/put it.');
@@ -396,7 +474,7 @@ function oData(res, config) {
     // +++
     // does a delete with the given Data to the current dataset
     // +++
-    base['delete'] = function (res) {
+    base.remove = base['delete'] = function (res) {
 
         //add the resource
         if (res)
@@ -498,7 +576,7 @@ function oData(res, config) {
                 }
             }
             else {
-                wordArr.push(searchColumns[i] + searchFunc + '\'' + searchWord + '\'');
+                wordArr.push(searchColumns[i] + ' '+ searchFunc + ' \'' + searchWord + '\'');
             }
             columnArr.push('(' + wordArr.join('and') + ')');
         }
@@ -598,7 +676,7 @@ function oData(res, config) {
     // +++
     function jsToOdata(str) {
         for (key in opertionMapping) {
-            str = str.replace(key, opertionMapping[key]);
+            str = str.split(key).join(' '+opertionMapping[key]+' ');
         }
         return (str);
     }
@@ -618,20 +696,16 @@ function oData(res, config) {
         else
             resource = res;
 
-        //add the json config (TODO: Currently only json is supported. Should we add more?)
-        if (base.oConfig.json) {
-            addQuery('$format', 'json');
+        //add the default format
+        if (!isQuery('$format')) {
+            addQuery('$format', base.oConfig.format);
         }
     }
 
     // +++
     // starts a request to the service
     // +++
-    function startRequest(callback, isSave) {
-        //validate callback
-        /*if(!callback || typeof callback !=='function') {
-			callback=function() {  };
-		}*/
+    function startRequest(callback,errorCallback, isSave) {
 
         //check if resource is defined
         if (resource === null) {
@@ -639,9 +713,8 @@ function oData(res, config) {
         }
 
         //create a CORS ajax Request
-
         if (resourceList.length === 0 && !isSave) {
-            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, false);
+            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false);
         }
         //else check if we need to make a $batch request
         else {
@@ -652,7 +725,7 @@ function oData(res, config) {
             var ajaxReq=createCORSRequest(resource.method, buildQuery());
             //check if we only have one request or we need to force batch because of isXDomainRequest
             if ((countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) && !isXDomainRequest) {
-                startAjaxReq(ajaxReq, stringify(resource.data), callback, false,
+                startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false,
 					[{ name: 'Accept', value: 'application/json' },
 					{ name: 'Content-Type', value: 'application/json' },
 					{ name: 'Content-Length', value: stringify(resource.data).length }]
@@ -665,7 +738,7 @@ function oData(res, config) {
                 //generate a uui for this batch
                 var guid = generateUUID();
                 //start the request
-                startAjaxReq(createCORSRequest('POST', base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch'), buildBatchBody(guid, isSave), callback, true,
+                startAjaxReq(createCORSRequest('POST', base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch'), buildBatchBody(guid, isSave), callback, errorCallback, true,
                      //add the necessary headers
                     [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }]
                 );
@@ -752,20 +825,20 @@ function oData(res, config) {
         //combine the uri
         for (var i = 0; i < res.path.length; i++) {
             //check for automatic expand
-            if (isEndpoint && i !== 0 && res.path[i].get === null) {
+            /*if (isEndpoint && i !== 0 && res.path[i].get === null) {
                 expandResource(res.path[i].resource);
             }
-            else {
+            else {*/
                 queryStr += res.path[i].resource;
 
                 if (res.path[i].get)
                     queryStr += '(' + res.path[i].get + ')';
 
                 queryStr += '/';
-            }
+            //}
         }
 
-        return (queryStr + resource.appending + getQuery());
+        return (queryStr + res.appending + getQuery());
     }
 
     // +++
@@ -799,7 +872,7 @@ function oData(res, config) {
         //uri
         var uriSplit = uri.split('/');
         for (var i = 0; i < uriSplit.length; i++) {
-            if (startsWith(uriSplit[i], '$')) {
+            if (startsWith(uriSplit[i], '$') && uriSplit[i] !== '$link') {
                 reqObj.appending = uriSplit[i];
             }
             else {
@@ -823,6 +896,18 @@ function oData(res, config) {
         queryOriginal = queryOriginal || null;
         resource.queryList.push({ name: queryName, value: queryValue, original: queryOriginal });
         resource.query[queryPseudonym || queryName] = resource.queryList.length - 1;
+    }
+
+    // +++
+    // internal function to append a query parameter
+    // +++
+    function appendQuery(queryName, queryValue, queryOriginal, appendType, queryPseudonym) {
+        queryOriginal = queryOriginal || null;
+        appendType = appendType || ' or ';
+        queryName = queryPseudonym || queryName;
+        resource.queryList[resource.query[queryName]].value = '(' + resource.queryList[resource.query[queryName]].value + ')' + appendType + '(' + queryValue + ')';
+        if (queryOriginal)
+            resource.queryList[resource.query[queryName]].original = resource.queryList[resource.query[queryName]].value;
     }
 
     // +++
@@ -1071,7 +1156,7 @@ function oData(res, config) {
     // +++
     // start a ajax request. data should be null if nothing to send
     // +++
-    function startAjaxReq(ajaxRequest, data, callback, isBatch, headers) {
+    function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers) {
         //if start loading function is set call it
         if (base.oConfig.start && overideLoading == null) {
             base.oConfig.openAjaxRequests++;
@@ -1145,40 +1230,31 @@ function oData(res, config) {
                         if (JSON && ajaxRequest.responseText != "")
                             errResponse = JSON.parse(ajaxRequest.responseText);
 
-                        if (typeof callback === 'function') {
 
-                            if (errResponse['odata.error']) {
-                                var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
-                                throwEx(errorMsg);
-                            }
-                            else
-                                throwEx('Request failed with HTTP status ' + ajaxRequest.status + ' on ready state ' + ajaxRequest.readyState);
+
+                        if (errResponse !== '' && errResponse['odata.error']) {
+                            var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
+                            throwEx(errorMsg);
                         }
                         else {
-                            if (currentPromise) {
-                                currentPromise.reject(errResponse);
-                            }
+                            throwEx('Request failed with HTTP status ' + ajaxRequest.status + ' on ready state ' + ajaxRequest.readyState);
                         }
+
                     } catch (ex) {
-                        throwEx(ajaxRequest.responseText);
+                        endLoading(tempBase, true, ajaxRequest.status);
+                        if (typeof errorCallback !== 'undefined') {
+                            errorCallback(ajaxRequest.status, ex)
+                        }
+                        else if (currentPromise) {
+                            currentPromise.reject(ajaxRequest.status,ex);
+                        }
+                        else {
+                            throw ex;
+                        }
                     }
                 }
-
-                //call the basic ready method
-                if (tempBase.oConfig.ready && overideLoading == null) {
-                    tempBase.oConfig.openAjaxRequests--;
-                    if (tempBase.oConfig.openAjaxRequests <= 0) {
-                        tempBase.oConfig.ready();
-                    }
-                }
-                if (overideLoading && overideLoading[1]) {
-                    overideLoading[1](false);
-                }
-                //TODO: Add a done function to the config which is executed on every finished ajax request. Test the following:
-                /*if(tempBase.oConfig.then) {
-					tempBase.oConfig.then(tempBase);
-				}*/
-
+                //end the loading when everything is okay
+                endLoading(tempBase,false);
             }
         }
 
@@ -1186,7 +1262,7 @@ function oData(res, config) {
         if (base.oConfig.username && base.oConfig.password) {
             //ajaxRequest.withCredentials=true;
             if (isXDomainRequest) {
-                throwEx('CORS is not supported for IE <= 9. Try to set isCors:false in the OData config if you do not need CORS support.');
+                throwEx('CORS and Basic Auth is not supported for IE <= 9. Try to set isCors:false in the OData config if you do not need CORS support.');
             }
             ajaxRequest.setRequestHeader('Authorization', 'Basic ' + encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
         }
@@ -1211,6 +1287,25 @@ function oData(res, config) {
         }
         ajaxRequest.send(data);
     }
+
+    //+++
+    // Cancels the loading state
+    //+++
+    function endLoading(base, isError, status) {
+        if (base.oConfig.ready && overideLoading == null) {
+            base.oConfig.openAjaxRequests--;
+            if (base.oConfig.openAjaxRequests <= 0) {
+                base.oConfig.ready();
+            }
+        }
+        if (overideLoading && overideLoading[1]) {
+            overideLoading[1](false);
+        }
+        if (base.oConfig.error && isError) {
+            base.oConfig.error(status);
+        }
+    }
+    
 
     // +++
     // this function parses a normal response to a JSON response
