@@ -6,7 +6,7 @@
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes 
-// Date: 24.02.2014
+// Date: 25.02.2014
 // +++
 
 function o(res) {
@@ -664,6 +664,9 @@ function oData(res, config) {
 			
 			//check regex with hash
 			if (routeList[r].route.regex.test(hash)) {
+				
+				//trigger the before routing func1
+				beforeRoutingFunc(hash);
 
 				//reset the param
 				internalParam={};
