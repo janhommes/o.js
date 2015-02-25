@@ -6,7 +6,7 @@
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes 
-// Date: 10.02.2014
+// Date: 24.02.2014
 // +++
 
 function o(res) {
@@ -26,7 +26,8 @@ function o(res) {
         password: null,		//the basic auth password
         isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth
         isCors:true,        //set this to false to disable CORS
-        openAjaxRequests: 0	//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+        openAjaxRequests: 0,//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+		isHashRoute:true,   //set this var to false to disable automatic #-hash setting on routes
     };
 
     // +++
@@ -94,7 +95,9 @@ function oData(res, config) {
     var isEndpoint = true;		    //true if an endpoint is configured
     var currentPromise = null;	    //if promise (Q.js) is used, we hold it here
     var overideLoading = null;      //if set, this resource call don't use the global loading function
-    var isXDomainRequest = false;    //this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
+    var isXDomainRequest = false;   //this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
+	var beforeRoutingFunc = function() { };
+	var internalParam = {}; 		//like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
     var opertionMapping = {
         '==': 'eq',
         '===': 'eq',
@@ -117,10 +120,10 @@ function oData(res, config) {
 
 
     //base external variables 
-    base.data = [];				//holds the data after an callback
+    base.data = [];					//holds the data after an callback
     base.inlinecount = null; 		//if inlinecount is set, here the counting is gold
-    base.param = [];				//in a route with a '?', this array holds all parameter after the '?' separated by a dash
-    base.oConfig = config;		//the internal config, passed over from the o function
+    base.param = {};				//this object holds all parameter for a route
+    base.oConfig = config;			//the internal config, passed over from the o function
 
 
     // ---------------------+++ PUBLICS +++----------------------------
@@ -145,8 +148,10 @@ function oData(res, config) {
                 //Push the routes in the routeList
                 //TODO: Is there any way to use the build an on hash update function?! Onhaschange can't be bound multiple times. Also a problem: if the hash is called a second time the route is not triggered
                 routeList.push({
-                    routeName: routes[i],
+                    name: routes[i],
+					route: buildRouteRegex(routes[i]),
                     callback: callback,
+					param:{},
                     interval: setInterval(function () {
                         if (window.location.hash != prevHash) {
                             prevHash = window.location.hash;
@@ -163,6 +168,14 @@ function oData(res, config) {
         //trigger on init if the hash is the same like current
         base.triggerRoute(window.location.hash);
 
+        return (base);
+    }
+	
+	// +++
+    // get called beforerounting
+    // +++
+    base.beforeRouting = function (beforeFunc) {
+		beforeRoutingFunc=beforeFunc;
         return (base);
     }
 
@@ -185,7 +198,7 @@ function oData(res, config) {
     // returns the object with the given id
     // +++
     base.find = function (getId) {
-        resource.path[resource.path.length - 1].get = checkIntAndPos(getId, 'find()');
+        resource.path[resource.path.length - 1].get=getId;
         return (base);
     }
 
@@ -194,7 +207,7 @@ function oData(res, config) {
     // +++
     base.top = base.take = function (takeAmount) {
         if (!isQueryThrowEx(['$top'])) {
-            addQuery('$top', checkIntAndPos(takeAmount, 'take()'));
+            addQuery('$top', takeAmount, takeAmount);
         }
         return (base);
     }
@@ -204,7 +217,7 @@ function oData(res, config) {
     // +++
     base.skip = function (skipAmount) {
         if (!isQueryThrowEx('$skip')) {
-            addQuery('$skip', checkIntAndPos(skipAmount, 'skip()'));
+            addQuery('$skip', skipAmount, skipAmount);
         }
         return (base);
     }
@@ -331,9 +344,9 @@ function oData(res, config) {
     // appends a navigation property to an existing resource
     // +++
     base.ref = base.link = function (navPath, id) {
-        removeQuery("$format");
+        removeQuery('$format');
         if (resource == null || resource.get) {
-            throwEx("You need to define a resource with the find() method to append an navigation property");
+            throwEx('You need to define a resource with the find() method to append an navigation property');
         }
         if(oConfig.version<4){
             resource.method = 'POST';
@@ -356,9 +369,9 @@ function oData(res, config) {
     // deletes a referenced entity relation
     // +++
     base.removeRef = base.deleteRef = function (navPath, id) {
-        removeQuery("$format");
+        removeQuery('$format');
         if (resource == null || resource.get) {
-            throwEx("You need to define a resource with the find() method to append an navigation property");
+            throwEx('You need to define a resource with the find() method to append an navigation property');
         }
         if (oConfig.version < 4) {
             resource.method = 'POST';
@@ -572,7 +585,12 @@ function oData(res, config) {
             var wordArr = [];
             if (isNotExactSearch) {
                 for (var m = 0; m < searchWordSplit.length; m++) {
-                    wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
+					if(oConfig.version == 4) {
+						wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
+					}
+					else {
+						wordArr.push(searchFunc + '(\'' + searchWordSplit[m] + '\',' + searchColumns[i] + ')');
+					}
                 }
             }
             else {
@@ -582,32 +600,166 @@ function oData(res, config) {
         }
         return (columnArr.join('or'));
     }
+	
+	 // +++
+    // builds the URI for this query
+    // +++
+    function buildQuery(overrideRes) {
+        var res = overrideRes || resource;
+
+        //check if there is a resource defined
+        if (!res || res.path.length === 0)
+            throwEx('No resource defined. Define a resource first with o("YourResourcePath").');
+
+        //get the full query
+        var queryStr = '';
+        //var isEndpoint=false;
+
+        //add the configured endpoint
+        if (isEndpoint) {
+            queryStr = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/');
+        }
+
+        //combine the uri
+        for (var i = 0; i < res.path.length; i++) {
+            //check for automatic expand
+            /*if (isEndpoint && i !== 0 && res.path[i].get === null) {
+                expandResource(res.path[i].resource);
+            }
+            else {*/
+                queryStr += res.path[i].resource;
+
+                if (res.path[i].get) {
+                    queryStr += '(' + (internalParam[res.path[i].get] || res.path[i].get) + ')';
+				}
+
+                queryStr += '/';
+            //}
+        }
+
+        return (queryStr + res.appending + getQuery());
+    }
+	
+	 // +++
+    // internal function which builds the url get parameter
+    // +++
+    function getQuery() {
+        var tempStr = '';
+        for (queryName in resource.query) {
+            if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
+                tempStr += '&' + resource.queryList[resource.query[queryName]].name + '=' + strFormat(resource.queryList[resource.query[queryName]].value, internalParam);
+            }
+        }
+        if (tempStr.length > 0)
+            return ('?' + tempStr.substring(1));
+        return ("");
+    }
 
     // +++
     // checks if a route exist and starts the request and adds the parameters
     // +++
-    function checkRoute(hash) {
-        for (var r = 0; r < routeList.length; r++) {
-            var tempRoute = (startsWith(hash, '#') ? '#' : '') + routeList[r].routeName;
-            var isAutoParameter = false;
+	function checkRoute(hash) {
+		//literate over the complete routeList
+		for (var r = 0; r < routeList.length; r++) {
+			
+			//check regex with hash
+			if (routeList[r].route.regex.test(hash)) {
 
+				//reset the param
+				internalParam={};
+				base.param={};
+				
+				//get the matching data
+				var matches=routeList[r].route.regex.exec(hash);
+
+				//combine the propArr with the matches
+				if(typeof routeList[r].route.para !== 'undefined') {
+					var i=1;
+					for(prop in routeList[r].route.para) {
+						internalParam[prop]=matches[i];
+						base.param[prop.substring(1)]=matches[i];
+						i++;
+					}
+				}
+				else {
+					for(var i=1;i<matches.length;i++) {
+						internalParam[':'+(i-1)]=matches[i];
+						base.param[(i-1)]=matches[i];
+						
+					}
+				}
+
+                //start the request if there is a resource defined
+                startRouteRequest(routeList[r].callback);
+			}
+		}
+	}
+	
+	// +++
+    // builds a route regex function based on a given string
+    // +++
+	function buildRouteRegex(routeStr) {
+		//build regex TODO: Can be done before and not on every iteration
+		var routeRegex=routeStr;
+		if(!(routeStr instanceof RegExp)) {
+			//set the hash if needed
+			if(oConfig.isHashRoute && !startsWith(routeStr,'#')) {
+				routeStr='#'+routeStr;
+			}
+			//build up a regex
+			var routeArr=routeStr.split('/');
+			var para={};
+			for(var i=0;i<routeArr.length;i++) {
+				if(startsWith(routeArr[i],':')) {
+					para[routeArr[i]]=true;
+					routeArr[i]='(\\w+|\\W+)';
+				}
+			}
+			routeRegex=new RegExp('^'+routeArr.join('/')+'$');
+		}
+		return({regex: routeRegex, para:para});
+	}
+	
+	
+    /*function checkRoute(hash) {
+        for (var r = 0; r < routeList.length; r++) {
+			
+			var isRegex=false;
+			var isAutoParameter = false;
+			if(routeList[r].routeName instanceof RegExp) {
+				isRegex=true;
+				isAutoParameter=true;
+			}
+			
+            var tempRoute = (startsWith(hash, '#') ? '#' : '') + routeList[r].routeName;
+			
             //if ends with '?' operator substring the question mark and set isAutoParameter to true
-            if (endsWith(tempRoute, '?')) {
+            if (!isRegex && endsWith(tempRoute, '?')) {
                 tempRoute = tempRoute.substring(0, tempRoute.length - 1);
                 isAutoParameter = true;
             }
 
             //check if hash is equal route
             //if (!isAutoParameter && tempRoute === hash) {
-            if (tempRoute === hash) {
+            if (!isRegex && tempRoute === hash) {
+				beforeRoutingFunc(hash);
                 //start the request
                 startRouteRequest(routeList[r].callback);
             }
 
             //check if we have a auto parameter route (marked with a question mark at the end)
-            if (isAutoParameter && startsWith(hash, (endsWith(tempRoute, '/') ? tempRoute : tempRoute + '/'))) {
+            if ((isRegex && routeList[r].routeName.test(hash)) || (!isRegex && isAutoParameter && startsWith(hash, (endsWith(tempRoute, '/') ? tempRoute : tempRoute + '/')))) {
+				if(isRegex) {
+					var matches=routeList[r].routeName.exec(hash);
+					if(matches!=null) {
+						tempRoute=matches[0];
+					}
+				}
+				
+				beforeRoutingFunc(hash);
                 //auto parameter
                 var routeParameter = hash.substring(tempRoute.length + 1).split('\/');
+				
                 var m = 0;
 
                 //for get direct (.find())
@@ -657,7 +809,7 @@ function oData(res, config) {
                 startRouteRequest(routeList[r].callback);
             }
         }
-    }
+    }*/
 
     // +++
     // performs a deep copy on an object with JSON
@@ -804,44 +956,6 @@ function oData(res, config) {
     }
 
     // +++
-    // builds the URI for this query
-    // +++
-    function buildQuery(overrideRes) {
-        var res = overrideRes || resource;
-
-        //check if there is a resource defined
-        if (!res || res.path.length === 0)
-            throwEx('No resource defined. Define a resource first with o("YourResourcePath").');
-
-        //get the full query
-        var queryStr = '';
-        //var isEndpoint=false;
-
-        //add the configured endpoint
-        if (isEndpoint) {
-            queryStr = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/');
-        }
-
-        //combine the uri
-        for (var i = 0; i < res.path.length; i++) {
-            //check for automatic expand
-            /*if (isEndpoint && i !== 0 && res.path[i].get === null) {
-                expandResource(res.path[i].resource);
-            }
-            else {*/
-                queryStr += res.path[i].resource;
-
-                if (res.path[i].get)
-                    queryStr += '(' + res.path[i].get + ')';
-
-                queryStr += '/';
-            //}
-        }
-
-        return (queryStr + res.appending + getQuery());
-    }
-
-    // +++
     // internal function to parse the Uri and extrude the resource
     // +++
     function parseUri(resource) {
@@ -919,21 +1033,6 @@ function oData(res, config) {
     }
 
     // +++
-    // internal function which builds the url get parameter
-    // +++
-    function getQuery() {
-        var tempStr = '';
-        for (queryName in resource.query) {
-            if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
-                tempStr += '&' + resource.queryList[resource.query[queryName]].name + '=' + resource.queryList[resource.query[queryName]].value;
-            }
-        }
-        if (tempStr.length > 0)
-            return ('?' + tempStr.substring(1));
-        return ("");
-    }
-
-    // +++
     // internal function to check if a query exist. Otherwith throwEx a exception
     // queries: Could be an array or an string
     // returns true if 
@@ -983,13 +1082,13 @@ function oData(res, config) {
     // +++
     // Checks if a value is positiv and a integer
     // +++
-    function checkIntAndPos(intVal, throwName) {
+    /*function checkIntAndPos(intVal, throwName) {
         var intParse = tryParseInt(intVal, null);
         if (intParse !== null && intParse >= 0)
             return intParse;
         else
             throwEx(throwName + ': Parameter must be an integer value and positive.');
-    }
+    }*/
 
     // +++
     // Checks if a value is positiv and a integer
@@ -1237,16 +1336,17 @@ function oData(res, config) {
                             throwEx(errorMsg);
                         }
                         else {
-                            throwEx('Request failed with HTTP status ' + ajaxRequest.status + ' on ready state ' + ajaxRequest.readyState);
+                            throwEx('Request to '+buildQuery()+' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
                         }
 
                     } catch (ex) {
                         endLoading(tempBase, true, ajaxRequest.status);
                         if (typeof errorCallback !== 'undefined') {
-                            errorCallback(ajaxRequest.status, ex)
+                            errorCallback(ajaxRequest.status || 404, ex)
                         }
                         else if (currentPromise) {
-                            currentPromise.reject(ajaxRequest.status,ex);
+							ex.status=(ajaxRequest.status || 404);
+                            currentPromise.reject(ex);
                         }
                         else {
                             throw ex;
@@ -1369,22 +1469,16 @@ function oData(res, config) {
     }
 
     // +++
-    // helper function like string.format in c#. Used in routes
+    // helper function to format a string with :vars
     // +++
     function strFormat() {
         var str = arguments[0];
         var para = arguments[1];
-
-        if (para.lenght) {
-            for (var i = 0; i < para.length; i++) {
-                var regex = new RegExp("{[" + i + "]}", "g");
-                str = str.replace(regex, para[i]);
-            }
+        for (p in para) {
+            var regex = new RegExp(p, 'g');
+			str = str.replace(regex, para[p]);
         }
-        else {
-            var regex = new RegExp("{[0]}", "g");
-            str = str.replace(regex, para);
-        }
+        
         return str;
     }
 

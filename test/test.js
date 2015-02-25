@@ -23,12 +23,12 @@ function printResult(o,data) {
 function configureEndpoint() {
 	if(!o().isEndpoint()) {
 		o().config({
-			endpoint:'https://secure.pointsale.de/Service.svc',
-			//endpoint:'http://localhost:1000/Api.svc',
+			//endpoint:'https://secure.pointsale.de/Service.svc',
+			endpoint:'http://localhost:1000/Api.svc',
 			version:3,
 			strictMode:true,
-			/*username:'psapi',
-			password:'demo'*/
+			username:'psapi',
+			password:'demo'
 			//headers:[{name:'X-Custom-Headers', value: 'value'}]
 		});
 	}
@@ -51,7 +51,7 @@ QUnit.test('No resource or endpoint throw error', function(assert) {
 	);
 });
 
-QUnit.test('GET Product - no endpoint - no query', function(assert) {
+/*QUnit.test('GET Product - no endpoint - no query', function(assert) {
 	var done = assert.async();
 	o('https://secure.pointsale.de/Service.svc/Product').get(function(data) {
 		assert.ok(data.length >= 0, printResult(this,data));
@@ -65,7 +65,7 @@ QUnit.test('GET Product - no endpoint - query: $top=1', function(assert) {
 		assert.ok(data.length === 1, printResult(this,data));
 		done();
 	});
-});
+});*/
 
 QUnit.test('CONFIG PS - endpoint', function(assert) {
 	configureEndpoint();
@@ -108,7 +108,7 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('GET Product - no endpoint - query: $filter=Price lt 100 and $top=1', function(assert) {
+	/*QUnit.test('GET Product - no endpoint - query: $filter=Price lt 100 and $top=1', function(assert) {
 		var done = assert.async();
 		o('https://secure.pointsale.de/Service.svc/Product?$filter=Price lt 100&$top=1').get(function(data) {
 			assert.ok(data.length === 1, printResult(this,data));
@@ -122,7 +122,7 @@ function startEndpointTests() {
 			assert.ok(data.id === testProduct.id, printResult(this,data));
 			done();
 		});
-	});
+	});*/
 
 	QUnit.test('GET Product('+testProduct.id+') - endpoint - query: $filter=Price lt 100', function(assert) {
 		var done = assert.async();
