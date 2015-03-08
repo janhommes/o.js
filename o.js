@@ -676,9 +676,9 @@ function oData(res, config) {
 				var matches=routeList[r].route.regex.exec(hash);
 
 				//combine the propArr with the matches
-				if(typeof routeList[r].route.para !== 'undefined') {
+				if(typeof routeList[r].route.param !== 'undefined') {
 					var i=1;
-					for(prop in routeList[r].route.para) {
+					for(prop in routeList[r].route.param) {
 						internalParam[prop]=matches[i];
 						base.param[prop.substring(1)]=matches[i];
 						i++;
@@ -711,16 +711,16 @@ function oData(res, config) {
 			}
 			//build up a regex
 			var routeArr=routeStr.split('/');
-			var para={};
+			var param={};
 			for(var i=0;i<routeArr.length;i++) {
 				if(startsWith(routeArr[i],':')) {
-					para[routeArr[i]]=true;
+					param[routeArr[i]]=true;
 					routeArr[i]='(\\w+|\\W+)';
 				}
 			}
 			routeRegex=new RegExp('^'+routeArr.join('/')+'$');
 		}
-		return({regex: routeRegex, para:para});
+		return({regex: routeRegex, param:param});
 	}
 	
 	
@@ -913,7 +913,7 @@ function oData(res, config) {
         if (resource.path[0].resource !== "")
             startRequest(callback);
         else {
-            callback(null);
+            callback.call(base, base.param);
         }
     }
 
