@@ -6,7 +6,29 @@
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes 
-// Date: 25.02.2014
+// Date: 10.06.2015
+// --------------------
+// The MIT License (MIT)
+//
+// Copyright (c) 2015 Jan Hommes
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 // +++
 
 function o(res) {
@@ -27,7 +49,7 @@ function o(res) {
         isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth
         isCors:true,        //set this to false to disable CORS
         openAjaxRequests: 0,//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
-		isHashRoute:true,   //set this var to false to disable automatic #-hash setting on routes
+	isHashRoute:true,   //set this var to false to disable automatic #-hash setting on routes
     };
 
     // +++
@@ -89,15 +111,15 @@ function oData(res, config) {
     // --------------------+++ VARIABLES +++---------------------------
 
     //base internal variables
-    var resource = null; 			//the main resource string
-    var resourceList = []; 		    //an array list of all resource used
-    var routeList = []; 			//an array list of all routes used
-    var isEndpoint = true;		    //true if an endpoint is configured
-    var currentPromise = null;	    //if promise (Q.js) is used, we hold it here
-    var overideLoading = null;      //if set, this resource call don't use the global loading function
-    var isXDomainRequest = false;   //this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
-	var beforeRoutingFunc = function() { };
-	var internalParam = {}; 		//like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
+    var resource = null; 					// the main resource string
+    var resourceList = []; 		    		// an array list of all resource used
+    var routeList = []; 					// an array list of all routes used
+    var isEndpoint = true;		    		// true if an endpoint is configured
+    var currentPromise = null;	    		// if promise (Q.js) is used, we hold it here
+    var overideLoading = null;      		// if set, this resource call don't use the global loading function
+    var isXDomainRequest = false;   		// this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
+	var beforeRoutingFunc = function() { };	// A function which is called before routing.
+	var internalParam = {}; 				// like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
     var opertionMapping = {
         '==': 'eq',
         '===': 'eq',
@@ -113,7 +135,6 @@ function oData(res, config) {
         '+': 'add',
         '-': 'sub',
         '*': 'mul',
-        //'/': 'div',
         '.':'/',
         '%': 'mod'
     };
@@ -171,7 +192,7 @@ function oData(res, config) {
         return (base);
     }
 	
-	// +++
+    // +++
     // get called beforerounting
     // +++
     base.beforeRouting = function (beforeFunc) {
@@ -234,7 +255,6 @@ function oData(res, config) {
 
     // +++
     // add a filter
-    //TODO: parse a JavaScript function to it)
     // +++
     base.filter = function (filterStr) {
         var filterVal = checkEmpty(jsToOdata(filterStr));
@@ -273,7 +293,7 @@ function oData(res, config) {
     }
 
     // +++
-    // ?
+    // enables select
     // +++
     base.select = function (selectStr) {
         addQuery('$select', checkEmpty(selectStr));
@@ -596,12 +616,12 @@ function oData(res, config) {
             else {
                 wordArr.push(searchColumns[i] + ' '+ searchFunc + ' \'' + searchWord + '\'');
             }
-            columnArr.push('(' + wordArr.join('and') + ')');
+            columnArr.push('(' + wordArr.join(' and ') + ')');
         }
         return (columnArr.join('or'));
     }
 	
-	 // +++
+	// +++
     // builds the URI for this query
     // +++
     function buildQuery(overrideRes) {
@@ -640,7 +660,7 @@ function oData(res, config) {
         return (queryStr + res.appending + getQuery());
     }
 	
-	 // +++
+	// +++
     // internal function which builds the url get parameter
     // +++
     function getQuery() {
@@ -664,13 +684,10 @@ function oData(res, config) {
 			
 			//check regex with hash
 			if (routeList[r].route.regex.test(hash)) {
-				
-				//trigger the before routing func1
-				beforeRoutingFunc(hash);
 
 				//reset the param
 				internalParam={};
-				base.param={};
+				var param={};
 				
 				//get the matching data
 				var matches=routeList[r].route.regex.exec(hash);
@@ -680,20 +697,23 @@ function oData(res, config) {
 					var i=1;
 					for(prop in routeList[r].route.param) {
 						internalParam[prop]=matches[i];
-						base.param[prop.substring(1)]=matches[i];
+						param[prop.substring(1)]=matches[i];
 						i++;
 					}
 				}
 				else {
 					for(var i=1;i<matches.length;i++) {
 						internalParam[':'+(i-1)]=matches[i];
-						base.param[(i-1)]=matches[i];
+						param[(i-1)]=matches[i];
 						
 					}
 				}
-
-                //start the request if there is a resource defined
-                startRouteRequest(routeList[r].callback);
+				
+				//trigger the before routing func1
+				if(!beforeRoutingFunc(param)) {
+					//start the request if there is a resource defined
+					startRouteRequest(routeList[r].callback,param);
+				}
 			}
 		}
 	}
@@ -722,97 +742,6 @@ function oData(res, config) {
 		}
 		return({regex: routeRegex, param:param});
 	}
-	
-	
-    /*function checkRoute(hash) {
-        for (var r = 0; r < routeList.length; r++) {
-			
-			var isRegex=false;
-			var isAutoParameter = false;
-			if(routeList[r].routeName instanceof RegExp) {
-				isRegex=true;
-				isAutoParameter=true;
-			}
-			
-            var tempRoute = (startsWith(hash, '#') ? '#' : '') + routeList[r].routeName;
-			
-            //if ends with '?' operator substring the question mark and set isAutoParameter to true
-            if (!isRegex && endsWith(tempRoute, '?')) {
-                tempRoute = tempRoute.substring(0, tempRoute.length - 1);
-                isAutoParameter = true;
-            }
-
-            //check if hash is equal route
-            //if (!isAutoParameter && tempRoute === hash) {
-            if (!isRegex && tempRoute === hash) {
-				beforeRoutingFunc(hash);
-                //start the request
-                startRouteRequest(routeList[r].callback);
-            }
-
-            //check if we have a auto parameter route (marked with a question mark at the end)
-            if ((isRegex && routeList[r].routeName.test(hash)) || (!isRegex && isAutoParameter && startsWith(hash, (endsWith(tempRoute, '/') ? tempRoute : tempRoute + '/')))) {
-				if(isRegex) {
-					var matches=routeList[r].routeName.exec(hash);
-					if(matches!=null) {
-						tempRoute=matches[0];
-					}
-				}
-				
-				beforeRoutingFunc(hash);
-                //auto parameter
-                var routeParameter = hash.substring(tempRoute.length + 1).split('\/');
-				
-                var m = 0;
-
-                //for get direct (.find())
-                for (var i = 0; i < resource.path.length; i++) {
-                    if (resource.path[i].get !== null) {
-                        resource.path[i].get = routeParameter[m];
-                        m = i;
-                    }
-                }
-
-                //for every other excluded $filter
-                for (var i = 0; i < resource.queryList.length; i++) {
-                    if (resource.query[resource.queryList[i].name] !== null && resource.queryList[i].name !== '$format' && resource.queryList[i].name !== '$expand') {
-                        if (typeof routeParameter[m] !== 'undefined' && routeParameter[m] !== "") {
-                            //try to parse int
-                            routeParameter[m] = tryParseInt(routeParameter[m], routeParameter[m]);
-                            //add the parameter to theexclude the string params
-                            if (resource.queryList[i].name !== '$filter') {
-                                resource.queryList[i].value = routeParameter[m];
-                            }
-                        }
-                        m++;
-                    }
-                }
-
-                //format filter if set
-                if (typeof resource.query.$filter !== 'undefined') {
-                    resource.queryList[resource.query.$filter].value = strFormat(resource.queryList[resource.query.$filter].original, routeParameter);
-                }
-                    //format a search if set -> Splits a given Parameter to extend the search
-                else if (typeof resource.query.$search !== 'undefined') {
-                    var split = [routeParameter[0]];
-                    if (typeof routeParameter[0] === 'string')
-                        split = routeParameter[0].split(' ');
-                    resource.queryList[resource.query.$search].value = "";
-                    for (var i = 0; i < split.length; i++) {
-                        resource.queryList[resource.query.$search].value += '(' + strFormat(resource.queryList[resource.query.$search].original, split[i]) + ') and ';
-                    }
-                    resource.queryList[resource.query.$search].value = resource.queryList[resource.query.$search].value.substring(0, resource.queryList[resource.query.$search].value.length - 4)
-                }
-
-                //set the base.param to make it accesable from extern.
-                base.param = [];
-                base.param = routeParameter;
-
-                //start the request if there is a resource defined
-                startRouteRequest(routeList[r].callback);
-            }
-        }
-    }*/
 
     // +++
     // performs a deep copy on an object with JSON
@@ -830,9 +759,22 @@ function oData(res, config) {
     // takes a script with javascript operations and translates it to odata
     // +++
     function jsToOdata(str) {
-        for (key in opertionMapping) {
+		//stripe out the vars
+		var regexp=new RegExp("'.*?'",'');
+		
+		var matches=regexp.exec(str);
+		str=str.replace(regexp,'{0}');
+		
+		for(key in opertionMapping) {
             str = str.split(key).join(' '+opertionMapping[key]+' ');
         }
+		
+		if(matches!=null) {
+			for(var i=0;i<matches.length;i++) {
+				str=str.replace('{0}',matches[i])
+			}		
+		}
+		
         return (str);
     }
 
@@ -860,7 +802,7 @@ function oData(res, config) {
     // +++
     // starts a request to the service
     // +++
-    function startRequest(callback,errorCallback, isSave) {
+    function startRequest(callback, errorCallback, isSave, param) {
 
         //check if resource is defined
         if (resource === null) {
@@ -869,7 +811,7 @@ function oData(res, config) {
 
         //create a CORS ajax Request
         if (resourceList.length === 0 && !isSave) {
-            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false);
+            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, null, param);
         }
         //else check if we need to make a $batch request
         else {
@@ -909,11 +851,11 @@ function oData(res, config) {
     // +++
     // starts a request triggered by a route
     // +++
-    function startRouteRequest(callback) {
+    function startRouteRequest(callback,param) {
         if (resource.path[0].resource !== "")
-            startRequest(callback);
+            startRequest(callback,null,false,param);
         else {
-            callback.call(base, base.param);
+            callback.call(base, param);
         }
     }
 
@@ -1258,7 +1200,7 @@ function oData(res, config) {
     // +++
     // start a ajax request. data should be null if nothing to send
     // +++
-    function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers) {
+    function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers, param) {
         //if start loading function is set call it
         if (base.oConfig.start && overideLoading == null) {
             base.oConfig.openAjaxRequests++;
@@ -1322,7 +1264,7 @@ function oData(res, config) {
                         currentPromise.resolve(tempBase);
                     }
                     if (typeof callback === 'function') {
-                        callback.call(tempBase, tempBase.data);
+                        callback.call(tempBase, tempBase.data, param);
                     }
                 }
                 else {
