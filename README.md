@@ -39,7 +39,7 @@ Currently the following queries are supported:
  
  `.orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
  
- `.inlineCount()` 	- adds a inlinecount to the resilt (Odata: Products/?*$inlinecount=allpages*)
+ `.count()` 		- adds a inlinecount to the result (Odata: Products/?*$count=true*)
  
  `.batch(string)` 	- adds a second resource to the request (Odata: $batch)
  
@@ -132,7 +132,7 @@ However, if you have set an endpoint you can still do a full endpoint request fo
   o().config({
 	  endpoint:null,    // your odata endpoint for the service
 	  json:true,        // currently only json is supported
-	  version:4,        // oData version (currently supported 4 and 3)
+	  version:4,        // oData version (currently supported version 4. However most also work with version 3.)
 	  strictMode:true,  // strict mode throws exception, non strict mode only logs them
 	  start:null,       // a function which is executed on loading
 	  ready:null,       // a function which is executed on ready
@@ -140,7 +140,7 @@ However, if you have set an endpoint you can still do a full endpoint request fo
 	  headers:[],	    // a array of additional headers e.g.: [{name:'headername',value:'headervalue'}]
 	  username:null,    // a basic auth username
 	  password:null,    // a basic auth password
-	  isAsync:true      //set this to true to make synced (a)jax calls. (dosn't work with basic auth!)
+	  isAsync:true      //set this to false to make synced (a)jax calls. (dosn't work with basic auth!)
   });
 ```
 
