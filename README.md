@@ -27,23 +27,23 @@ o('https://secure.pointsale.de/Service.svc/Product').take(5).skip(2).get(functio
 
 Currently the following queries are supported:
 
- `find(int)`	 	- returns the object with the given id. (Odata: Products*(1)*) 
+ `.find(int)`	 	- returns the object with the given id. (Odata: Products*(1)*) 
  
- `top(int)`	 	- returns the top x objects (Odata: Products/?*$top=2*)
+ `.top(int)`	 	- returns the top x objects (Odata: Products/?*$top=2*)
  
- `skip(int)` 		- returns the objects skipped by the given value (Odata: Products/?*$skip=2*)
+ `.skip(int)` 		- returns the objects skipped by the given value (Odata: Products/?*$skip=2*)
  
- `first()`		- returns the first object which is found (Odata: Products/?*$top=1*)
+ `.first()`		- returns the first object which is found (Odata: Products/?*$top=1*)
  
- `filter(string)`	- adds a filter string (currently only a plain string filter is supported, [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)
+ `.filter(string)`	- adds a filter string (currently only a plain string filter is supported, [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)
  
- `orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
+ `.orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
  
- `inlineCount()` 	- adds a inlinecount to the resilt (Odata: Products/?*$inlinecount=allpages*)
+ `.inlineCount()` 	- adds a inlinecount to the resilt (Odata: Products/?*$inlinecount=allpages*)
  
- `batch(string)` 	- adds a second resource to the request (Odata: $batch)
+ `.batch(string)` 	- adds a second resource to the request (Odata: $batch)
  
- `expand(string)` 	- expands a related resource (Odata: Products/?*$expand=ProductUnit*)
+ `.expand(string)` 	- expands a related resource (Odata: Products/?*$expand=ProductUnit*)
 
 Get data:
 --------
@@ -112,7 +112,6 @@ o('http://services.odata.org/V4/OData/OData.svc/Products').find(2).get().then(fu
 });
 ```
 
-
 Endpoint configuration:
 ---------
 You can configure a endpoint with the `o().config()` function. This config is persistent over all off your o.js calls. Example:
@@ -137,6 +136,7 @@ However, if you have set an endpoint you can still do a full endpoint request fo
 	  strictMode:true,  // strict mode throws exception, non strict mode only logs them
 	  start:null,       // a function which is executed on loading
 	  ready:null,       // a function which is executed on ready
+	  error:null,       // a function which is executed on error
 	  headers:[],	    // a array of additional headers e.g.: [{name:'headername',value:'headervalue'}]
 	  username:null,    // a basic auth username
 	  password:null,    // a basic auth password
