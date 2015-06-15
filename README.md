@@ -1,11 +1,11 @@
 # o.js
 *o.js alpha v0.5*
 
-o.js is a client side Odata Javascript library to simplify the request of data from Odata web services. The main goal is to build a standalone, lightweight and easy to understand Odata lib.
+o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.
 
 Samples
 ------------
-For alle samples we are using the sample odata service from <a href="http://www.odata.org">Odata.org</a>. You can find the metadata of this service <a href="http://services.odata.org/V4/OData/OData.svc">here</a>.
+For alle samples we are using the test odata service from <a href="http://www.odata.org">Odata.org</a>. You can find the metadata of this service <a href="http://services.odata.org/V4/OData/OData.svc">here</a>.
 
 Simple Odata query with o.js:
 -----------
@@ -16,34 +16,25 @@ Simple Odata query with o.js:
 ```
 o.js uses a jQuery like syntax to determine which resource you want to access. You can define any Odata service url (or any json web service) in the o-function: `o('<your odata service resource>')`. This only holds a handler to this resource and dosn't start the ajax call. If you want to get the resource, you need to call `.get()`. Get accepts a function callback which contains the data as the first parameter.
 
-Method chaining:
+Methods:
 --------
-By adding some chained functions to the o-function you can add query options:
+By adding some chained functions to the o-handler you can add query options:
 ```js
-o('https://secure.pointsale.de/Service.svc/Product').take(5).skip(2).get(function(data) {
+o('http://services.odata.org/V4/OData/OData.svc/Products').take(5).skip(2).get(function(data) {
 	console.log(data); //An array of 5 products skiped by 2
 });
 ```
 
-Currently the following queries are supported:
-
- `.find(int)`	 	- returns the object with the given id. (Odata: Products*(1)*) 
- 
- `.top(int)`	 	- returns the top x objects (Odata: Products/?*$top=2*)
- 
- `.skip(int)` 		- returns the objects skipped by the given value (Odata: Products/?*$skip=2*)
- 
- `.first()`		- returns the first object which is found (Odata: Products/?*$top=1*)
- 
- `.filter(string)`	- adds a filter string (currently only a plain string filter is supported, [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)
- 
- `.orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
- 
- `.count()` 		- adds a inlinecount to the result (Odata: Products/?*$count=true*)
- 
- `.batch(string)` 	- adds a second resource to the request (Odata: $batch)
- 
- `.expand(string)` 	- expands a related resource (Odata: Products/?*$expand=ProductUnit*)
+Routing:
+--------
+You can use hash routes to map your Odata service endpoint to your website:
+```js
+  o('http://services.odata.org/V4/OData/OData.svc/Products').find(':0').route('Product/Detail/:0/:1',function(data) {
+	console.log('Route Product/Detail/'+this.param[0]+'/'+this.param[1]+' triggered. Result:');
+	console.log(data);
+  });
+```
+Instead of manual getting your data with the `get()` function, this routing function always returns the data when somebody navigates to an URL with the hash value `Product/Detail/1/Some more parameter`. The `find()` method automatically maps the right parameter (in this example 1). <a href="todo">See this</a> demonstration for more examples.
 
 Get data:
 --------
@@ -100,6 +91,20 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').patch({Name:'NewNa
 });
 ````
 
+To remove (DELETE) data you need to call `remove()`:
+```js
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(function(data) {
+	console.log("Product deleted"); 
+});
+````
+
+To add an reference to an other resource use `ref` (to remove it simply use `removeRef` the same way):
+```js
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 2).save(function(data) {
+	console.log("Product(1) associated with Categories(2)"); 
+});
+````
+
 You can also combine a single data request (`first()` or `find()`) with the save method and chain it:
 ```js
 o('http://services.odata.org/V4/OData/OData.svc/Products').find(2).get().then(function(oHandler) {
@@ -144,7 +149,36 @@ However, if you have set an endpoint you can still do a full endpoint request fo
   });
 ```
 
+Full list of supported functions:
+---------
 
+Currently the following queries are supported:
+
+ `.find(int)`	 	- returns the object with the given id. (Odata: Products*(1)*)
+ 
+ `.top(int)`	 	- returns the top x objects (Odata: Products/?*$top=2*) - Synonym: `.take`
+ 
+ `.skip(int)` 		- returns the objects skipped by the given value (Odata: Products/?*$skip=2*)
+ 
+ `.first()`		- returns the first object which is found (Odata: Products/?*$top=1*)
+ 
+ `.filter(string)`	- adds a filter string (o.js can convered simple JS-Syntax. If you need something complex use the plain Odata $filter syntax: [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)  - Synonym: `.where`
+ 
+ `.any(string, string)` - applies an any filter to an resource (Odata: Products/?*$filter=Categories/any(x:x/Name eq 'Test')*)
+ 
+ `.search(array, string)` - builds up a search $filter. The first parameter defines the columns to search in the second the searchword (e.g.: `.search(['Name', 'Description'], 'Test')`)
+ 
+ `.orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
+ 
+ `.orderByDesc(string)`	- orders the data descading (Odata: Products/?*$orderBy=Name*)
+ 
+ `.count()` 		- only counts the result (Odata: Products/*$count*)
+ 
+ `.inlineCount(string)`	- adds a inlinecount to the result. (Odata: Products/?*$count=true*)
+ 
+ `.batch(string)` 	- adds a second resource to the request (Odata: $batch)
+ 
+ `.expand(string)` 	- expands a related resource (Odata: Products/?*$expand=ProductUnit*)
 
 
 
