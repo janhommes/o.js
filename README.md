@@ -1,7 +1,7 @@
 # o.js
 *o.js alpha v0.5*
 
-o.js is a clientside Odata Javascript libary to simplify the request of data from Odata web services. The main goal is to build a standalone, lighwight and easy to understand Odata lib.
+o.js is a client side Odata Javascript library to simplify the request of data from Odata web services. The main goal is to build a standalone, lightweight and easy to understand Odata lib.
 
 Samples
 ------------
