@@ -1,14 +1,16 @@
 # o.js
-*o.js alpha v0.5*
+*o.js beta v0.1*
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.
+ 
 
-Samples
+
+##### Samples #####
 ------------
 For alle samples we are using the test odata service from <a href="http://www.odata.org">Odata.org</a>. You can find the metadata of this service <a href="http://services.odata.org/V4/OData/OData.svc">here</a>.
 
-Simple Odata query with o.js:
------------
+###### Simple Odata query with o.js ######
+----------------------
 ```js
   o('http://services.odata.org/V4/OData/OData.svc/Products').get(function(data) {
   		console.log(data); //returns an array of Product data
@@ -16,7 +18,7 @@ Simple Odata query with o.js:
 ```
 o.js uses a jQuery like syntax to determine which resource you want to access. You can define any Odata service url (or any json web service) in the o-function: `o('<your odata service resource>')`. This only holds a handler to this resource and dosn't start the ajax call. If you want to get the resource, you need to call `.get()`. Get accepts a function callback which contains the data as the first parameter.
 
-Methods:
+###### Methods ######
 --------
 By adding some chained functions to the o-handler you can add query options:
 ```js
@@ -25,7 +27,7 @@ o('http://services.odata.org/V4/OData/OData.svc/Products').take(5).skip(2).get(f
 });
 ```
 
-Routing:
+###### Routing ######
 --------
 You can use hash routes to map your Odata service endpoint to your website:
 ```js
@@ -34,9 +36,9 @@ You can use hash routes to map your Odata service endpoint to your website:
 	console.log(data);
   });
 ```
-Instead of manual getting your data with the `get()` function, this routing function always returns the data when somebody navigates to an URL with the hash value `Product/Detail/1/Some more parameter`. The `find()` method automatically maps the right parameter (in this example 1). <a href="todo">See this</a> demonstration for more examples.
+Instead of manual getting your data with the `get()` function, this routing function always returns the data when somebody navigates to an URL with the hash value `index.html#Product/Detail/1/Some more parameter`. The `find()` method automatically maps the right parameter (in this example *1*). <a href="todo">See this</a> demonstration for more examples.
 
-Get data:
+###### Get data (details) ######
 --------
 If you want to get data you need to call the `get()` function. This functions returns an async callback function which holds an array as it's parameter. If you use `first()` or the `find()` method it only returns the data because an array is not needed. 
 You can also save your o-function to call it later:
@@ -74,8 +76,14 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(2)').get().then(functio
 	console.log(ex);
 }
 ```
+ 
 
-Add and change data:
+
+#### Add and change data ####
+---------
+To add and change data you can use the http verb in kombination with the `save()` method:
+
+###### Post: ######
 ---------
 You can use the `post()` function in combination with the `save()` method to add data:
 ```js
@@ -84,6 +92,8 @@ o('http://services.odata.org/V4/OData/OData.svc/Products').post({Name:'Example 1
 }
 ````
 
+###### Patch/Put: ######
+---------
 Changing (PATCH or PUT) data is nearly the same:
 ```js
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').patch({Name:'NewName'}).save(function(data) {
@@ -91,6 +101,8 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').patch({Name:'NewNa
 });
 ````
 
+###### Delete: ######
+---------
 To remove (DELETE) data you need to call `remove()`:
 ```js
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(function(data) {
@@ -98,6 +110,8 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(func
 });
 ````
 
+###### Reference: ######
+---------
 To add an reference to an other resource use `ref` (to remove it simply use `removeRef` the same way):
 ```js
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 2).save(function(data) {
@@ -116,8 +130,10 @@ o('http://services.odata.org/V4/OData/OData.svc/Products').find(2).get().then(fu
 	console.log("error");
 });
 ```
+ 
 
-Endpoint configuration:
+
+##### Endpoint configuration #####
 ---------
 You can configure a endpoint with the `o().config()` function. This config is persistent over all off your o.js calls. Example:
 ```js
@@ -148,8 +164,10 @@ However, if you have set an endpoint you can still do a full endpoint request fo
 	  isAsync:true      //set this to false to make synced (a)jax calls. (dosn't work with basic auth!)
   });
 ```
+ 
 
-Full list of supported functions:
+
+##### Full list of supported functions ##### 
 ---------
 
 Currently the following queries are supported:
