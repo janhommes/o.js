@@ -1,12 +1,12 @@
 // +++
-// o.js  v0.5a
+// o.js  v0.1b
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations: 
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes 
-// Date: 10.06.2015
+// Date: 25.06.2015
 // --------------------
 // The MIT License (MIT)
 //
@@ -47,9 +47,10 @@ function o(res) {
         username: null, 	//the basic auth username
         password: null,		//the basic auth password
         isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth
-        isCors:true,        //set this to false to disable CORS
-        openAjaxRequests: 0,//a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
-	isHashRoute:true,   //set this var to false to disable automatic #-hash setting on routes
+        isCors: true,        //set this to false to disable CORS
+        openAjaxRequests: 0, //a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+        isHashRoute: true,   //set this var to false to disable automatic #-hash setting on routes
+		appending: ''		 // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
     };
 
     // +++
@@ -118,8 +119,8 @@ function oData(res, config) {
     var currentPromise = null;	    		// if promise (Q.js) is used, we hold it here
     var overideLoading = null;      		// if set, this resource call don't use the global loading function
     var isXDomainRequest = false;   		// this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
-	var beforeRoutingFunc = function() { };	// A function which is called before routing.
-	var internalParam = {}; 				// like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
+    var beforeRoutingFunc = function () { };	// A function which is called before routing.
+    var internalParam = {}; 				// like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
     var opertionMapping = {
         '==': 'eq',
         '===': 'eq',
@@ -135,7 +136,7 @@ function oData(res, config) {
         '+': 'add',
         '-': 'sub',
         '*': 'mul',
-        '.':'/',
+        '.': '/',
         '%': 'mod'
     };
 
@@ -159,7 +160,6 @@ function oData(res, config) {
             routes = [routes];
         }
 
-        //var tempBase=base;
         var prevHash = window.location.hash;
 
         //literate over every rout and add a interval to check if the route is triggered
@@ -170,9 +170,9 @@ function oData(res, config) {
                 //TODO: Is there any way to use the build an on hash update function?! Onhaschange can't be bound multiple times. Also a problem: if the hash is called a second time the route is not triggered
                 routeList.push({
                     name: routes[i],
-					route: buildRouteRegex(routes[i]),
+                    route: buildRouteRegex(routes[i]),
                     callback: callback,
-					param:{},
+                    param: {},
                     interval: setInterval(function () {
                         if (window.location.hash != prevHash) {
                             prevHash = window.location.hash;
@@ -191,12 +191,12 @@ function oData(res, config) {
 
         return (base);
     }
-	
+
     // +++
     // get called beforerounting
     // +++
     base.beforeRouting = function (beforeFunc) {
-		beforeRoutingFunc=beforeFunc;
+        beforeRoutingFunc = beforeFunc;
         return (base);
     }
 
@@ -219,7 +219,7 @@ function oData(res, config) {
     // returns the object with the given id
     // +++
     base.find = function (getId) {
-        resource.path[resource.path.length - 1].get=getId;
+        resource.path[resource.path.length - 1].get = getId;
         return (base);
     }
 
@@ -256,7 +256,7 @@ function oData(res, config) {
     // +++
     // add a filter
     // +++
-    base.filter = function (filterStr) {
+    base.filter = base.where = function (filterStr) {
         var filterVal = checkEmpty(jsToOdata(filterStr));
         if (isQuery('$filter')) {
             appendQuery('$filter', filterVal, filterVal);
@@ -271,7 +271,7 @@ function oData(res, config) {
     // Applies a any filter
     // +++
     base.any = function (res, filter) {
-        var filterVal= res + '/any(x:x/' + jsToOdata(checkEmpty(filter)) + ')'
+        var filterVal = res + '/any(x:x/' + jsToOdata(checkEmpty(filter)) + ')'
         if (isQuery('$filter')) {
             appendQuery('$filter', filterVal, filterVal);
         }
@@ -368,7 +368,7 @@ function oData(res, config) {
         if (resource == null || resource.get) {
             throwEx('You need to define a resource with the find() method to append an navigation property');
         }
-        if(oConfig.version<4){
+        if (oConfig.version < 4) {
             resource.method = 'POST';
             resource.path.push('$link');
             resource.path.push({ resource: navPath, get: null });
@@ -380,8 +380,8 @@ function oData(res, config) {
         }
         var newResource = parseUri(navPath);
         newResource.path[newResource.path.length - 1].get = id;
-        var baseRes=buildQuery(newResource);
-        resource.data = { '@odata.id': baseRes.substring(0,baseRes.length-1) };
+        var baseRes = buildQuery(newResource);
+        resource.data = { '@odata.id': baseRes.substring(0, baseRes.length - 1) };
         return (base);
     }
 
@@ -420,7 +420,7 @@ function oData(res, config) {
     // This function actually queries the oData service with a GET request
     // TODO: maybe add some pseudonyms...
     // +++
-    base.get = function (callback,errorCallback) {
+    base.get = function (callback, errorCallback) {
         //start the request
         if (typeof Q !== 'undefined')
             currentPromise = Q.defer();
@@ -435,7 +435,7 @@ function oData(res, config) {
     // adds a dataset to the current selected resource 
     // if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
     // +++
-    base.save = function (callback,errorCallback) {
+    base.save = function (callback, errorCallback) {
         //if base.data is set and the user saves, we copying this resource as a Patch
         //this allows a fast edit mode after a get request
         if (resource.method === 'GET' && resource.data !== null) {
@@ -447,7 +447,7 @@ function oData(res, config) {
         }
 
         //start the request with promise
-        if (currentPromise || typeof callback==='undefined') {
+        if (currentPromise || typeof callback === 'undefined') {
             currentPromise = Q.defer();
             startRequest(callback, errorCallback, true);
             return (currentPromise.promise);
@@ -571,6 +571,16 @@ function oData(res, config) {
         }
         return (base);
     }
+	
+	// +++
+    // Set this value to add a progress handler to the current resource
+    // +++
+    base.progress = function (progressFunc) {
+		if (resource != null) {
+			resource.progress=progressFunc;
+		}
+        return (base);
+    }
 
     // ---------------------+++ INTERNALS +++----------------------------
 
@@ -605,23 +615,23 @@ function oData(res, config) {
             var wordArr = [];
             if (isNotExactSearch) {
                 for (var m = 0; m < searchWordSplit.length; m++) {
-					if(oConfig.version == 4) {
-						wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
-					}
-					else {
-						wordArr.push(searchFunc + '(\'' + searchWordSplit[m] + '\',' + searchColumns[i] + ')');
-					}
+                    if (oConfig.version == 4) {
+                        wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
+                    }
+                    else {
+                        wordArr.push(searchFunc + '(\'' + searchWordSplit[m] + '\',' + searchColumns[i] + ')');
+                    }
                 }
             }
             else {
-                wordArr.push(searchColumns[i] + ' '+ searchFunc + ' \'' + searchWord + '\'');
+                wordArr.push(searchColumns[i] + ' ' + searchFunc + ' \'' + searchWord + '\'');
             }
             columnArr.push('(' + wordArr.join(' and ') + ')');
         }
         return (columnArr.join('or'));
     }
-	
-	// +++
+
+    // +++
     // builds the URI for this query
     // +++
     function buildQuery(overrideRes) {
@@ -642,29 +652,24 @@ function oData(res, config) {
 
         //combine the uri
         for (var i = 0; i < res.path.length; i++) {
-            //check for automatic expand
-            /*if (isEndpoint && i !== 0 && res.path[i].get === null) {
-                expandResource(res.path[i].resource);
+            queryStr += res.path[i].resource;
+
+            if (res.path[i].get) {
+                queryStr += '(' + (internalParam[res.path[i].get] || res.path[i].get) + ')';
             }
-            else {*/
-                queryStr += res.path[i].resource;
 
-                if (res.path[i].get) {
-                    queryStr += '(' + (internalParam[res.path[i].get] || res.path[i].get) + ')';
-				}
-
-                queryStr += '/';
-            //}
+            queryStr += '/';
         }
 
         return (queryStr + res.appending + getQuery());
     }
-	
-	// +++
+
+    // +++
     // internal function which builds the url get parameter
     // +++
     function getQuery() {
         var tempStr = '';
+		
         for (queryName in resource.query) {
             if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
                 tempStr += '&' + resource.queryList[resource.query[queryName]].name + '=' + strFormat(resource.queryList[resource.query[queryName]].value, internalParam);
@@ -678,70 +683,71 @@ function oData(res, config) {
     // +++
     // checks if a route exist and starts the request and adds the parameters
     // +++
-	function checkRoute(hash) {
-		//literate over the complete routeList
-		for (var r = 0; r < routeList.length; r++) {
-			
-			//check regex with hash
-			if (routeList[r].route.regex.test(hash)) {
+    function checkRoute(hash) {
+        //literate over the complete routeList
+        for (var r = 0; r < routeList.length; r++) {
+            //check regex with hash
+            if (routeList[r].route.regex.test(hash)) {
 
-				//reset the param
-				internalParam={};
-				var param={};
-				
-				//get the matching data
-				var matches=routeList[r].route.regex.exec(hash);
+                //reset the param
+                internalParam = {};
+                var param = {};
 
-				//combine the propArr with the matches
-				if(typeof routeList[r].route.param !== 'undefined') {
-					var i=1;
-					for(prop in routeList[r].route.param) {
-						internalParam[prop]=matches[i];
-						param[prop.substring(1)]=matches[i];
-						i++;
-					}
-				}
-				else {
-					for(var i=1;i<matches.length;i++) {
-						internalParam[':'+(i-1)]=matches[i];
-						param[(i-1)]=matches[i];
-						
-					}
-				}
-				
-				//trigger the before routing func1
-				if(!beforeRoutingFunc(param)) {
-					//start the request if there is a resource defined
-					startRouteRequest(routeList[r].callback,param);
-				}
-			}
-		}
-	}
-	
-	// +++
+                //get the matching data
+                var matches = routeList[r].route.regex.exec(hash);
+
+                //combine the propArr with the matches
+                if (typeof routeList[r].route.param !== 'undefined') {
+                    var i = 1;
+                    for (prop in routeList[r].route.param) {
+                        internalParam[prop] = matches[i];
+                        param[prop.substring(1)] = matches[i];
+                        i++;
+                    }
+                }
+                else {
+                    for (var i = 1; i < matches.length; i++) {
+                        internalParam[':' + (i - 1)] = matches[i];
+                        param[(i - 1)] = matches[i];
+
+                    }
+                }
+
+                //trigger the before routing func1
+                if (!beforeRoutingFunc(param)) {
+                    //start the request if there is a resource defined
+                    startRouteRequest(routeList[r].callback, param);
+                }
+
+                base.param = param;
+            }
+        }
+    }
+
+    // +++
     // builds a route regex function based on a given string
     // +++
-	function buildRouteRegex(routeStr) {
-		//build regex TODO: Can be done before and not on every iteration
-		var routeRegex=routeStr;
-		if(!(routeStr instanceof RegExp)) {
-			//set the hash if needed
-			if(oConfig.isHashRoute && !startsWith(routeStr,'#')) {
-				routeStr='#'+routeStr;
-			}
-			//build up a regex
-			var routeArr=routeStr.split('/');
-			var param={};
-			for(var i=0;i<routeArr.length;i++) {
-				if(startsWith(routeArr[i],':')) {
-					param[routeArr[i]]=true;
-					routeArr[i]='(\\w+|\\W+)';
-				}
-			}
-			routeRegex=new RegExp('^'+routeArr.join('/')+'$');
-		}
-		return({regex: routeRegex, param:param});
-	}
+    function buildRouteRegex(routeStr) {
+        //build regex TODO: Can be done before and not on every iteration
+        var routeRegex = routeStr;
+        if (!(routeStr instanceof RegExp)) {
+            //set the hash if needed
+            if (oConfig.isHashRoute && !startsWith(routeStr, '#')) {
+                routeStr = '#' + routeStr;
+            }
+            //build up a regex
+            var routeArr = routeStr.split('/');
+            var param = {};
+            for (var i = 0; i < routeArr.length; i++) {
+                if (startsWith(routeArr[i], ':')) {
+                    param[routeArr[i]] = true;
+                    routeArr[i] = '([\\w| |-]+|\\[\W| |-]+)';
+                }
+            }
+            routeRegex = new RegExp('^' + routeArr.join('/') + '$');
+        }
+        return ({ regex: routeRegex, param: param });
+    }
 
     // +++
     // performs a deep copy on an object with JSON
@@ -759,22 +765,22 @@ function oData(res, config) {
     // takes a script with javascript operations and translates it to odata
     // +++
     function jsToOdata(str) {
-		//stripe out the vars
-		var regexp=new RegExp("'.*?'",'');
-		
-		var matches=regexp.exec(str);
-		str=str.replace(regexp,'{0}');
-		
-		for(key in opertionMapping) {
-            str = str.split(key).join(' '+opertionMapping[key]+' ');
+        //stripe out the vars
+        var regexp = new RegExp("'.*?'", '');
+
+        var matches = regexp.exec(str);
+        str = str.replace(regexp, '{0}');
+
+        for (key in opertionMapping) {
+            str = str.split(key).join(' ' + opertionMapping[key] + ' ');
         }
-		
-		if(matches!=null) {
-			for(var i=0;i<matches.length;i++) {
-				str=str.replace('{0}',matches[i])
-			}		
-		}
-		
+
+        if (matches != null) {
+            for (var i = 0; i < matches.length; i++) {
+                str = str.replace('{0}', matches[i])
+            }
+        }
+
         return (str);
     }
 
@@ -797,6 +803,11 @@ function oData(res, config) {
         if (!isQuery('$format')) {
             addQuery('$format', base.oConfig.format);
         }
+			
+		//appendings
+		for(var i=0;i<oConfig.appending.length;i++) {
+			addQuery(oConfig.appending[i].name, oConfig.appending[i].value);
+		}
     }
 
     // +++
@@ -811,35 +822,43 @@ function oData(res, config) {
 
         //create a CORS ajax Request
         if (resourceList.length === 0 && !isSave) {
-            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, null, param);
+            startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, null, param, resource.progress);
         }
         //else check if we need to make a $batch request
         else {
             //add the last resource to the history
             resourceList.push(resource);
-
+			
             //build a ajax request
-            var ajaxReq=createCORSRequest(resource.method, buildQuery());
+            var ajaxReq = createCORSRequest(resource.method, buildQuery());
             //check if we only have one request or we need to force batch because of isXDomainRequest
             if ((countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) && !isXDomainRequest) {
                 startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false,
 					[{ name: 'Accept', value: 'application/json' },
 					{ name: 'Content-Type', value: 'application/json' },
-					{ name: 'Content-Length', value: stringify(resource.data).length }]
-				);
+					{ name: 'Content-Length', value: stringify(resource.data).length }],
+				param, resourceList[resourceList.length-1].progress);
                 //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                 removeResource(['POST', 'PATCH', 'DELETE']);
             }
-            //do a $batch request
+                //do a $batch request
             else {
                 //generate a uui for this batch
                 var guid = generateUUID();
+				
+				//build the endpoint
+				var endpoint = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch';
+						
+				//appendings
+				for(var i=0;i<oConfig.appending.length;i++) {
+					endpoint += (i === 0 ? '?' : '&') + oConfig.appending[i].name + '=' + oConfig.appending[i].value;
+				}
+				
                 //start the request
-                startAjaxReq(createCORSRequest('POST', base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch'), buildBatchBody(guid, isSave), callback, errorCallback, true,
+                startAjaxReq(createCORSRequest('POST', endpoint), buildBatchBody(guid, isSave), callback, errorCallback, true,
                      //add the necessary headers
-                    [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }]
-                );
-                //{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }
+                    [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }],
+                param, resourceList[resourceList.length-1].progress);
                 if (isSave) {
                     //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                     removeResource(['POST', 'PUT', 'DELETE']);
@@ -851,9 +870,9 @@ function oData(res, config) {
     // +++
     // starts a request triggered by a route
     // +++
-    function startRouteRequest(callback,param) {
+    function startRouteRequest(callback, param) {
         if (resource.path[0].resource !== "")
-            startRequest(callback,null,false,param);
+            startRequest(callback, null, false, param);
         else {
             callback.call(base, param);
         }
@@ -913,7 +932,8 @@ function oData(res, config) {
             query: {}, //the query Array --> use base.queryArray		
             queryList: [],
             method: 'GET',
-            data: null
+            data: null,
+			progress:null,
         };
 
         //query
@@ -945,6 +965,7 @@ function oData(res, config) {
             }
         }
 
+
         return (reqObj);
     }
 
@@ -973,7 +994,6 @@ function oData(res, config) {
     // internal function to remove a query parameter
     // +++
     function removeQuery(queryName) {
-        //resource.queryList.splice(resource.query[queryName], 1);
         resource.query[queryName] = null;
     }
 
@@ -1023,17 +1043,6 @@ function oData(res, config) {
         });
         return uuid;
     }
-
-    // +++
-    // Checks if a value is positiv and a integer
-    // +++
-    /*function checkIntAndPos(intVal, throwName) {
-        var intParse = tryParseInt(intVal, null);
-        if (intParse !== null && intParse >= 0)
-            return intParse;
-        else
-            throwEx(throwName + ': Parameter must be an integer value and positive.');
-    }*/
 
     // +++
     // Checks if a value is positiv and a integer
@@ -1181,7 +1190,7 @@ function oData(res, config) {
                 body += '--changeset_' + changsetGuid + '\n';
                 body += 'Content-Type: application/http\n';
                 body += 'Content-Transfer-Encoding: binary\n';
-                body += 'Content-ID:' + i+1 + '\n\n';         //This ID can be referenced $1/Customer 
+                body += 'Content-ID:' + i + 1 + '\n\n';         //This ID can be referenced $1/Customer 
                 body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
                 body += 'Host: ' + base.oConfig.endpoint + '\n';
                 body += 'Content-Type: application/json\n';
@@ -1200,7 +1209,8 @@ function oData(res, config) {
     // +++
     // start a ajax request. data should be null if nothing to send
     // +++
-    function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers, param) {
+    function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers, param, progress) {
+		
         //if start loading function is set call it
         if (base.oConfig.start && overideLoading == null) {
             base.oConfig.openAjaxRequests++;
@@ -1226,37 +1236,37 @@ function oData(res, config) {
                 ajaxRequest.onreadystatechange();
             };
         }
+		else if(typeof progress === 'function') {
+			ajaxRequest.onprogress = progress;
+		}
+		
         ajaxRequest.onreadystatechange = function () {
             //check the http status
             if (ajaxRequest.readyState === 4) {
                 if (ajaxRequest.status >= 200 && ajaxRequest.status < 300) {
 
-                    //handling no-content returns
-                    if (ajaxRequest.status === 204) {
-                        //callback.call(tempBase,tempBase.data);
-                        //parseResponse(tempBase.data,tempBase);
-                    }
-                        //dealing with normal response
-                    else if (!isBatch) {
-                        parseResponse(ajaxRequest.responseText, tempBase);
-                        //callback.call(tempBase,tempBase.data);
-                    }
-                        //else, handling a $batch response
-                    else {
-                        //split every line and look for startsWith({)
-                        var batchLines = ajaxRequest.responseText.split('\n');
-                        var resCount = 0;
-                        var dataArray = [];
-                        for (var i = 0; i < batchLines.length; i++) {
-                            if (startsWith(batchLines[i], '{')) {
-                                parseResponse(batchLines[i], tempBase);
-                                dataArray.push(tempBase.data);
-                                resCount++;
-                            }
+                    //dealing with the response
+                    if (ajaxRequest.status !== 204) {
+                        if (!isBatch) {
+                            parseResponse(ajaxRequest.responseText, tempBase);
+                            //callback.call(tempBase,tempBase.data);
                         }
-                        tempBase.data = dataArray;
-
-                        //callback.call(tempBase,dataArray);
+                            //else, handling a $batch response
+                        else {
+							var dataArray = [];
+							var regex = /({[\s\S]*?--batchresponse_)/g;
+							var result;
+							do {
+								result = regex.exec(ajaxRequest.responseText);
+								if(result) {
+									parseResponse(result[0].substring(0, result[0].length-16), tempBase);
+									dataArray.push(tempBase.data);
+                                }
+								
+							} while (result);
+							
+                            tempBase.data = dataArray;
+                        }
                     }
 
                     //call the Callback (check for Q-promise)
@@ -1274,23 +1284,20 @@ function oData(res, config) {
                         if (JSON && ajaxRequest.responseText != "")
                             errResponse = JSON.parse(ajaxRequest.responseText);
 
-
-
                         if (errResponse !== '' && errResponse['odata.error']) {
                             var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
                             throwEx(errorMsg);
                         }
                         else {
-                            throwEx('Request to '+buildQuery()+' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
+                            throwEx('Request to ' + buildQuery() + ' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
                         }
-
                     } catch (ex) {
-                        endLoading(tempBase, true, ajaxRequest.status);
-                        if (typeof errorCallback !== 'undefined') {
+                        endLoading(tempBase, true, ajaxRequest.status || 404, ajaxRequest.responseText);
+                        if (typeof errorCallback === 'function') {
                             errorCallback(ajaxRequest.status || 404, ex)
                         }
                         else if (currentPromise) {
-							ex.status=(ajaxRequest.status || 404);
+                            ex.status = (ajaxRequest.status || 404);
                             currentPromise.reject(ex);
                         }
                         else {
@@ -1299,7 +1306,7 @@ function oData(res, config) {
                     }
                 }
                 //end the loading when everything is okay
-                endLoading(tempBase,false);
+                endLoading(tempBase, false);
             }
         }
 
@@ -1336,21 +1343,23 @@ function oData(res, config) {
     //+++
     // Cancels the loading state
     //+++
-    function endLoading(base, isError, status) {
+    function endLoading(base, isError, status, msg) {
         if (base.oConfig.ready && overideLoading == null) {
             base.oConfig.openAjaxRequests--;
             if (base.oConfig.openAjaxRequests <= 0) {
                 base.oConfig.ready();
             }
         }
+
         if (overideLoading && overideLoading[1]) {
             overideLoading[1](false);
         }
+
         if (base.oConfig.error && isError) {
-            base.oConfig.error(status);
+            base.oConfig.error(status, msg);
         }
     }
-    
+
 
     // +++
     // this function parses a normal response to a JSON response
@@ -1421,9 +1430,10 @@ function oData(res, config) {
         var para = arguments[1];
         for (p in para) {
             var regex = new RegExp(p, 'g');
-			str = str.replace(regex, para[p]);
+            if (typeof str === 'string')
+                str = str.replace(regex, para[p]);
         }
-        
+
         return str;
     }
 

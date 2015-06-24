@@ -5,13 +5,11 @@
 // http://qunitjs.com/
 //
 // By Jan Hommes 
-// Date: 14.01.2015
+// Date: 15.06.2015
 // +++
 
 //helper function for debuging
 function printResult(o,data) {
-	//console.log(o);
-	//console.log(data);
 	try{
 		return('Passed! Lenght: '+(typeof data.length !== 'undefined'? data.length :1) +'  |  JSON Result: '+JSON.stringify(data));
 	} catch(e) {
@@ -23,13 +21,9 @@ function printResult(o,data) {
 function configureEndpoint() {
 	if(!o().isEndpoint()) {
 		o().config({
-			//endpoint:'https://secure.pointsale.de/Service.svc',
-			endpoint:'http://localhost:1000/Api.svc',
-			version:3,
+			endpoint:'http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
+			version:4,
 			strictMode:true,
-			username:'psapi',
-			password:'demo'
-			//headers:[{name:'X-Custom-Headers', value: 'value'}]
 		});
 	}
 }
@@ -76,15 +70,16 @@ QUnit.test('CONFIG PS - endpoint', function(assert) {
 // ------------------------------------------------- Endpoint tests -------------------------------------------------------------
 
 //create test data with a test
-var testProduct=null;
+var testEntity=null;
 function createTestData() {
 	QUnit.test('POST Product as the test product - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('Product').post({Name:'Yeah',Price:'99.00'}).save(function(o) {
-			assert.ok(o.Name=='Yeah', printResult(this,o));
+		var name='Test_'+Math.random();
+		o('People').post({UserName:name,FirstName:name,LastName:name}).save(function(o) {
+			assert.ok(o.UserName==name, printResult(this,o));
 			done();
-			testProduct=o;
-			console.log(testProduct);
+			testEntity=o;
+			console.log(testEntity);
 			startEndpointTests();
 		});
 	});
@@ -94,7 +89,7 @@ function createTestData() {
 function startEndpointTests() {
 	QUnit.test('GET Product - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('Product').get(function(data) {
+		o('People').get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
 		});
@@ -102,7 +97,7 @@ function startEndpointTests() {
 
 	QUnit.test('GET Product - endpoint - .top(1)', function(assert) {
 		var done = assert.async();
-		o('Product').top(1).get(function(data) {
+		o('People').top(1).get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
 		});
@@ -116,70 +111,70 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('GET Product('+testProduct.id+') - no endpoint - query: $filter=Price lt 100', function(assert) {
+	QUnit.test('GET Product('+testEntity.UserName+') - no endpoint - query: $filter=Price lt 100', function(assert) {
 		var done = assert.async();
-		o('https://secure.pointsale.de/Service.svc/Product('+testProduct.id+')?$filter=Price lt 100').get(function(data) {
-			assert.ok(data.id === testProduct.id, printResult(this,data));
+		o('https://secure.pointsale.de/Service.svc/Product('+testEntity.UserName+')?$filter=Price lt 100').get(function(data) {
+			assert.ok(data.UserName === testEntity.UserName, printResult(this,data));
 			done();
 		});
 	});*/
 
-	QUnit.test('GET Product('+testProduct.id+') - endpoint - query: $filter=Price lt 100', function(assert) {
+	QUnit.test('GET People(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('Product('+testProduct.id+')?$filter=Price lt 100').get(function(data) {
-			assert.ok(data.id === testProduct.id, printResult(this,data));
+		o('People(\''+testEntity.UserName+'\')').get(function(data) {
+			assert.ok(data.UserName === testEntity.UserName, printResult(this,data));
 			done();
 		});
 	});
 
 	QUnit.test('GET Product - endpoint - query: .take(5) and .skip(2)', function(assert) {
 		var done = assert.async();
-		o('Product').take(5).skip(2).get(function(data) {
+		o('People').take(5).skip(2).get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product - endpoint - query: .take(5) and .expand("ProductGroup")', function(assert) {
+	QUnit.test('GET Products - endpoint - query: .take(5) and .expand("ProductGroup")', function(assert) {
 		var done = assert.async();
-		o('Product').take(5).expand('ProductGroup').get(function(data) {
+		o('People').take(5).expand('ProductGroup').get(function(data) {
 			assert.ok(data.length  >= 0 && (data[0] && data[0].ProductGroup), printResult(this,data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product('+testProduct.id+') with q.js promise - endpoint - no query', function(assert) {
+	QUnit.test('GET Products(\''+testEntity.UserName+'\') with q.js promise - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('Product('+testProduct.id+')').get().then(function(o) {
-			assert.ok(o.data.id === testProduct.id, printResult(o,o.data));
+		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
+			assert.ok(o.data.UserName === testEntity.UserName, printResult(o,o.data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product('+testProduct.id+') and  Group with q.js promise all - endpoint - no query', function(assert) {
+	QUnit.test('GET Products(\''+testEntity.UserName+'\') and  Group with q.js promise all - endpoint - no query', function(assert) {
 		var done = assert.async();
 		Q.all([
-			o('Product('+testProduct.id+')').get(),
-			o('Product?$filter=Price lt 100')
+			o('People(\''+testEntity.UserName+'\')').get(),
+			o('People?$filter=UserName eq \'Yeah\'')
 		]).then(function(o) {
-			assert.ok(o[0].data.id==testProduct.id, printResult(o[0],o[0].data));
+			assert.ok(o[0].data.UserName==testEntity.UserName, printResult(o[0],o[0].data));
 			assert.ok(o[1].data.length >=0, printResult(o[1],o[1].data));
 			done();
 		});
 	});
 
-	QUnit.test('GET Product('+testProduct.id+') and PATCH Product(2), change and save() it with q.js promise - endpoint - no query', function(assert) {
+	QUnit.test('GET Products(\''+testEntity.UserName+'\') and PATCH Product(2), change and save() it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();	
 		var name='Test_'+Math.random();
 		
-		o('Product('+testProduct.id+')').get().then(function(o) {
-			o.data.Name=name;
-			assert.ok(o.data.id===testProduct.id, printResult(o,o.data));
+		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
+			o.data.FirstName=name;
+			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
 			done1();
 			return(o.save());
 		}).then(function(o) {
-			assert.ok(o.data.id === testProduct.id && o.data.Name===name, printResult(o,o.data));
+			assert.ok(o.data.UserName === testEntity.UserName && o.data.FirstName===name, printResult(o,o.data));
 			done2();
 		});
 		/*.fail(function(err) {
@@ -187,17 +182,14 @@ function startEndpointTests() {
 		});*/
 	});
 	
-	QUnit.test('GET Product('+testProduct.id+') and PATCH Product(2), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
+	QUnit.test('GET Products(\''+testEntity.UserName+'\') and PATCH Product(2), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();	
 		var name='Test_'+Math.random();
 		
-		o('Product('+testProduct.id+')').get().then(function(o) {
-			o.data.Name=name;
-			//this is not allowed, must be:
-			//o.data.Price='12.12';
-			o.data.Price=12.12;
-			assert.ok(o.data.id===testProduct.id, printResult(o,o.data));
+		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
+			o.data.FirstName=name;
+			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
 			done1();
 			return(o.save());
 		}).then(function(o) {
@@ -208,20 +200,20 @@ function startEndpointTests() {
 		});
 	});
 
-	QUnit.test('PATCH Product('+testProduct.id+') - endpoint - no query', function(assert) {
+	QUnit.test('PATCH Products(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
 		var name='Test_'+Math.random();
-		o('Product('+testProduct.id+')').patch({Name:name}).save(function(data) {
+		o('People(\''+testEntity.UserName+'\')').patch({FirstName:name}).save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
 			done();
 		});
 	});
 	
-	QUnit.test('PATCH Product and provoke error because of bulk updates are not supported - endpoint - no query', function(assert) {
+	/*QUnit.test('PATCH Products and provoke error because of bulk updates are not supported - endpoint - no query', function(assert) {
 		var done = assert.async();
 		var name='Test_'+Math.random();
 		try {
-			o('Product').patch({Name:name}).save(function(data) {
+			o('People').patch({FirstName:name}).save(function(data) {
 								
 			});
 		}
@@ -229,14 +221,14 @@ function startEndpointTests() {
 			assert.ok(true, ex);
 			done();
 		}
-	});
+	});*/
 	
 	
 	//DELETES the test data, move it to the end of this file!
-	QUnit.test('DELETE Product('+testProduct.id+') - endpoint - no query', function(assert) {
+	QUnit.test('DELETE Products(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
 		var name='Test_'+Math.random();
-		o('Product('+testProduct.id+')').delete().save(function(data) {
+		o('People(\''+testEntity.UserName+'\')').delete().save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
 			done();			
 		});
