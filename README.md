@@ -1,7 +1,7 @@
 # o.js
 *o.js beta v0.1*
 
-o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib. 
+o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib. 
 
 
 ##### Samples #####
@@ -196,6 +196,18 @@ Currently the following queries are supported:
  `.batch(string)` 	- adds a second resource to the request (Odata: $batch)
  
  `.expand(string)` 	- expands a related resource (Odata: Products/?*$expand=ProductUnit*)
+ 
+ `.ref(string, string)` - expands a related resource (Odata: Products/*$ref=Categories(1)*)
+ 
+ `.deleteRef(string, string)` - expands a related resource (Odata: Products/*$ref=Categories(1)*)
+ 
+ `.post(object)` 	- Post data to an endpoint
+ 
+ `.patch(object)` 	- PATCH data on an endpoint
+ 
+ `.put(object)` 	- PUT data on an endpoint
+ 
+ `.remove(object)` 	- DELETE data on an endpoint (You must define only one resource: e.g: Products(1) )
 
 
 
