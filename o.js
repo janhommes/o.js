@@ -43,7 +43,7 @@ function o(res) {
         start: null, 		//a function which is executed on loading
         ready: null,		//a function which is executed on ready
         error: null,		//a function which is executed on error
-        headers: [],		//a array of additional headers [{name:'headername',value:'headervalue'}]
+        headers: [{name: 'If-Match', value: '*'}],		//a array of additional headers [{name:'headername',value:'headervalue'}]
         username: null, 	//the basic auth username
         password: null,		//the basic auth password
         isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth

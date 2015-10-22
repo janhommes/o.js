@@ -85,18 +85,18 @@ body {
 	color:#888;
 	text-align:right;
 }
-.products {
+.people {
 	background-color:#EEE;
 	margin:10px;
 	padding:10px;
 	border-radius:5px;
 }
-.products h4 {
+.people h4 {
 	white-space: nowrap;
 	text-overflow:ellipsis;
 	overflow:hidden;
 }
-.products .description {
+.people .description {
 	text-overflow:ellipsis;
 	overflow:hidden;
 	min-height:60px;

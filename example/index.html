@@ -8,18 +8,12 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>o.js Productpage Example</title>
+    <title>o.js example page</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 	<link href="css/custom.css" rel="stylesheet">
 
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
   </head>
 
   <body>
@@ -29,11 +23,10 @@
         <nav>
           <ul class="nav nav-pills pull-right">
             <li role="presentation" data-bind="css: { active: route()==='Home' }" class="active"><a href="#Home">Home</a></li>
-            <li role="presentation" data-bind="css: { active: route()==='Product' }"><a href="#Product">Products</a></li>
-            <li role="presentation" data-bind="css: { active: route()==='Card' }"><a href="#Card">Card <span data-bind="text:'('+shoppingCard.items().length+')',visible:shoppingCard.items().length>0"></span></a></li>
+            <li role="presentation" data-bind="css: { active: route()==='People' }"><a href="#People">People</a></li>
           </ul>
         </nav>
-        <h3 class="text-muted">Example Shop</h3>
+        <h3 class="text-muted">o.js Example</h3>
       </div>
 	  
 	  <div class="loading" data-bind="visible:isLoading()"> 
@@ -46,91 +39,74 @@
 	  <div class="spacer" data-bind="css: { opacity20: isLoading()}">
 		  <div class="jumbotron" data-bind="visible:route()==='Home'">
 			<h1>o.js Example</h1>
-			<p class="lead">This example shows how easy you can use o.js routing function in combination with knockout and bootstrap to make a stunning SPA webpage.</p>
+			<p class="lead">This example shows how easy you can use o.js routing function in combination with knockout and bootstrap to make a SPA webpage.</p>
 			<p> <a class="btn btn-lg btn-success" href="https://github.com/janhommes/o.js" role="button">Get o.js</a></p>
 		  </div>
 		  
-		  <div class="jumbotron" data-bind="visible:route()==='Detail',with:detailProduct">
-			<h1 data-bind="text:Name">o.js Example</h1>
-			<p class="lead" data-bind="text:(Description || 'No Description')"></p>
-			<!--<p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>-->
+		  <div data-bind="visible:route()==='Detail',with:detailPeople">
+			  <div class="jumbotron">
+			<h1 data-bind="text:FirstName + ' ' + LastName "></h1>
+			  </div>
+			
+			<table class="table table-hover">
+				  <thead>
+					<tr>
+					  <th>#</th>
+					  <th>Name</th>
+					  <th>Description</th>
+					  <th></th>
+					  <th class="text-center">Budget</th>
+					</tr>
+				  </thead>
+				  <tbody>
+					<!-- ko foreach: Trips -->
+					<tr>
+						<td data-bind="text:($index()+1)"></td>
+						<td data-bind="text:Name"></td>
+						<td data-bind="text:Description"></td>
+						<td style="width:100px;" class="text-right" data-bind="currency:Budget"></td>
+						<td style="width:20%;vertical-align:middle; " class="text-center">
+							<a role="button" class="btn btn-danger" data-bind="click:$root.remove">x</a>
+						</td>
+					</tr>
+					<!-- /ko -->
+				  </tbody>
+				</table>
 		  </div>
 		  
 		  <div class="row marketing" data-bind="visible:route()==='Home'">
-			<!-- ko foreach: products -->
+			<!-- ko foreach: People -->
 				<div class="col-md-4">
-					<div class="products">
-						<h4 data-bind="text:Name"></h4>
-						<div class="description" data-bind="text:(Description || 'No Description')"></div>
-						<div class="price" data-bind="currency:Price"></div>
-						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+ID+'/'+Name }">Details</a>
-						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
+					<div class="people">
+						<h4 data-bind="text:FirstName"></h4>
+						<h2 data-bind="text:LastName"></h4>
+						<a role="button" class="btn btn-primary" data-bind="attr { href:'#People/Detail/'+UserName }">Details</a>
 					</div>
 				</div>
 			<!-- /ko -->
 		  </div>
 		  
-		  <div class="row marketing" data-bind="visible:route()==='Product'">
-			<!-- ko foreach: products -->
+		  <div class="row marketing" data-bind="visible:route()==='People'">
+			<!-- ko foreach: People -->
 				<div class="col-md-4">
-					<div class="products">
-						<h4 data-bind="text:Name"></h4>
-						<div class="description" data-bind="text:(Description || 'No Description')"></div>
-						<div class="price" data-bind="currency:Price"></div>
-						<a role="button" class="btn btn-primary" data-bind="attr { href:'#Product/Detail/'+ID+'/'+Name }">Details</a>
-						<a role="button" class="btn btn-success" data-bind="click:$parent.addToCard">Add</a>
+					<div class="people">
+						<h4 data-bind="text:FirstName"></h4>
+						<h2 data-bind="text:LastName"></h4>
+						<a role="button" class="btn btn-primary" data-bind="attr { href:'#People/Detail/'+UserName }">Details</a>
 					</div>
 				</div>
 			<!-- /ko -->
 		  </div>
 		  
-		 <div class="row marketing" data-bind="visible:route()==='Product'">
+		 <div class="row marketing" data-bind="visible:route()==='People'">
 			<div class="col-md-4">
-				<a data-bind="attr: { href: '#Product/Page/'+(skip()-9) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
+				<a data-bind="attr: { href: '#People/Page/'+(skip()-9) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
 			</div>
 			<div class="col-md-4 text-center">
 				<span data-bind="text:Math.ceil((skip()/9)+1)"></span> of <span data-bind="text:Math.ceil(total()/9)"></span>
 			</div>
 			<div class="col-md-4">
-				<a data-bind="attr: { href: '#Product/Page/'+(skip()+9) },visible:(skip()+9)<total()" class="btn btn-default pull-right" role="button">Next</a>
-			</div>
-		</div>
-		
-		 <div class="row marketing" data-bind="visible:route()==='Card'">
-			<h3 data-bind="visible:shoppingCard.items().length===0">Your card is empty :(</h3>
-			<div data-bind="visible:shoppingCard.items().length>0">
-				<table class="table table-hover">
-				  <thead>
-					<tr>
-					  <th>#</th>
-					  <th>Name</th>
-					  <th></th>
-					  <th class="text-center">Amount</th>
-					</tr>
-				  </thead>
-				  <tbody>
-					<!-- ko foreach: shoppingCard.items -->
-					<tr>
-						<td style="vertical-align:middle;" data-bind="text:($index()+1)"></td>
-						<td style="vertical-align:middle;" data-bind="text:Product.Name"></td>
-						<td style="width:10%;">
-							<input class="form-control text-center" type="text" value="" data-bind="value:Amount">
-						</td>
-						<td style="vertical-align:middle;" class="text-right" data-bind="currency:Total()"></td>
-						<td style="width:20%;" class="text-right">
-							<a role="button" class="btn btn-danger" data-bind="click:Remove">x</a>
-						</td>
-					</tr>
-					<!-- /ko -->
-					<tr class="success">
-						<td colspan="4" class="text-right">
-							<strong data-bind="currency:shoppingCard.total()"></strong>
-						</td>
-						<td class="text-left">Total</td>
-					</tr>
-				  </tbody>
-				</table>
-				<a role="button" class="btn btn-success pull-right" href="#Order">Order now</a>
+				<a data-bind="attr: { href: '#People/Page/'+(skip()+9) },visible:(skip()+9)<total()" class="btn btn-default pull-right" role="button">Next</a>
 			</div>
 		</div>
 	  </div>

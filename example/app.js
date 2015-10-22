@@ -12,17 +12,24 @@ function ViewModel() {
 	var self=this;
 	
 	//ko observables
-	self.products=ko.observableArray([]);
-	self.groups=ko.observableArray([]);
-	self.currentProduct=ko.observable(null);
+	self.People=ko.observableArray([]);
+	//self.currentPeople=ko.observable(null);
 	self.route=ko.observable('');
 	self.skip=ko.observable(0);
 	self.total=ko.observable(0);
-	self.detailProduct=ko.observable();
+	self.detailPeople=ko.observable();
 	self.isLoading=ko.observable(false);
 	
+	self.remove = function(d) {
+		o('People(\'' + self.detailPeople().UserName + '\')/Trips(' + d.TripId + ')').remove().save(function() {
+			o('People(\'' + self.detailPeople().UserName + '\')').expand('Trips').get(function(d) {
+				self.detailPeople(d);
+			});
+		});
+	}
+	
 	//a complex observable used for the shopping card
-	self.shoppingCard={
+	/*self.shoppingCard={
 		items:ko.observableArray([]),
 		total:function() {
 			var total=0;
@@ -30,11 +37,11 @@ function ViewModel() {
 				total+=this.items()[i].Total();
 			return(total);
 		}
-	}
+	}*/
 	
 	//o.js init
 	o().config({
-		endpoint:'http://services.odata.org/V4/OData/OData.svc',
+		endpoint:'http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
 		version:4,
 		strictMode:true,
 		start:function() {
@@ -48,56 +55,35 @@ function ViewModel() {
 		
 	//+++ initialize the routes +++
 
-	//get top 3 products on start TODO: At filter for best selling!
-	o('Products').take(3).route('Home', function(data) {
+	//get top 3 People on start TODO: At filter for best selling!
+	o('People').take(3).route('Home', function(data) {
 		self.route('Home');
-		self.products(data);
+		self.People(data);
 	}).triggerRoute(window.location.hash === '' ? '#Home' : window.location.hash);
 	
-	//get a product list on product click
-	o('Products').take(9).inlineCount().route('Product',function(data) {
-		self.route('Product');
-		self.products(data);
+	//get a People list on People click
+	o('People').take(9).inlineCount().route('People',function(data) {
+		self.route('People');
+		self.People(data);
 		self.skip(0);
 		self.total(this.inlinecount);
 	});
 	
-	//product pagination
-	o('Products').skip(':0').take(9).inlineCount().route('Product/Page/:0',function(data) {
+	//People pagination
+	o('People').skip(':0').take(9).inlineCount().route('People/Page/:0',function(data) {
 		console.log(this.param);
 		self.skip(parseInt(this.param[0]));
-		self.route('Product');
-		self.products(data);
+		self.route('People');
+		self.People(data);
 		self.total(this.inlinecount);
 	});
 	
-	//product detail
-	o('Products').find(':0').route('Product/Detail/:0/:1',function(data) {
+	//People detail
+	o('People').filter('UserName == \':0\'').expand('Trips').first().route('People/Detail/:0',function(data) {
 		self.route('Detail');
-		self.detailProduct(data);
+		console.log(data);
+		self.detailPeople(data);
 	});
-
-	//open the shopping card
-	o('').route('Card',function(data) {
-		self.route('Card');
-	});
-	
-	//add to shopping card
-	self.addToCard=function(product) {
-		//push a temp ProductOrder element into the items. 
-		self.shoppingCard.items.push({ 
-			Amount:ko.observable(1),
-			Product:product,
-			Total:function() {
-				return(this.Amount()*this.Product.Price);
-			},
-			Remove:function() {
-				var index = self.shoppingCard.items.indexOf(this);
-				self.shoppingCard.items.splice(index, 1);
-			}
-		});
-	}
-
 }
 
 //append the viewmodel
