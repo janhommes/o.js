@@ -28,17 +28,6 @@ function ViewModel() {
 		});
 	}
 	
-	//a complex observable used for the shopping card
-	/*self.shoppingCard={
-		items:ko.observableArray([]),
-		total:function() {
-			var total=0;
-			for(var i=0;i<this.items().length;i++) 
-				total+=this.items()[i].Total();
-			return(total);
-		}
-	}*/
-	
 	//o.js init
 	o().config({
 		endpoint:'http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
@@ -88,4 +77,3 @@ function ViewModel() {
 
 //append the viewmodel
 ko.applyBindings(new ViewModel());
-
