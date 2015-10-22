@@ -35,7 +35,7 @@ You can use hash routes to map your Odata service endpoint to your website:
 	console.log(data);
   });
 ```
-Instead of manual getting your data with the `get()` function, this routing function always returns the data when somebody navigates to an URL with the hash value `index.html#Product/Detail/1/Some more parameter`. The `find()` method automatically maps the right parameter (in this example *1*). <a href="todo">See this</a> demonstration for more examples. 
+Instead of manual getting your data with the `get()` function, this routing function always returns the data when somebody navigates to an URL with the hash value `index.html#Product/Detail/1/Some more parameter`. The `find()` method automatically maps the right parameter (in this example *1*). <a href="https://github.com/janhommes/o.js/tree/master/example">See this</a> demonstration for more examples. 
 
 ###### Get data (details) ######
 --------
