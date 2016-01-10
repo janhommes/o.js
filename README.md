@@ -1,7 +1,16 @@
 # o.js
-*o.js beta v0.1*
+*o.js beta v0.1.1*
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib. 
+
+
+##### Install #####
+------------
+Download the `o.js` or `o.min.js` file or install it via `bower` and add the script into your file (`<script src="bower_components/o.js/o.js"></script>`):
+
+```
+	bower install o.js
+```
 
 
 ##### Samples #####
