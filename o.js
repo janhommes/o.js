@@ -493,8 +493,8 @@ function oData(res, config) {
         if (res) {
             addNewResource(res);
         }
-
-        if (!resource.path[0] || !resource.path[0].get)
+        
+        if (!resource.path[resource.path.length-1] || !resource.path[resource.path.length-1].get)
             throwEx('Bulk updates are not supported. You need to query a unique resource with find() to patch/put it.');
 
         //set the method and data
@@ -513,12 +513,11 @@ function oData(res, config) {
         if (res)
             addNewResource(res);
 
-        if (!resource.path[0] || !resource.path[0].get)
+        if (!resource.path[resource.path.length-1] || !resource.path[resource.path.length-1].get)
             throwEx('Bulk deletes are not supported. You need to query a unique resource with find() to delete it.');
 
         //set the method
         resource.method = 'DELETE';
-        //resource.data=null;
 
         return (base);
     }

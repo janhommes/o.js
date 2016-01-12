@@ -178,7 +178,7 @@ function startEndpointTests() {
 		});
 	});
 	
-	QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH People(2), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
+	/*QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH People(X), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();	
 		var name='Test_'+Math.random();
@@ -194,7 +194,7 @@ function startEndpointTests() {
 			assert.ok(err, 'Passed! Error as expected.');
 			done2();
 		});
-	});
+	});*/
 
 	QUnit.test('PATCH People(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
@@ -204,7 +204,20 @@ function startEndpointTests() {
 			done();
 		}, function(e) { 
 			assert.ok(e === 200, printResult(this, e));
-			done()
+			done();
+		});
+	});
+    
+    
+	QUnit.test('PATCH People(\''+testEntity.UserName+'\') - no endpoint - no query', function(assert) {
+		var done = assert.async();
+		var name='Test_'+Math.random();
+		o('http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/People(\''+testEntity.UserName+'\')').patch({FirstName:name}).save(function(data) {
+			assert.ok(data.length===0, printResult(this,data));
+			done();
+		}, function(e) { 
+			assert.ok(e === 200, printResult(this, e));
+			done();
 		});
 	});
 
@@ -217,7 +230,7 @@ function startEndpointTests() {
 			done();			
 		}, function(e) { 
 			assert.ok(e === 200, printResult(this, e));
-			done()
+			done();
 		});
 	});
 }
