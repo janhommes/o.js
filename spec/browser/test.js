@@ -4,27 +4,31 @@
 // o.js unit test with quint.js
 // http://qunitjs.com/
 //
-// By Jan Hommes 
-// Date: 15.06.2015
+// By Jan Hommes
+// Date: 01.02.2016
 // +++
+
+/*if(typeof require === 'undefined') {
+    var o = require('../o.js');
+}*/
 
 //helper function for debuging
 function printResult(o,data) {
 	try{
 		if(data.message) {
-			return('JSON Result: '+JSON.stringify(data));	
+			return('JSON Result: '+JSON.stringify(data));
 		}
 		return('Lenght: '+(typeof data.length !== 'undefined'? data.length :1) +'  |  JSON Result: '+JSON.stringify(data));
 	} catch(e) {
 		return('Exception: '+e);
 	}
-} 
+}
 
 //helper function to configure endpoint
 function configureEndpoint() {
 	if(!o().isEndpoint()) {
 		o().config({
-			endpoint:'http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
+			endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
 			version:4,
 			strictMode:true
 		});
@@ -34,7 +38,7 @@ function configureEndpoint() {
 
 // ----------------------------------------------- Tests ----------------------------------------------------
 
-QUnit.test('No resource or endpoint throw error', function(assert) {
+test('No resource or endpoint throw error', function(assert) {
 	 assert.throws(
 		function() {
 			o('');
@@ -47,6 +51,19 @@ QUnit.test('No resource or endpoint throw error', function(assert) {
 		},
 		'Passed no endpoint!'
 	);
+});
+
+
+QUnit.test('GET People - no endpoint - no query', function(assert) {
+    var done = assert.async();
+
+    o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').get(function(data) {
+        assert.ok(data.length >= 0, printResult(this,data));
+        done();
+    }, function(e) {
+        assert.ok(e === 200, printResult(this, e));
+        done();
+    });
 });
 
 QUnit.test('CONFIG - endpoint', function(assert) {
@@ -68,21 +85,33 @@ function createTestData() {
 			done();
 			testEntity = data;
 			startEndpointTests();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
 	});
 }
-	
+
 // Start this test if the endpoint is configured
 function startEndpointTests() {
-	QUnit.test('GET People - endpoint - no query', function(assert) {
+    QUnit.test('POST People as the test person - endpoint - no query', function(assert) {
 		var done = assert.async();
-		o('People').get(function(data) {
+		var name='Test_'+Math.random();
+		o('People').post({UserName:name,FirstName:name,LastName:name}).save(function(data) {
+			assert.ok(data.UserName === name, printResult(this, data));
+			done();
+		}, function(e) {
+			assert.ok(e === 200, printResult(this, e));
+			done()
+		});
+	});
+
+	QUnit.test('GET People - no endpoint - no query', function(assert) {
+		var done = assert.async();
+		o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -93,7 +122,7 @@ function startEndpointTests() {
 		o('People').top(1).get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -104,7 +133,7 @@ function startEndpointTests() {
 		o('People(\''+testEntity.UserName+'\')').get(function(data) {
 			assert.ok(data.UserName === testEntity.UserName, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -115,7 +144,7 @@ function startEndpointTests() {
 		o('People').take(5).skip(2).get(function(data) {
 			assert.ok(data.length >= 0, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -126,7 +155,7 @@ function startEndpointTests() {
 		o('People').take(5).expand('Trips').get(function(data) {
 			assert.ok(data.length  >= 0 && (data[0] && data[0].Trips), printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -137,7 +166,7 @@ function startEndpointTests() {
 		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
 			assert.ok(o.data.UserName === testEntity.UserName, printResult(o,o.data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done()
 		});
@@ -160,9 +189,9 @@ function startEndpointTests() {
 
 	QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH AAA People(\''+testEntity.UserName+'\'), change and save() it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
-		var done2 = assert.async();	
+		var done2 = assert.async();
 		var name='Test_'+Math.random();
-		
+
 		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
 			o.data.FirstName=name;
 			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
@@ -177,12 +206,12 @@ function startEndpointTests() {
 			done2();
 		});
 	});
-	
+
 	/*QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH People(X), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
 		var done1 = assert.async();
-		var done2 = assert.async();	
+		var done2 = assert.async();
 		var name='Test_'+Math.random();
-		
+
 		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
 			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
 			o.data.Gender = 1;
@@ -202,20 +231,20 @@ function startEndpointTests() {
 		o('People(\''+testEntity.UserName+'\')').patch({FirstName:name}).save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done();
 		});
 	});
-    
-    
+
+
 	QUnit.test('PATCH People(\''+testEntity.UserName+'\') - no endpoint - no query', function(assert) {
 		var done = assert.async();
 		var name='Test_'+Math.random();
-		o('http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/People(\''+testEntity.UserName+'\')').patch({FirstName:name}).save(function(data) {
+		o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\''+testEntity.UserName+'\')').patch({FirstName:name}).save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
 			done();
-		}, function(e) { 
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done();
 		});
@@ -227,10 +256,20 @@ function startEndpointTests() {
 		var name='Test_'+Math.random();
 		o('People(\''+testEntity.UserName+'\')').delete().save(function(data) {
 			assert.ok(data.length===0, printResult(this,data));
-			done();			
-		}, function(e) { 
+			done();
+		}, function(e) {
 			assert.ok(e === 200, printResult(this, e));
 			done();
 		});
+	});
+
+
+    QUnit.test('Route #test', function(assert) {
+		var done = assert.async();
+		o('People').route('test', function(data) {
+			assert.ok(data.length > 0);
+			done();
+		});
+        window.location.hash = "test";
 	});
 }
