@@ -272,4 +272,15 @@ function startEndpointTests() {
 		});
         window.location.hash = "test";
 	});
+
+    QUnit.test('Route #test/:0 -> where :0 is ' + testEntity.UserName, function(assert) {
+		var done = assert.async();
+		o('People').filter('UserName == \':0\'').route('person/:0', function(data) {
+			assert.ok(data.length > 0);
+            //assert.ok(this.param[0] === testEntity.UserName);
+            assert.ok(this.param[0] === 'russellwhyte');
+			done();
+		});
+        window.location.hash = "person/russellwhyte";
+	});
 }
