@@ -1,24 +1,24 @@
 // +++
-// o.js  v0.1b
+// o.js  v0.2.0
 //
 // o.js is a simple oData wrapper for JavaScript.
-// Currently supporting the following operations: 
+// Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
-// By Jan Hommes 
-// Date: 25.06.2015
+// By Jan Hommes
+// Date: 13.01.2016
 // --------------------
 // The MIT License (MIT)
 //
-// Copyright (c) 2015 Jan Hommes
-// 
+// Copyright (c) 2016 Jan Hommes
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 
@@ -30,9 +30,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 // +++
-
 function o(res) {
-    base = this;
+    var base = this;
 
     //base config object
     base.oConfig = base.oConfig || {
@@ -107,7 +106,7 @@ function o(res) {
 
 
 function oData(res, config) {
-    base = this;
+    var base = this;
 
     // --------------------+++ VARIABLES +++---------------------------
 
@@ -141,7 +140,7 @@ function oData(res, config) {
     };
 
 
-    //base external variables 
+    //base external variables
     base.data = [];					//holds the data after an callback
     base.inlinecount = null; 		//if inlinecount is set, here the counting is gold
     base.param = {};				//this object holds all parameter for a route
@@ -158,6 +157,11 @@ function oData(res, config) {
         //if not a array, make it one
         if (!isArray(routes)) {
             routes = [routes];
+        }
+
+        // check support
+        if(typeof window === 'undefined') {
+            throwEx('Routes are only supported in a browser env.');
         }
 
         var prevHash = window.location.hash;
@@ -421,18 +425,20 @@ function oData(res, config) {
     // TODO: maybe add some pseudonyms...
     // +++
     base.get = function (callback, errorCallback) {
+        // init the q -> if node require a node promise -> if ES6, try ES6 promise
+        var promise = initPromise();
+        currentPromise = promise.defer();
+
         //start the request
-        if (typeof Q !== 'undefined')
-            currentPromise = Q.defer();
         startRequest(callback, errorCallback, false);
-        if (typeof Q !== 'undefined')
+        if (typeof promise !== 'undefined')
             return (currentPromise.promise);
         else
             return (base);
     }
 
     // +++
-    // adds a dataset to the current selected resource 
+    // adds a dataset to the current selected resource
     // if o("Product/ProductGroup").post(...) will post a dataset to the Product resource
     // +++
     base.save = function (callback, errorCallback) {
@@ -446,9 +452,11 @@ function oData(res, config) {
             addNewResource(newResource);
         }
 
+        var promise = initPromise();
+
         //start the request with promise
-        if (currentPromise || typeof callback === 'undefined') {
-            currentPromise = Q.defer();
+        if (promise && typeof callback === 'undefined') {
+            currentPromise = promise.defer();
             startRequest(callback, errorCallback, true);
             return (currentPromise.promise);
         }
@@ -460,7 +468,7 @@ function oData(res, config) {
     }
 
     // +++
-    // adds a dataset to the current selected resource 
+    // adds a dataset to the current selected resource
     // o("Product/ProductGroup").post(...) will post a dataset to the Product resource
     // alternative you can define a new resource by using .post({data},'OtherResource');
     // +++
@@ -493,7 +501,7 @@ function oData(res, config) {
         if (res) {
             addNewResource(res);
         }
-        
+
         if (!resource.path[resource.path.length-1] || !resource.path[resource.path.length-1].get)
             throwEx('Bulk updates are not supported. You need to query a unique resource with find() to patch/put it.');
 
@@ -523,7 +531,7 @@ function oData(res, config) {
     }
 
     // +++
-    // Returns the current query 
+    // Returns the current query
     // +++
     base.query = function (overrideRes) {
         return (buildQuery(overrideRes));
@@ -570,7 +578,7 @@ function oData(res, config) {
         }
         return (base);
     }
-	
+
 	// +++
     // Set this value to add a progress handler to the current resource
     // +++
@@ -583,6 +591,22 @@ function oData(res, config) {
 
     // ---------------------+++ INTERNALS +++----------------------------
 
+    // +++
+    // initialize a promise callback
+    // +++
+    function initPromise() {
+        if (typeof Q !== 'undefined') {
+            var p = Q;
+            return(p);
+        }
+        else if(typeof window === 'undefined') {
+            var p = require('q');
+            return(p);
+        }
+        else {
+            return(null);
+        }
+    }
 
     // +++
     // builds a filter by a given data object to include or exclude values on a query
@@ -604,8 +628,7 @@ function oData(res, config) {
     // builds a search filter
     // ++++
     function buildSearchFilter(searchColumns, searchWord, searchFunc) {
-        var searchStr = "";
-        var searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
+        searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
         var searchWordSplit = searchWord.split(' ');
         var isNotExactSearch = (searchFunc === 'contains' || searchFunc === 'substringof');
 
@@ -668,7 +691,7 @@ function oData(res, config) {
     // +++
     function getQuery() {
         var tempStr = '';
-		
+
         for (queryName in resource.query) {
             if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
                 tempStr += '&' + resource.queryList[resource.query[queryName]].name + '=' + strFormat(resource.queryList[resource.query[queryName]].value, internalParam);
@@ -802,7 +825,7 @@ function oData(res, config) {
         if (!isQuery('$format')) {
             addQuery('$format', base.oConfig.format);
         }
-			
+
 		//appendings
 		for(var i=0;i<oConfig.appending.length;i++) {
 			addQuery(oConfig.appending[i].name, oConfig.appending[i].value);
@@ -827,15 +850,17 @@ function oData(res, config) {
         else {
             //add the last resource to the history
             resourceList.push(resource);
-			
+
             //build a ajax request
             var ajaxReq = createCORSRequest(resource.method, buildQuery());
             //check if we only have one request or we need to force batch because of isXDomainRequest
             if ((countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) && !isXDomainRequest) {
                 startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false,
-					[{ name: 'Accept', value: 'application/json' },
-					{ name: 'Content-Type', value: 'application/json' },
-					{ name: 'Content-Length', value: stringify(resource.data).length }],
+					[
+                       { name: 'Accept', value: 'application/json' },
+					   { name: 'Content-Type', value: 'application/json' }
+					   //{ name: 'Content-Length', value: stringify(resource.data).length }
+                    ],
 				param, resourceList[resourceList.length-1].progress);
                 //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                 removeResource(['POST', 'PATCH', 'DELETE']);
@@ -844,15 +869,15 @@ function oData(res, config) {
             else {
                 //generate a uui for this batch
                 var guid = generateUUID();
-				
+
 				//build the endpoint
 				var endpoint = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch';
-						
+
 				//appendings
 				for(var i=0;i<oConfig.appending.length;i++) {
 					endpoint += (i === 0 ? '?' : '&') + oConfig.appending[i].name + '=' + oConfig.appending[i].value;
 				}
-				
+
                 //start the request
                 startAjaxReq(createCORSRequest('POST', endpoint), buildBatchBody(guid, isSave), callback, errorCallback, true,
                      //add the necessary headers
@@ -928,7 +953,7 @@ function oData(res, config) {
         var reqObj = {
             path: [], //array of all without the base
             appending: '', // e.g. $count or $batch
-            query: {}, //the query Array --> use base.queryArray		
+            query: {}, //the query Array --> use base.queryArray
             queryList: [],
             method: 'GET',
             data: null,
@@ -955,7 +980,7 @@ function oData(res, config) {
             }
             else {
                 var index = uriSplit[i].split('(');
-                if (index.length === 1) {
+                if (index.length === 1 || startsWith(uriSplit[i], '(')) {
                     reqObj.path.push({ 'resource': uriSplit[i], 'get': null });
                 }
                 else {
@@ -999,7 +1024,7 @@ function oData(res, config) {
     // +++
     // internal function to check if a query exist. Otherwith throwEx a exception
     // queries: Could be an array or an string
-    // returns true if 
+    // returns true if
     // +++
     function isQueryThrowEx(queries) {
         if (isQuery(queries)) {
@@ -1185,15 +1210,15 @@ function oData(res, config) {
                 //do POST if the base.save() function was called
                 //TODO:  || res.method==='PUT' || res.method==='DELETE'
             else if ((res.method === 'POST' || res.method === 'PUT' || res.method === 'PATCH' || res.method === 'DELETE') && isSave) {
-                var stringData = stringify(res.data);
+                //var stringData = stringify(res.data);
                 body += '--changeset_' + changsetGuid + '\n';
                 body += 'Content-Type: application/http\n';
                 body += 'Content-Transfer-Encoding: binary\n';
-                body += 'Content-ID:' + i + 1 + '\n\n';         //This ID can be referenced $1/Customer 
+                body += 'Content-ID:' + i + 1 + '\n\n';         //This ID can be referenced $1/Customer
                 body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
                 body += 'Host: ' + base.oConfig.endpoint + '\n';
                 body += 'Content-Type: application/json\n';
-                body += 'Content-Length:' + stringData.length + '\n\n';
+                //body += 'Content-Length:' + stringData.length + '\n\n';
                 body += stringify(resource.data) + '\n\n\n';
                 isChangeset = true;
             }
@@ -1209,7 +1234,7 @@ function oData(res, config) {
     // start a ajax request. data should be null if nothing to send
     // +++
     function startAjaxReq(ajaxRequest, data, callback, errorCallback, isBatch, headers, param, progress) {
-		
+
         //if start loading function is set call it
         if (base.oConfig.start && overideLoading == null) {
             base.oConfig.openAjaxRequests++;
@@ -1238,7 +1263,7 @@ function oData(res, config) {
 		else if(typeof progress === 'function') {
 			ajaxRequest.onprogress = progress;
 		}
-		
+
         ajaxRequest.onreadystatechange = function () {
             //check the http status
             if (ajaxRequest.readyState === 4) {
@@ -1261,9 +1286,9 @@ function oData(res, config) {
 									parseResponse(result[0].substring(0, result[0].length-16), tempBase);
 									dataArray.push(tempBase.data);
                                 }
-								
+
 							} while (result);
-							
+
                             tempBase.data = dataArray;
                         }
                     }
@@ -1318,7 +1343,7 @@ function oData(res, config) {
             ajaxRequest.setRequestHeader('Authorization', 'Basic ' + encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
         }
 
-        //check if not IE 9 or 8 
+        //check if not IE 9 or 8
         if (!isXDomainRequest) {
             //set headers
             if (headers) {
@@ -1328,7 +1353,7 @@ function oData(res, config) {
                 }
             }
 
-            //additional headers 
+            //additional headers
             if (base.oConfig.headers.length > 0) {
                 //TODO: merge both normal and additional headers?!
                 for (var i = 0; i < base.oConfig.headers.length; i++) {
@@ -1398,8 +1423,17 @@ function oData(res, config) {
     // Create the XHR object with CORS support
     // +++
     function createCORSRequest(method, url) {
-        // TODO: Add older browser fallback here!
-        var xhr = new XMLHttpRequest();
+        var xhr = null;
+
+        //if no window assume node.js
+        if(typeof window === 'undefined') {
+            var Xhr2 = require('xhr2');
+            xhr = new Xhr2();
+        }
+        else {
+            xhr = new XMLHttpRequest();
+        }
+
         if (base.oConfig.isCors && 'withCredentials' in xhr) {
             // XHR for Chrome/Firefox/Opera/Safari.
             xhr.open(method, url, base.oConfig.isAsync);
@@ -1512,4 +1546,9 @@ function oData(res, config) {
     }
 
     return (init(res));
+}
+
+// Export for npm
+if(typeof window === 'undefined') {
+    module.exports = o;
 }
