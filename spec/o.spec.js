@@ -23,6 +23,23 @@ describe('o.js tests:', function() {
 		});
 	});
 
+  it('GET Orders - no endpoint - filter by date', function(done) {
+    var url = 'http://services.odata.org/V4/Northwind/Northwind.svc/Orders';
+
+    var handleErrors = function(e) {
+      expect(e).toBe(200);
+      done();
+    };
+
+    o(url).inlineCount(true).get().then(function(oHandler) {
+      var total = oHandler.inlinecount;
+      o(url).where('RequiredDate gt 1996-08-16').inlineCount(true).get().then(function(oHandler) {
+        expect(oHandler.inlinecount).toBeLessThan(total);
+        done();
+      }).fail(handleErrors);
+    }).fail(handleErrors);
+  });
+
     var testEntity = null;
 
     describe('with endpoint:', function() {
@@ -31,7 +48,8 @@ describe('o.js tests:', function() {
             o().config({
                 endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
                 version:4,
-                strictMode:true
+                strictMode:true,
+                headers: [{name: 'If-Match', value: '*'}]
             });
 
             var name='Test_'+Math.random();
