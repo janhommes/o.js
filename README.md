@@ -1,5 +1,5 @@
 # o.js
-*o.js beta v0.2.0*
+*o.js beta v0.2.1*
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib.
 
@@ -15,12 +15,12 @@ You can use o.js in node.js as well:
 ```
 	npm install o.js
 
-    //var o = require('o.js');
+    var o = require('o.js');
 ```
 
 ## Samples ##
 ------------
-For alle samples we are using the test odata service from <a href="http://www.odata.org">Odata.org</a>. You can find the metadata of this service <a href="http://services.odata.org/V4/OData/OData.svc">here</a>.
+For all samples we are using the test odata service from <a href="http://www.odata.org">Odata.org</a>. You can find the metadata of this service <a href="http://services.odata.org/V4/OData/OData.svc">here</a>.
 
 ### Simple Odata query with o.js ###
 ----------------------
@@ -29,7 +29,7 @@ For alle samples we are using the test odata service from <a href="http://www.od
   		console.log(data); //returns an array of Product data
   });
 ```
-o.js uses a jQuery like syntax to determine which resource you want to access. You can define any Odata service url (or any json web service) in the o-function: `o('<your odata service resource>')`. This only holds a handler to this resource and dosn't start the ajax call. If you want to get the resource, you need to call `.get()`. Get accepts a function callback which contains the data as the first parameter.
+o.js uses a jQuery like syntax to determine which resource you want to access. You can define any Odata service url (or any json web service) in the o-function: `o('<your odata service resource>')`. This only holds a handler to this resource and doesn't start the ajax call. If you want to get the resource, you need to call `.get()`. Get accepts a function callback which contains the data as the first parameter.
 
 ### Methods ###
 --------
@@ -69,7 +69,7 @@ oHandler.get(function(data) {
 });
 ```
 
-If you need to get several data you can use promise. Currently o.js only suports [q.js](https://github.com/kriskowal/q). The following example show how you can get the data of two differend resources:
+If you need to get several data you can use promise. Currently o.js only supports [q.js](https://github.com/kriskowal/q). The following example show how you can get the data of two different resources:
 ```js
 Q.all([
 	o('http://services.odata.org/V4/OData/OData.svc/Products(4)').get(),
@@ -92,7 +92,7 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(2)').get().then(functio
 
 ## Add and change data ##
 ---------
-To add and change data you can use the http verb in kombination with the `save()` method:
+To add and change data you can use the http verb in combination with the `save()` method:
 
 ### Post: ###
 ---------
@@ -144,7 +144,7 @@ o('http://services.odata.org/V4/OData/OData.svc/Products').find(2).get().then(fu
 
 ### Endpoint configuration ###
 ---------
-You can configure a endpoint with the `o().config()` function. This config is persistent over all off your o.js calls. Example:
+You can configure a endpoint with the `o().config()` function. This configuration is persistent over all off your o.js calls. Example:
 ```js
   // set an endpoint
   o().config({
@@ -187,15 +187,15 @@ Currently the following queries are supported:
 
  `.first()`		- returns the first object which is found (Odata: Products/?*$top=1*)
 
- `.filter(string)`	- adds a filter string (o.js can convered simple JS-Syntax. If you need something complex use the plain Odata $filter syntax: [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)  - Synonym: `.where`
+ `.filter(string)`	- adds a filter string (o.js can converted simple JS-Syntax. If you need something complex use the plain Odata $filter syntax: [see the Odata doc](http://www.odata.org/documentation/odata-version-3-0/url-conventions/) for more information) (Odata: Products/?*$filter=Name eq 'Example'*)  - Synonym: `.where`
 
  `.any(string, string)` - applies an any filter to an resource (Odata: Products/?*$filter=Categories/any(x:x/Name eq 'Test')*)
 
- `.search(array, string)` - builds up a search $filter. The first parameter defines the columns to search in the second the searchword (e.g.: `.search(['Name', 'Description'], 'Test')`)
+ `.search(array, string)` - builds up a search $filter. The first parameter defines the columns to search in the second the search word (e.g.: `.search(['Name', 'Description'], 'Test')`)
 
- `.orderBy(string)`	- orders the data (Odata: Products/?*$orderBy=Name*)
+ `.orderBy(string, direction)`	- orders the data (Odata: Products/?*$orderBy=Name*)
 
- `.orderByDesc(string)`	- orders the data descading (Odata: Products/?*$orderBy=Name*)
+ `.orderByDesc(string)`	- orders the data descending (Odata: Products/?*$orderBy=Name*)
 
  `.count()` 		- only counts the result (Odata: Products/*$count*)
 

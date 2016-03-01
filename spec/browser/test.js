@@ -5,12 +5,8 @@
 // http://qunitjs.com/
 //
 // By Jan Hommes
-// Date: 01.02.2016
+// Date: 01.03.2016
 // +++
-
-/*if(typeof require === 'undefined') {
-    var o = require('../o.js');
-}*/
 
 //helper function for debuging
 function printResult(o,data) {
@@ -30,7 +26,8 @@ function configureEndpoint() {
 		o().config({
 			endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
 			version:4,
-			strictMode:true
+			strictMode:true,
+			headers: [{name: 'If-Match', value: '*'}]
 		});
 	}
 }
@@ -187,6 +184,39 @@ function startEndpointTests() {
 		});
 	});
 
+	QUnit.test('GET Orders - custom endpoint - filter by date', function(assert) {
+	  var done = assert.async();
+
+		o().config({
+			endpoint: 'http://services.odata.org/V4/Northwind/Northwind.svc/',
+			headers: [],
+			isCors: false
+		});
+
+	  var handleErrors = function(err) {
+	    assert.ok(false, printResult(this, err));
+			o().config({
+				endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
+				headers: [{name: 'If-Match', value: '*'}],
+				isCors: true
+			});
+	    done();
+	  };
+
+	  o('Orders').inlineCount(true).get().then(function(oHandler) {
+	    var total = oHandler.inlinecount;
+	    o('Orders').where('RequiredDate gt 1996-08-16').inlineCount(true).get().then(function(oHandler) {
+	      assert.ok(oHandler.inlinecount < total, printResult(oHandler.inlinecount, total));
+				o().config({
+					endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
+					headers: [{name: 'If-Match', value: '*'}],
+					isCors: true
+				});
+	      done();
+	    }).fail(handleErrors);
+	  }).fail(handleErrors);
+	});
+
 	QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH AAA People(\''+testEntity.UserName+'\'), change and save() it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();
@@ -207,23 +237,29 @@ function startEndpointTests() {
 		});
 	});
 
-	/*QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH People(X), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
+	QUnit.test('POST, PUT and DELETE it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();
+        var done3 = assert.async();
 		var name='Test_'+Math.random();
 
-		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
-			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
-			o.data.Gender = 1;
-			done1();
-			return(o.save());
-		}).then(function(o) {
-			//not reachable because of error
-		}).fail(function(err) {
-			assert.ok(err, 'Passed! Error as expected.');
-			done2();
-		});
-	});*/
+		o('People').post({
+            UserName:name,
+            FirstName:'foo',
+            LastName:'bar'
+        }).save().then(function(result) {
+            done1();
+            var oHandler = o('People').find(('\'' + result.data.UserName + '\'')).patch({ FirstName: 'fooBAAAR' });
+            return(oHandler.save());
+        }).then(function(result) {
+            done2();
+            result.delete();
+            return(result.save());
+        }).then(function() {
+            expect(0);
+            done3();
+        });
+	});
 
 	QUnit.test('PATCH People(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
