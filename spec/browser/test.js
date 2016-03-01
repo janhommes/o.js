@@ -5,12 +5,8 @@
 // http://qunitjs.com/
 //
 // By Jan Hommes
-// Date: 01.02.2016
+// Date: 01.03.2016
 // +++
-
-/*if(typeof require === 'undefined') {
-    var o = require('../o.js');
-}*/
 
 //helper function for debuging
 function printResult(o,data) {
@@ -250,8 +246,8 @@ function startEndpointTests() {
 		o('People').post({
             UserName:name,
             FirstName:'foo',
-            LastName:'bar'})
-        .save().then(function(result) {
+            LastName:'bar'
+        }).save().then(function(result) {
             done1();
             var oHandler = o('People').find(('\'' + result.data.UserName + '\'')).patch({ FirstName: 'fooBAAAR' });
             return(oHandler.save());
@@ -260,8 +256,8 @@ function startEndpointTests() {
             result.delete();
             return(result.save());
         }).then(function() {
-           done3();
-           console.log('done!');
+            expect(0);
+            done3();
         });
 	});
 
