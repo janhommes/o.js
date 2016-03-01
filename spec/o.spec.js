@@ -23,6 +23,23 @@ describe('o.js tests:', function() {
 		});
 	});
 
+  it('GET Orders - no endpoint - filter by date', function(done) {
+    var url = 'http://services.odata.org/V4/Northwind/Northwind.svc/Orders';
+
+    var handleErrors = function(e) {
+      expect(e).toBe(200);
+      done();
+    };
+
+    o(url).inlineCount(true).get().then(function(oHandler) {
+      var total = oHandler.inlinecount;
+      o(url).where('RequiredDate gt 1996-08-16').inlineCount(true).get().then(function(oHandler) {
+        expect(oHandler.inlinecount).toBeLessThan(total);
+        done();
+      }, handleErrors);
+    }, handleErrors);
+  });
+
     var testEntity = null;
 
     describe('with endpoint:', function() {
