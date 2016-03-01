@@ -36,8 +36,8 @@ describe('o.js tests:', function() {
       o(url).where('RequiredDate gt 1996-08-16').inlineCount(true).get().then(function(oHandler) {
         expect(oHandler.inlinecount).toBeLessThan(total);
         done();
-      }, handleErrors);
-    }, handleErrors);
+      }).fail(handleErrors);
+    }).fail(handleErrors);
   });
 
     var testEntity = null;
