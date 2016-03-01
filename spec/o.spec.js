@@ -31,7 +31,8 @@ describe('o.js tests:', function() {
             o().config({
                 endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
                 version:4,
-                strictMode:true
+                strictMode:true,
+                headers: [{name: 'If-Match', value: '*'}]
             });
 
             var name='Test_'+Math.random();
