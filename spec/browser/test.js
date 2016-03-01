@@ -207,23 +207,29 @@ function startEndpointTests() {
 		});
 	});
 
-	/*QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH People(X), change and save() it with q.js promise but provoke error - endpoint - no query', function(assert) {
+	QUnit.test('POST, PUT and DELETE it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();
+        var done3 = assert.async();
 		var name='Test_'+Math.random();
 
-		o('People(\''+testEntity.UserName+'\')').get().then(function(o) {
-			assert.ok(o.data.UserName===testEntity.UserName, printResult(o,o.data));
-			o.data.Gender = 1;
-			done1();
-			return(o.save());
-		}).then(function(o) {
-			//not reachable because of error
-		}).fail(function(err) {
-			assert.ok(err, 'Passed! Error as expected.');
-			done2();
-		});
-	});*/
+		o('People').post({
+            UserName:name,
+            FirstName:'foo',
+            LastName:'bar'})
+        .save().then(function(result) {
+            done1();
+            var oHandler = o('People').find(('\'' + result.data.UserName + '\'')).patch({ FirstName: 'fooBAAAR' });
+            return(oHandler.save());
+        }).then(function(result) {
+            done2();
+            result.delete();
+            return(result.save());
+        }).then(function() {
+           done3();
+           console.log('done!');
+        });
+	});
 
 	QUnit.test('PATCH People(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
