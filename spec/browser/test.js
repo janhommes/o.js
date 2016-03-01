@@ -30,7 +30,8 @@ function configureEndpoint() {
 		o().config({
 			endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
 			version:4,
-			strictMode:true
+			strictMode:true,
+			headers: [{name: 'If-Match', value: '*'}]
 		});
 	}
 }
@@ -185,6 +186,39 @@ function startEndpointTests() {
 			assert.ok(false, printResult(this, err));
 			done();
 		});
+	});
+
+	QUnit.test('GET Orders - custom endpoint - filter by date', function(assert) {
+	  var done = assert.async();
+
+		o().config({
+			endpoint: 'http://services.odata.org/V4/Northwind/Northwind.svc/',
+			headers: [],
+			isCors: false
+		});
+
+	  var handleErrors = function(err) {
+	    assert.ok(false, printResult(this, err));
+			o().config({
+				endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
+				headers: [{name: 'If-Match', value: '*'}],
+				isCors: true
+			});
+	    done();
+	  };
+
+	  o('Orders').inlineCount(true).get().then(function(oHandler) {
+	    var total = oHandler.inlinecount;
+	    o('Orders').where('RequiredDate gt 1996-08-16').inlineCount(true).get().then(function(oHandler) {
+	      assert.ok(oHandler.inlinecount < total, printResult(oHandler.inlinecount, total));
+				o().config({
+					endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
+					headers: [{name: 'If-Match', value: '*'}],
+					isCors: true
+				});
+	      done();
+	    }).fail(handleErrors);
+	  }).fail(handleErrors);
 	});
 
 	QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH AAA People(\''+testEntity.UserName+'\'), change and save() it with q.js promise - endpoint - no query', function(assert) {
