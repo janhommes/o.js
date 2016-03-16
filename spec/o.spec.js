@@ -40,6 +40,32 @@ describe('o.js tests:', function () {
         }).fail(handleErrors);
     });
 
+    xit('POST with string output', function(done) {
+      var url = '';
+  		var data = {};
+
+      o(url).post(data).save().then(function(oHandler) {
+        expect(typeof oHandler.data === 'string').toBe(true);
+        done();
+      }).fail(function(e) {
+        expect(e).toBe(200);
+        done();
+      });
+    });
+
+    xit('POST with no output', function(done) {
+      var url = '';
+  		var data = {};
+
+      o(url).post(data).save().then(function(oHandler) {
+        expect(oHandler.data).toEqual('');
+        done();
+      }).fail(function(e) {
+        expect(e).toBe(200);
+        done();
+      });
+    });
+
     var testEntity = null;
 
     describe('with endpoint:', function () {
