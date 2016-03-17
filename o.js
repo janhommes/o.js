@@ -1414,7 +1414,7 @@
                 tempBase.data = count;
             }
             else {
-                if (JSON) {
+                if (JSON && response !== '') {
                     var data = JSON.parse(response);
                     if (data.hasOwnProperty('value')) {
                         if (isQuery(['$first']) && data.value.length && data.value.length <= 1) {

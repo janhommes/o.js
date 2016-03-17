@@ -217,6 +217,36 @@ function startEndpointTests() {
 	  }).fail(handleErrors);
 	});
 
+	QUnit.skip('POST Action with string output', function(assert) {
+		var done = assert.async();
+
+		var url = '';
+		var data = {};
+
+		o(url).post(data).save().then(function(oHandler) {
+			assert.ok(typeof oHandler.data === 'string');
+			done();
+		}).fail(function(e) {
+			assert.ok(false, printResult(this, err));
+			done();
+		});
+	});
+
+	QUnit.skip('POST Action with no output', function(assert) {
+		var done = assert.async();
+
+		var url = '';
+		var data = {};
+
+		o(url).post(data).save().then(function(oHandler) {
+			assert.ok(oHandler.data === '');
+			done();
+		}).fail(function(e) {
+			assert.ok(false, printResult(this, err));
+			done();
+		});
+	});
+
 	QUnit.test('GET People(\''+testEntity.UserName+'\') and PATCH AAA People(\''+testEntity.UserName+'\'), change and save() it with q.js promise - endpoint - no query', function(assert) {
 		var done1 = assert.async();
 		var done2 = assert.async();
