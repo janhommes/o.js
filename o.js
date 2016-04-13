@@ -153,6 +153,7 @@
 
         //base external variables
         base.data = [];					//holds the data after an callback
+        base.raw = null;				//holds the data after an callback (raw data, containing also metadata)
         base.inlinecount = null; 		//if inlinecount is set, here the counting is gold
         base.param = {};				//this object holds all parameter for a route
         base.oConfig = config;			//the internal config, passed over from the o function
@@ -1416,6 +1417,7 @@
             else {
                 if (JSON) {
                     var data = JSON.parse(response);
+                    tempBase.raw = data;
                     if (data.hasOwnProperty('value')) {
                         if (isQuery(['$first']) && data.value.length && data.value.length <= 1) {
                             tempBase.data = data.value[0];
