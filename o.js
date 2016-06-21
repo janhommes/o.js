@@ -937,7 +937,7 @@
             else {
                 //check if endpoint is defined
                 if (!base.oConfig.endpoint) {
-                    throwEx('You can not use resource query without defining your oData endpoint. Use o().config({endpoint:youeEndpoint}) to define your oData endpoint.');
+                    throwEx('You can not use resource query without defining your oData endpoint. Use o().config({endpoint:yourEndpoint}) to define your oData endpoint.');
                 }
             }
 
