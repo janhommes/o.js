@@ -1238,8 +1238,8 @@
                     body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
                     body += 'Host: ' + base.oConfig.endpoint + '\n';
                     body += 'Content-Type: application/json\n';
-                    //body += 'Content-Length:' + stringData.length + '\n\n';
-                    body += stringify(resource.data) + '\n\n\n';
+                    //body += 'Content-Length:' + stringData.length + '\n';
+                    body += '\n' + stringify(resource.data) + '\n\n\n';
                     isChangeset = true;
                 }
             }
