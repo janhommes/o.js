@@ -32,6 +32,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 // +++
+
+/*global define module require*/
+/*eslint no-undef: "error"*/
+
 ; (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         define(['q'], factory);
@@ -339,7 +343,7 @@
             // adds a inline count
             // +++
             base.inlineCount = function (countOption) {
-                if (oConfig.version == 4) {
+                if (base.oConfig.version == 4) {
                     countOption = countOption || 'true';
                     if (!isQueryThrowEx('$count')) {
                         addQuery('$count', countOption);
@@ -393,7 +397,7 @@
                 if (resource == null || resource.get) {
                     throwEx('You need to define a resource with the find() method to append an navigation property');
                 }
-                if (oConfig.version < 4) {
+                if (base.oConfig.version < 4) {
                     resource.method = 'POST';
                     resource.path.push('$link');
                     resource.path.push({ resource: navPath, get: null });
@@ -418,7 +422,7 @@
                 if (resource == null || resource.get) {
                     throwEx('You need to define a resource with the find() method to append an navigation property');
                 }
-                if (oConfig.version < 4) {
+                if (base.oConfig.version < 4) {
                     resource.method = 'POST';
                     resource.path.push('$link');
                     resource.path.push({ resource: navPath, get: null });
@@ -565,7 +569,7 @@
 
                 var searchStr = buildSearchFilter(searchColumns, searchWord, searchFunc);
 
-                if (oConfig.version == 4 && isSupported) {
+                if (base.oConfig.version == 4 && isSupported) {
                     if (!isQueryThrowEx('$search')) {
                         addQuery('$search', searchStr, searchStr);
                     }
@@ -635,7 +639,7 @@
             function buildFilterByData(column, filterList, operation, combine) {
                 if (isArray(filterList)) {
                     var filterStr = "", arr = [];
-                    for (i = 0; i < filterList.length; ++i) {
+                    for (var i = 0; i < filterList.length; ++i) {
                         arr[i] = '(' + column + ' ' + operation + ' ' + filterList[i][column] + ')';
                     }
                     filterStr = arr.join(' ' + combine + ' ');
@@ -649,7 +653,7 @@
             // builds a search filter
             // ++++
             function buildSearchFilter(searchColumns, searchWord, searchFunc) {
-                searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
+                searchFunc = searchFunc || (base.oConfig.version == 4 ? 'contains' : 'substringof');
                 var searchWordSplit = searchWord.split(' ');
                 var isNotExactSearch = (searchFunc === 'contains' || searchFunc === 'substringof');
 
@@ -658,7 +662,7 @@
                     var wordArr = [];
                     if (isNotExactSearch) {
                         for (var m = 0; m < searchWordSplit.length; m++) {
-                            if (oConfig.version == 4) {
+                            if (base.oConfig.version == 4) {
                                 wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
                             }
                             else {
@@ -713,7 +717,7 @@
             function getQuery() {
                 var tempStr = '';
 
-                for (queryName in resource.query) {
+                for (var queryName in resource.query) {
                     if (resource.query.hasOwnProperty(queryName) && resource.query[queryName] != null) {
                         tempStr += '&' + resource.queryList[resource.query[queryName]].name + '=' + strFormat(resource.queryList[resource.query[queryName]].value, internalParam);
                     }
@@ -742,7 +746,7 @@
                         //combine the propArr with the matches
                         if (typeof routeList[r].route.param !== 'undefined') {
                             var i = 1;
-                            for (prop in routeList[r].route.param) {
+                            for (var prop in routeList[r].route.param) {
                                 internalParam[prop] = matches[i];
                                 param[prop.substring(1)] = matches[i];
                                 i++;
@@ -775,7 +779,7 @@
                 var routeRegex = routeStr;
                 if (!(routeStr instanceof RegExp)) {
                     //set the hash if needed
-                    if (oConfig.isHashRoute && !startsWith(routeStr, '#')) {
+                    if (base.oConfig.isHashRoute && !startsWith(routeStr, '#')) {
                         routeStr = '#' + routeStr;
                     }
                     //build up a regex
@@ -814,7 +818,7 @@
                 var matches = regexp.exec(str);
                 str = str.replace(regexp, '{0}');
 
-                for (key in opertionMapping) {
+                for (var key in opertionMapping) {
                     str = str.split(key).join(' ' + opertionMapping[key] + ' ');
                 }
 
@@ -848,8 +852,8 @@
                 }
 
                 //appendings
-                for (var i = 0; i < oConfig.appending.length; i++) {
-                    addQuery(oConfig.appending[i].name, oConfig.appending[i].value);
+                for (var i = 0; i < base.oConfig.appending.length; i++) {
+                    addQuery(base.oConfig.appending[i].name, base.oConfig.appending[i].value);
                 }
             }
 
@@ -895,8 +899,8 @@
                         var endpoint = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch';
 
                         //appendings
-                        for (var i = 0; i < oConfig.appending.length; i++) {
-                            endpoint += (i === 0 ? '?' : '&') + oConfig.appending[i].name + '=' + oConfig.appending[i].value;
+                        for (var i = 0; i < base.oConfig.appending.length; i++) {
+                            endpoint += (i === 0 ? '?' : '&') + base.oConfig.appending[i].name + '=' + base.oConfig.appending[i].value;
                         }
 
                         //start the request
@@ -943,7 +947,7 @@
                 }
 
                 //set the route name
-                routeName = res;
+                base.routeName = res;
 
                 //add the basic resource
                 addNewResource(res);
@@ -1482,7 +1486,7 @@
             function strFormat() {
                 var str = arguments[0];
                 var para = arguments[1];
-                for (p in para) {
+                for (var p in para) {
                     var regex = new RegExp(p, 'g');
                     if (typeof str === 'string')
                         str = str.replace(regex, para[p]);
