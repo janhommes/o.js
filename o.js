@@ -41,7 +41,7 @@
         root.o = factory(root.Q);
     }
 } (this, function (Q) {
-    function createClient() {
+    function createClientFn() {
         function o(res) {
             var base = this;
 
@@ -1568,11 +1568,14 @@
 
             return (init(res));
         }
-
         return o.bind(o);
     }
 
-    var d = createClient();
-    d.createClient = createClient;
+    var d = createClientFn();
+    d.createClient = function createClient(config) {
+        var o = createClientFn();
+        o().config(config);
+        return o;
+    };
     return d;
 }));
