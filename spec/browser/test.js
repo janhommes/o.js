@@ -264,7 +264,7 @@ function startEndpointTests() {
             return (oHandler.save());
         }).then(function (result) {
             done2();
-            result.delete();
+            result.remove();
             return (result.save());
         }).then(function () {
             expect(0);
@@ -301,7 +301,7 @@ function startEndpointTests() {
     QUnit.test('DELETE Products(\'' + testEntity.UserName + '\') - endpoint - no query', function (assert) {
         var done = assert.async();
         var name = 'Test_' + Math.random();
-        o('People(\'' + testEntity.UserName + '\')').delete().save(function (data) {
+        o('People(\'' + testEntity.UserName + '\')').remove().save(function (data) {
             assert.ok(data.length === 0, printResult(this, data));
             done();
         }, function (e) {

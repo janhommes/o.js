@@ -1,12 +1,12 @@
 // +++
-// o.js  v0.2.2
+// o.js  v0.3.0
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 01.03.2016
+// Date: 01.09.2016
 // Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire)
 //
 // --------------------
@@ -448,14 +448,17 @@
         base.get = function (callback, errorCallback) {
             // init the q -> if node require a node promise -> if ES6, try ES6 promise
             var promise = initPromise();
-            currentPromise = promise.defer();
 
             //start the request
-            startRequest(callback, errorCallback, false);
-            if (typeof promise !== 'undefined')
+            if (promise && typeof callback === 'undefined') {
+                currentPromise = promise.defer();
+                startRequest(callback, errorCallback, false);
                 return (currentPromise.promise);
-            else
+            }
+            else {
+                startRequest(callback, errorCallback, false);
                 return (base);
+            }
         }
 
         // +++
@@ -1452,8 +1455,12 @@
                 var Xhr2 = require('xhr2');
                 xhr = new Xhr2();
             }
-            else {
+            else if(typeof window.XMLHttpRequest !== 'undefined') {
                 xhr = new XMLHttpRequest();
+            }
+            else {
+                //IE 8 support
+                xhr = new ActiveXObject('MSXML2.XMLHTTP.3.0');
             }
 
             if (base.oConfig.isCors && 'withCredentials' in xhr) {
