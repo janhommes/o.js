@@ -937,7 +937,7 @@
             else {
                 //check if endpoint is defined
                 if (!base.oConfig.endpoint) {
-                    throwEx('You can not use resource query without defining your oData endpoint. Use o().config({endpoint:youeEndpoint}) to define your oData endpoint.');
+                    throwEx('You can not use resource query without defining your oData endpoint. Use o().config({endpoint:yourEndpoint}) to define your oData endpoint.');
                 }
             }
 
@@ -1238,8 +1238,8 @@
                     body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
                     body += 'Host: ' + base.oConfig.endpoint + '\n';
                     body += 'Content-Type: application/json\n';
-                    //body += 'Content-Length:' + stringData.length + '\n\n';
-                    body += stringify(resource.data) + '\n\n\n';
+                    //body += 'Content-Length:' + stringData.length + '\n';
+                    body += '\n' + stringify(resource.data) + '\n\n\n';
                     isChangeset = true;
                 }
             }
