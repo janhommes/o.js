@@ -703,6 +703,8 @@
                 queryStr += '/';
             }
 
+            queryStr = queryStr.slice(0, -1);
+
             return (queryStr + res.appending + getQuery());
         }
 
