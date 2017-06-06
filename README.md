@@ -176,7 +176,7 @@ o().config({
 
 // after you have set an endpoint, you can shorten your queries:
 o('Products').get(function(data) {
-  //same result like the first exmple on this page
+  //same result like the first example on this page
 });
 ```
 
@@ -185,18 +185,35 @@ However, if you have set an endpoint you can still do a full endpoint request fo
 ```javascript
 //basic config
 o().config({
-  endpoint: null,   // your odata endpoint for the service
-  json: true,       // currently only json is supported
-  version: 4,       // oData version (currently supported version 4\. However most also work with version 3.)
-  strictMode: true, // strict mode throws exceptions, non strict mode only logs them
-  start: null,      // a function which is executed on loading
-  ready: null,      // a function which is executed on ready
-  error: null,      // a function which is executed on error
-  headers: [],      // an array of additional headers e.g.: [{name:'headername',value:'headervalue'}]
-  username: null,   // a basic auth username
-  password: null,   // a basic auth password
-  isAsync: true     // set this to false to make synced (a)jax calls. (doesn't work with basic auth!)
+    endpoint: null,
+    format: 'json', 	// The media format. Default is JSON.
+    autoFormat: true,   // Will always append a $format=json to each query if set to true.
+    version: 4, 		// currently only tested for Version 4. Most will work in version 3 as well.
+    strictMode: true, 	// strict mode throws exception, non strict mode only logs them
+    start: null, 		// a function which is executed on loading
+    ready: null,		// a function which is executed on ready
+    error: null,		// a function which is executed on error
+    headers: [],		// an array of additional headers [{name:'headername',value:'headervalue'}]
+    username: null, 	// the basic auth username
+    password: null,		// the basic auth password
+    isAsync: true,		// set this to false to enable sync requests. Only usable without basic auth
+    isCors: true,       // set this to false to disable CORS
+    openAjaxRequests: 0,// a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+    isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
+    appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
 });
+```
+
+### Custom headers
+You can set a custom header which overrides the basic config headers by calling `headers([])`. If doing so, you need to call it again and empty to reset the headers to the ones configured in `o().config()`:
+
+```javascript
+o('Products').headers([{name: 'custom1', value: 'some1'}, {name: 'custom2', value: 'some2'}]).get(function(data) {
+  // result
+});
+
+// reset the headers
+o('OtherResource').headers().get();
 ```
 
 ### Full list of supported functions

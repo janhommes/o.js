@@ -63,6 +63,38 @@ QUnit.test('GET People - no endpoint - no query', function(assert) {
     });
 });
 
+QUnit.test('GET People - $format off - autoFormat=false', function(assert) {
+    var done = assert.async();
+
+	o().config({ autoFormat: false });
+
+    o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').get(function(data) {
+        assert.ok(this.query().indexOf('$format') === -1, printResult(this, data));
+        done();
+    }, function(e) {
+        assert.ok(e === 200, printResult(this, e));
+        done();
+    });
+});
+
+
+QUnit.skip('GET People - custom headers', function(assert) {
+    var done = assert.async();
+
+	o().config({ headers: [ { name: 'Content-Type',  value: 'json' }] });
+
+    o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').headers([ { name: 'Content-Type',  value: 'xml' }]).get(function(data) {
+        assert.ok(this.oConfig.headers[0].value === 'xml', printResult(this, data));
+        done();
+    }, function(e) {
+        assert.ok(e === 200, printResult(this, e));
+        done();
+    });
+
+	o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').headers();
+	assert.ok(o().oConfig.headers[0].value === 'json');
+});
+
 QUnit.test('CONFIG - endpoint', function(assert) {
 	configureEndpoint();
 	assert.ok(o().isEndpoint(), 'Passed! Endpoint is: '+o('').query());

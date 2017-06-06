@@ -1,18 +1,18 @@
 // +++
-// o.js  v0.2.2
+// o.js  v0.3.1
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 01.03.2016
+// Date: 06.06.2017
 // Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire)
 //
 // --------------------
 // The MIT License (MIT)
 //
-// Copyright (c) 2016 Jan Hommes
+// Copyright (c) 2017 Jan Hommes
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,27 +40,28 @@
     } else {
         root.o = factory(root.Q);
     }
-} (this, function (Q) {
+}(this, function (Q) {
     function o(res) {
         var base = this;
 
         //base config object
         base.oConfig = base.oConfig || {
             endpoint: null,
-            format: 'json', 	//The media format. Default is JSON.
-            version: 4, 		//currently only tested for Version 4. Most will work in version 3 as well.
-            strictMode: true, 	//strict mode throws exception, non strict mode only logs them
-            start: null, 		//a function which is executed on loading
-            ready: null,		//a function which is executed on ready
-            error: null,		//a function which is executed on error
-            headers: [],		//an array of additional headers [{name:'headername',value:'headervalue'}]
-            username: null, 	//the basic auth username
-            password: null,		//the basic auth password
-            isAsync: true,		//set this to false to enable sync requests. Only usable without basic auth
-            isCors: true,        //set this to false to disable CORS
-            openAjaxRequests: 0, //a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
-            isHashRoute: true,   //set this var to false to disable automatic #-hash setting on routes
-            appending: ''		 // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
+            format: 'json', 	// The media format. Default is JSON.
+            autoFormat: true,   // Will always append a $format=json to each query if set to true.
+            version: 4, 		// currently only tested for Version 4. Most will work in version 3 as well.
+            strictMode: true, 	// strict mode throws exception, non strict mode only logs them
+            start: null, 		// a function which is executed on loading
+            ready: null,		// a function which is executed on ready
+            error: null,		// a function which is executed on error
+            headers: [],		// an array of additional headers [{name:'headername',value:'headervalue'}]
+            username: null, 	// the basic auth username
+            password: null,		// the basic auth password
+            isAsync: true,		// set this to false to enable sync requests. Only usable without basic auth
+            isCors: true,       // set this to false to disable CORS
+            openAjaxRequests: 0,// a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+            isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
+            appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
         };
 
         // +++
@@ -69,7 +70,7 @@
         // endpoint: Name of the endpoint e.g. http(s)://MyDomain/ServiceName.svc
         // json: Use json, true or false (currently only json supported)
         // version: Define the oData Version. (currently only Version 3 and 4 are supported)
-        // strictMode: In strict mode exceptios are thrown, else they are logged
+        // strictMode: In strict mode exceptions are thrown, else they are logged
         // start: A function which is executed on loading
         // ready: A function which is executed on finished loading
         // headers: An array of additional headers [{name:'headername',value:'headervalue'}]
@@ -639,7 +640,6 @@
                 }
                 filterStr = arr.join(' ' + combine + ' ');
                 return (filterStr);
-                //addQuery('$filter', checkEmpty(filterStr), filterStr);
             }
             return ("");
         }
@@ -844,7 +844,7 @@
                 resource = res;
 
             //add the default format
-            if (!isQuery('$format')) {
+            if (!isQuery('$format') && oConfig.autoFormat) {
                 addQuery('$format', base.oConfig.format);
             }
 
@@ -881,7 +881,6 @@
                         [
                             { name: 'Accept', value: 'application/json' },
                             { name: 'Content-Type', value: 'application/json' }
-                            //{ name: 'Content-Length', value: stringify(resource.data).length }
                         ],
                         param, resourceList[resourceList.length - 1].progress);
                     //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
@@ -1527,8 +1526,8 @@
                         }
 
                         output = output +
-                        this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-                        this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+                            this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+                            this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
 
                     }
 
