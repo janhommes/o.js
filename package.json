@@ -1,7 +1,7 @@
 {
   "name": "odata",
   "description": "o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "o.js",
   "dependencies": {
     "q": "*",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "test": "jasmine",
-    "uglify": "uglifyjs --compress --mangle --o o.min.js o.js"
+    "uglify": "uglifyjs --compress --mangle -o o.min.js o.js"
   },
   "repository": {
     "type": "git",
