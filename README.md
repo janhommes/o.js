@@ -1,6 +1,6 @@
 # o.js
 
-_o.js beta v0.3.1_
+_o.js beta v0.3.3_
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib.
 
@@ -185,7 +185,7 @@ However, if you have set an endpoint you can still do a full endpoint request fo
 ```javascript
 //basic config
 o().config({
-    endpoint: null,
+    endpoint: null,   // The default endpoint to use.
     format: 'json', 	// The media format. Default is JSON.
     autoFormat: true,   // Will always append a $format=json to each query if set to true.
     version: 4, 		// currently only tested for Version 4. Most will work in version 3 as well.
@@ -196,11 +196,7 @@ o().config({
     headers: [],		// an array of additional headers [{name:'headername',value:'headervalue'}]
     username: null, 	// the basic auth username
     password: null,		// the basic auth password
-    isAsync: true,		// set this to false to enable sync requests. Only usable without basic auth
-    isCors: true,       // set this to false to disable CORS
-    openAjaxRequests: 0,// a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
-    isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
-    appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
+    isAsync: true		// set this to false to enable sync requests. Only usable without basic auth
 });
 ```
 

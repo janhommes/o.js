@@ -4,8 +4,9 @@
   "version": "0.3.2",
   "main": "o.js",
   "dependencies": {
-    "q": "*",
-    "xhr2": "*"
+    "jslint": "^0.10.3",
+    "q": "^1.5.0",
+    "xhr2": "^0.1.4 "
   },
   "devDependencies": {
     "jasmine": "*",

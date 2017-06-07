@@ -1,12 +1,12 @@
 // +++
-// o.js  v0.3.1
+// o.js  v0.3.3
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 06.06.2017
+// Date: 06/07/2017
 // Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire)
 //
 // --------------------
@@ -339,7 +339,7 @@
         // adds a inline count
         // +++
         base.inlineCount = function (countOption) {
-            if (oConfig.version == 4) {
+            if (base.oConfig.version == 4) {
                 countOption = countOption || 'true';
                 if (!isQueryThrowEx('$count')) {
                     addQuery('$count', countOption);
@@ -393,7 +393,7 @@
             if (resource == null || resource.get) {
                 throwEx('You need to define a resource with the find() method to append an navigation property');
             }
-            if (oConfig.version < 4) {
+            if (base.oConfig.version < 4) {
                 resource.method = 'POST';
                 resource.path.push('$link');
                 resource.path.push({ resource: navPath, get: null });
@@ -418,7 +418,7 @@
             if (resource == null || resource.get) {
                 throwEx('You need to define a resource with the find() method to append an navigation property');
             }
-            if (oConfig.version < 4) {
+            if (base.oConfig.version < 4) {
                 resource.method = 'POST';
                 resource.path.push('$link');
                 resource.path.push({ resource: navPath, get: null });
@@ -443,7 +443,6 @@
 
         // +++
         // This function actually queries the oData service with a GET request
-        // TODO: maybe add some pseudonyms...
         // +++
         base.get = function (callback, errorCallback) {
             // init the q -> if node require a node promise -> if ES6, try ES6 promise
@@ -513,10 +512,9 @@
         }
 
         // +++
-        // does a update with the given Data to the current dataset
-        // always uses the PATCH http method
+        // does a update with the given Data to the current dataset with PATCH.
         // +++
-        base.patch = base.put = function (data, res) {
+        base.patch = function (data, res) {
 
             //add the resource
             if (res) {
@@ -528,6 +526,26 @@
 
             //set the method and data
             resource.method = 'PATCH';
+            resource.data = data;
+
+            return (base);
+        }
+
+        // +++
+        // does a update with the given Data to the current dataset with PUT.
+        // +++
+        base.put = function (data, res) {
+
+            //add the resource
+            if (res) {
+                addNewResource(res);
+            }
+
+            if (!resource.path[resource.path.length - 1] || !resource.path[resource.path.length - 1].get)
+                throwEx('Bulk updates are not supported. You need to query a unique resource with find() to patch/put it.');
+
+            //set the method and data
+            resource.method = 'PUT';
             resource.data = data;
 
             return (base);
@@ -565,7 +583,7 @@
 
             var searchStr = buildSearchFilter(searchColumns, searchWord, searchFunc);
 
-            if (oConfig.version == 4 && isSupported) {
+            if (base.oConfig.version == 4 && isSupported) {
                 if (!isQueryThrowEx('$search')) {
                     addQuery('$search', searchStr, searchStr);
                 }
@@ -648,7 +666,7 @@
         // builds a search filter
         // ++++
         function buildSearchFilter(searchColumns, searchWord, searchFunc) {
-            searchFunc = searchFunc || (oConfig.version == 4 ? 'contains' : 'substringof');
+            searchFunc = searchFunc || (base.oConfig.version == 4 ? 'contains' : 'substringof');
             var searchWordSplit = searchWord.split(' ');
             var isNotExactSearch = (searchFunc === 'contains' || searchFunc === 'substringof');
 
@@ -657,7 +675,7 @@
                 var wordArr = [];
                 if (isNotExactSearch) {
                     for (var m = 0; m < searchWordSplit.length; m++) {
-                        if (oConfig.version == 4) {
+                        if (base.oConfig.version == 4) {
                             wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
                         }
                         else {
@@ -776,7 +794,7 @@
             var routeRegex = routeStr;
             if (!(routeStr instanceof RegExp)) {
                 //set the hash if needed
-                if (oConfig.isHashRoute && !startsWith(routeStr, '#')) {
+                if (base.oConfig.isHashRoute && !startsWith(routeStr, '#')) {
                     routeStr = '#' + routeStr;
                 }
                 //build up a regex
@@ -844,13 +862,13 @@
                 resource = res;
 
             //add the default format
-            if (!isQuery('$format') && oConfig.autoFormat) {
+            if (!isQuery('$format') && base.oConfig.autoFormat) {
                 addQuery('$format', base.oConfig.format);
             }
 
             //appendings
-            for (var i = 0; i < oConfig.appending.length; i++) {
-                addQuery(oConfig.appending[i].name, oConfig.appending[i].value);
+            for (var i = 0; i < base.oConfig.appending.length; i++) {
+                addQuery(base.oConfig.appending[i].name, base.oConfig.appending[i].value);
             }
         }
 
@@ -876,36 +894,36 @@
                 //build a ajax request
                 var ajaxReq = createCORSRequest(resource.method, buildQuery());
                 //check if we only have one request or we need to force batch because of isXDomainRequest
-                if ((countMethod(['POST', 'PATCH', 'DELETE']) <= 1 && isSave) && !isXDomainRequest) {
+                if ((countMethod(['POST', 'PATCH', 'DELETE', 'PUT']) <= 1 && isSave) && !isXDomainRequest) {
                     startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false,
                         [
                             { name: 'Accept', value: 'application/json' },
                             { name: 'Content-Type', value: 'application/json' }
                         ],
                         param, resourceList[resourceList.length - 1].progress);
-                    //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
-                    removeResource(['POST', 'PATCH', 'DELETE']);
+                    // because the post/put/delete is done, we remove the resource to assume that it will not be posted again
+                    removeResource(['POST', 'PATCH', 'DELETE', 'PUT']);
                 }
-                //do a $batch request
+                // do a $batch request
                 else {
-                    //generate a uui for this batch
+                    // generate a uui for this batch
                     var guid = generateUUID();
 
-                    //build the endpoint
+                    // build the endpoint
                     var endpoint = base.oConfig.endpoint + (endsWith(base.oConfig.endpoint, '/') ? '' : '/') + '$batch';
 
-                    //appendings
-                    for (var i = 0; i < oConfig.appending.length; i++) {
-                        endpoint += (i === 0 ? '?' : '&') + oConfig.appending[i].name + '=' + oConfig.appending[i].value;
+                    // appendings
+                    for (var i = 0; i < base.oConfig.appending.length; i++) {
+                        endpoint += (i === 0 ? '?' : '&') + base.oConfig.appending[i].name + '=' + base.oConfig.appending[i].value;
                     }
 
-                    //start the request
+                    // start the request
                     startAjaxReq(createCORSRequest('POST', endpoint), buildBatchBody(guid, isSave), callback, errorCallback, true,
-                        //add the necessary headers
+                        // add the necessary headers
                         [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }],
                         param, resourceList[resourceList.length - 1].progress);
                     if (isSave) {
-                        //because the post/put/delete is done, we remove the resource to assume that it will not be posted again
+                        // because the post/put/delete is done, we remove the resource to assume that it will not be posted again
                         removeResource(['POST', 'PUT', 'DELETE']);
                     }
                 }
@@ -1482,7 +1500,7 @@
         function strFormat() {
             var str = arguments[0];
             var para = arguments[1];
-            for (p in para) {
+            for (var p in para) {
                 var regex = new RegExp(p, 'g');
                 if (typeof str === 'string')
                     str = str.replace(regex, para[p]);
