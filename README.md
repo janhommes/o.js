@@ -204,18 +204,6 @@ o().config({
 });
 ```
 
-### Custom headers
-You can set a custom header which overrides the basic config headers by calling `headers([])`. If doing so, you need to call it again and empty to reset the headers to the ones configured in `o().config()`:
-
-```javascript
-o('Products').headers([{name: 'custom1', value: 'some1'}, {name: 'custom2', value: 'some2'}]).get(function(data) {
-  // result
-});
-
-// reset the headers
-o('OtherResource').headers().get();
-```
-
 ### Full list of supported functions
 
 Currently the following queries are supported:
