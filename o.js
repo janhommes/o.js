@@ -1346,7 +1346,7 @@
 
                             if (JSON && ajaxRequest.responseText != "")
                                 errResponse = JSON.parse(ajaxRequest.responseText);
-                                throwEx(errResponse);
+                                throwEx(errResponse.error.message);
 //                             if (errResponse !== '' && errResponse['error']) {
 //                                 var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
 //                                 throwEx(errorMsg);
