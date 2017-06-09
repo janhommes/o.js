@@ -1346,14 +1346,14 @@
 
                             if (JSON && ajaxRequest.responseText != "")
                                 errResponse = JSON.parse(ajaxRequest.responseText);
-
-                            if (errResponse !== '' && errResponse['odata.error']) {
-                                var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
-                                throwEx(errorMsg);
-                            }
-                            else {
-                                throwEx('Request to ' + buildQuery() + ' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
-                            }
+                                throwEx(errResponse);
+//                             if (errResponse !== '' && errResponse['error']) {
+//                                 var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
+//                                 throwEx(errorMsg);
+//                             }
+//                             else {
+//                                 throwEx('Request to ' + buildQuery() + ' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
+//                             }
                         } catch (ex) {
                             endLoading(tempBase, true, ajaxRequest.status || 404, ajaxRequest.responseText);
                             if (typeof errorCallback === 'function') {
