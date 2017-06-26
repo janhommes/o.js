@@ -1277,7 +1277,12 @@
             //if start loading function is set call it
             if (base.oConfig.start && overideLoading == null) {
                 base.oConfig.openAjaxRequests++;
-                base.oConfig.start();
+                base.oConfig.start({
+                    ajaxRequest: ajaxRequest,
+                    data: data,
+                    headers: headers,
+                    param: param
+                });
             }
             if (overideLoading && overideLoading[0]) {
                 overideLoading[0](true);
