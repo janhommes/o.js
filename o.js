@@ -447,7 +447,8 @@
         base.get = function (callback, errorCallback) {
             // init the q -> if node require a node promise -> if ES6, try ES6 promise
             var promise = initPromise();
-            currentPromise = promise.defer();
+            if (typeof promise !== 'undefined')
+                currentPromise = promise.defer();
 
             //start the request
             startRequest(callback, errorCallback, false);
