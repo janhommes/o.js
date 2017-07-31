@@ -1,5 +1,5 @@
 // +++
-// o.js  v0.3.3
+// o.js  v0.3.4
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
@@ -885,7 +885,12 @@
 
             //create a CORS ajax Request
             if (resourceList.length === 0 && !isSave) {
-                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, null, param, resource.progress);
+                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, 
+                    [
+                        { name: 'Accept', value: 'application/json' },
+                        { name: 'Content-Type', value: 'application/json' }
+                    ],
+                    param, resource.progress);
             }
             //else check if we need to make a $batch request
             else {
