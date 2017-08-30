@@ -1234,6 +1234,19 @@
                 body += '--batch_' + batchGuid + '\n';
                 body += 'Content-Type: multipart/mixed; boundary=changeset_' + changsetGuid + '\n\n';
             }
+
+            var hostname = null;
+            if (base.oConfig.endpoint !== null) {
+                //find & remove protocol (http, https etc.) and get hostname
+                if (base.oConfig.endpoint.indexOf("://") > -1) {
+                    hostname = base.oConfig.endpoint.split('/')[2];
+                } else {
+                    hostname = base.oConfig.endpoint.split('/')[0];
+                }
+                //find & remove port number
+                hostname = hostname.split(':')[0];
+            }
+
             //loop over the resourceList
             for (var i = 0; i < resourceList.length; i++) {
                 var res = resourceList[i];
@@ -1245,7 +1258,14 @@
                     body += 'Content-Type: application/http\n';
                     body += 'Content-Transfer-Encoding: binary\n\n';
                     body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
-                    body += 'Host: ' + base.oConfig.endpoint + '\n\n';
+                    body += 'Host: ' + hostname + '\n';
+
+                    for (var k = 0; k < base.oConfig.headers.length; k++) {
+                        var header = base.oConfig.headers[k];
+                        body += header.name + ': ' + header.value + '\n';
+                    }
+
+                    body += '\n';
                 }
                 //do POST if the base.save() function was called
                 //TODO:  || res.method==='PUT' || res.method==='DELETE'
@@ -1254,9 +1274,15 @@
                     body += '--changeset_' + changsetGuid + '\n';
                     body += 'Content-Type: application/http\n';
                     body += 'Content-Transfer-Encoding: binary\n';
-                    body += 'Content-ID:' + i + 1 + '\n\n';         //This ID can be referenced $1/Customer
+                    body += 'Content-ID:' + i + 1 + '\n\n'; //This ID can be referenced $1/Customer
                     body += res.method + ' ' + buildQuery(res) + ' HTTP/1.1\n';
-                    body += 'Host: ' + base.oConfig.endpoint + '\n';
+                    body += 'Host: ' + hostname + '\n';
+
+                    for (var k = 0; k < base.oConfig.headers.length; k++) {
+                        var header = base.oConfig.headers[k];
+                        body += header.name + ': ' + header.value + '\n';
+                    }
+
                     body += 'Content-Type: application/json\n';
                     //body += 'Content-Length:' + stringData.length + '\n';
                     body += '\n' + stringify(resource.data) + '\n\n\n';

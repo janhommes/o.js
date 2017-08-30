@@ -1,5 +1,8 @@
 var o = require('../o.js');
 
+jasmine.getEnv().defaultTimeoutInterval = 60000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 describe('o.js tests:', function () {
 
     it('GET People - no endpoint - no query', function (done) {
