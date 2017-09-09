@@ -722,7 +722,9 @@
                 queryStr += '/';
             }
 
-            queryStr = queryStr.slice(0, -1);
+            if(typeof res.appending === 'undefined' || res.appending === null) {
+                queryStr = queryStr.slice(0, -1);
+            }
 
             return (queryStr + res.appending + getQuery());
         }
@@ -887,7 +889,7 @@
             if (resourceList.length === 0 && !isSave) {
                 startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, 
                     [
-                        { name: 'Accept', value: 'application/json' },
+                        { name: 'Accept', value: 'application/json,text/plain' },
                         { name: 'Content-Type', value: 'application/json' }
                     ],
                     param, resource.progress);

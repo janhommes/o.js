@@ -157,6 +157,18 @@ function startEndpointTests() {
 		});
 	});
 
+	QUnit.test('GET People - endpoint - .count()', function(assert) {
+		var done = assert.async();
+		o('People').count().get(function(data) {
+			console.log(data);
+			assert.ok(data >= 0, printResult(this,data));
+			done();
+		}, function(e) {
+			assert.ok(e === 200, printResult(this, e));
+			done()
+		});
+	});
+
 	QUnit.test('GET People(\''+testEntity.UserName+'\') - endpoint - no query', function(assert) {
 		var done = assert.async();
 		o('People(\''+testEntity.UserName+'\')').get(function(data) {
