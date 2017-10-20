@@ -1,6 +1,6 @@
 # o.js
 
-_o.js beta v0.3.5_
+_o.js beta v0.3.6_
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib.
 
@@ -229,6 +229,8 @@ Currently the following queries are supported:
 `.batch(string)` - adds a second resource to the request (Odata: $batch)
 
 `.expand(string)` - expands a related resource (Odata: Products/?_$expand=ProductUnit_)
+
+`.select(string)` - selects only certain properties (Odata: Products/?_$select=Name)
 
 `.ref(string, string)` - expands a related resource (Odata: Products/_$ref=Categories(1)_)
 

@@ -326,12 +326,16 @@
         }
 
         // +++
-        // returns the first object which is found
+        // returns the counted data-sets
         // +++
         base.count = function () {
-            removeQuery('$format');
-            resource.appending = '$count';
-            //addQuery('$count', 'count');
+            if (base.oConfig.version >= 4) {
+                resource.path.push({ resource: '$count', get: null });
+            }
+            else {
+                removeQuery('$format');
+                addQuery('$count', 'count');
+            }
             return (base);
         }
 
@@ -339,7 +343,7 @@
         // adds a inline count
         // +++
         base.inlineCount = function (countOption) {
-            if (base.oConfig.version == 4) {
+            if (base.oConfig.version >= 4) {
                 countOption = countOption || 'true';
                 if (!isQueryThrowEx('$count')) {
                     addQuery('$count', countOption);
@@ -401,7 +405,7 @@
             else {
                 resource.method = 'POST';
                 resource.path.push({ resource: navPath, get: null });
-                resource.appending = '$ref';
+                resource.path.push({ resource: '$ref', get: null });
             }
             var newResource = parseUri(navPath);
             newResource.path[newResource.path.length - 1].get = id;
@@ -426,7 +430,7 @@
             else {
                 resource.method = 'POST';
                 resource.path.push({ resource: navPath, get: null });
-                resource.appending = '$ref';
+                resource.path.push({ resource: '$ref', get: null });
             }
             if (id) {
                 var newResource = parseUri(navPath);
@@ -704,7 +708,6 @@
 
             //get the full query
             var queryStr = '';
-            //var isEndpoint=false;
 
             //add the configured endpoint
             if (isEndpoint) {
@@ -722,7 +725,7 @@
                 queryStr += '/';
             }
 
-            if(typeof res.appending === 'undefined' || res.appending === null) {
+            if (typeof res.appending === 'undefined' || res.appending === null) {
                 queryStr = queryStr.slice(0, -1);
             }
 
@@ -887,7 +890,7 @@
 
             //create a CORS ajax Request
             if (resourceList.length === 0 && !isSave) {
-                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, 
+                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false,
                     [
                         { name: 'Accept', value: 'application/json,text/plain' },
                         { name: 'Content-Type', value: 'application/json' }
@@ -1036,7 +1039,6 @@
                 }
             }
 
-
             return (reqObj);
         }
 
@@ -1183,7 +1185,6 @@
                 return (JSON.stringify(data));
             else {
                 //Throw exception
-                //TODO: Is there any other solution for non JSON? caniuse say there is a 96.58% coverage for JSON parsing...
                 throwEx('No JSON support.');
                 return (data);
             }
