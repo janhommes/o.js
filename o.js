@@ -1509,6 +1509,7 @@
             }
 
             if (base.oConfig.isCors && 'withCredentials' in xhr) {
+				xhr.withCredentials=true;
                 // XHR for Chrome/Firefox/Opera/Safari.
                 xhr.open(method, url, base.oConfig.isAsync);
             }
