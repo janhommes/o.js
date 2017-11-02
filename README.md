@@ -197,6 +197,9 @@ o().config({
     username: null, 	// the basic auth username
     password: null,		// the basic auth password
     isAsync: true		// set this to false to enable sync requests. Only usable without basic auth
+	isCors: true,       // set this to false to disable CORS
+    isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
+    appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
 });
 ```
 
