@@ -1496,7 +1496,7 @@
         // +++
         // Create the XHR object with CORS support
         // +++
-        function createCORSRequest(method, url) {qsdqsd
+        function createCORSRequest(method, url) {
             var xhr = null;
 
             //if no window assume node.js
