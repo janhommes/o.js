@@ -1,13 +1,13 @@
 // +++
-// o.js  v0.3.4
+// o.js  v0.3.7
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 06/07/2017
-// Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire)
+// Date: 11/08/2017
+// Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire), 
 //
 // --------------------
 // The MIT License (MIT)
@@ -157,6 +157,7 @@
         base.inlinecount = null; 		//if inlinecount is set, here the counting is gold
         base.param = {};				//this object holds all parameter for a route
         base.oConfig = config;			//the internal config, passed over from the o function
+        base.raw = null;                //holds the data after an callback (raw data, containing also metadata)
 
 
         // ---------------------+++ PUBLICS +++----------------------------
@@ -725,7 +726,7 @@
                 queryStr += '/';
             }
 
-            if (typeof res.appending === 'undefined' || res.appending === null) {
+            if (!res.appending) {
                 queryStr = queryStr.slice(0, -1);
             }
 
@@ -1470,6 +1471,7 @@
             else {
                 if (JSON && response !== '') {
                     var data = JSON.parse(response);
+                    tempBase.raw = data;
                     if (data.hasOwnProperty('value')) {
                         if (isQuery(['$first']) && data.value.length && data.value.length <= 1) {
                             tempBase.data = data.value[0];
