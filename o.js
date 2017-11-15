@@ -411,7 +411,7 @@
             var newResource = parseUri(navPath);
             newResource.path[newResource.path.length - 1].get = id;
             var baseRes = buildQuery(newResource);
-            resource.data = { '@odata.id': baseRes.substring(0, baseRes.length - 1) };
+            resource.data = { '@odata.id': baseRes };
             return (base);
         }
 
@@ -437,7 +437,7 @@
                 var newResource = parseUri(navPath);
                 newResource.path[newResource.path.length - 1].get = id;
                 var baseRes = buildQuery(newResource);
-                addQuery('$id', baseRes.substring(0, baseRes.length - 1));
+                addQuery('$id', baseRes);
             }
             //set the method
             resource.method = 'DELETE';
