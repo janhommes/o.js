@@ -146,8 +146,8 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(func
 To add an reference to an other resource use `ref` (to remove it simply use `removeRef` the same way):
 
 ```javascript
-o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 2).save(function(data) {
-  console.log("Product(1) associated with Categories(2)");
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 'Category', 2).save(function(data) {
+  console.log("Product(1) associated with Category(2)");
 });
 ```
 
