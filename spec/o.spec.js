@@ -226,6 +226,48 @@ describe('o.js tests:', function () {
             });
         });
 
+        it('POST People(testEntity)/Friends/$ref - endpoint - no query', function (done) {
+            o('People(\'' + testEntity.UserName + '\')').ref('Friends', 'People', '\'' + testEntity.UserName + '\'').save(function (data) {
+                expect(data.length).toBe(0);
+                done();
+            }, function (e) {
+                expect(e).toBe(204);
+                done();
+            });
+        });
+
+        it('DELETE People(testEntity)/Friends/$ref - endpoint - no query', function (done) {
+            o('People(\'' + testEntity.UserName + '\')').removeRef('Friends', 'People', '\'' + testEntity.UserName + '\'').save(function (data) {
+                expect(data.length).toBe(0);
+                done();
+            }, function (e) {
+                expect(e).toBe(204);
+                done();
+            });
+        });
+
+        it('POST People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
+            o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
+                .ref('Friends', 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
+                expect(data.length).toBe(0);
+                done();
+            }, function (e) {
+                expect(e).toBe(204);
+                done();
+            });
+        });
+
+        it('DELETE People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
+            o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
+                .removeRef('Friends', 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
+                expect(data.length).toBe(0);
+                done();
+            }, function (e) {
+                expect(e).toBe(204);
+                done();
+            });
+        });
+
         //DELETES the test data, move it to the end of this file!
         it('DELETE Products(testEntity) - endpoint - no query', function (done) {
             var name = 'Test_' + Math.random();
