@@ -146,8 +146,16 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(func
 To add an reference to an other resource use `ref` (to remove it simply use `removeRef` the same way):
 
 ```javascript
-o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 'Category', 2).save(function(data) {
-  console.log("Product(1) associated with Category(2)");
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 2).save(function(data) {
+  console.log("Products(1) associated with Categories(2)");
+});
+```
+
+If the navigation property you are trying to set is not named the same as the collection:
+
+```javascript
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('RelatedProducts', 'Products', 2).save(function(data) {
+  console.log("Products(1) associated with Products(2) using the RelatedProducts navigation property");
 });
 ```
 
@@ -235,9 +243,9 @@ Currently the following queries are supported:
 
 `.select(string)` - selects only certain properties (Odata: Products/?_$select=Name)
 
-`.ref(string, string)` - expands a related resource (Odata: Products/_$ref=Categories(1)_)
+`.ref(string, string, [string])` - expands a related resource (Odata: Products(1)/Category/_$ref=Categories(1)_)
 
-`.deleteRef(string, string)` - expands a related resource (Odata: Products/_$ref=Categories(1)_)
+`.deleteRef(string, string, [string])` - expands a related resource (Odata: Products(1)/Category/_$ref=Categories(1)_)
 
 `.post(object)` - Post data to an endpoint
 

@@ -394,6 +394,11 @@
         // appends a navigation property to an existing resource
         // +++
         base.ref = base.link = function (navPath, res, id) {
+            if (!id) {
+                id = res;
+                res = null;
+            }
+
             removeQuery('$format');
             if (resource == null || resource.get) {
                 throwEx('You need to define a resource with the find() method to append an navigation property');
@@ -408,7 +413,7 @@
                 resource.path.push({ resource: navPath, get: null });
                 resource.path.push({ resource: '$ref', get: null });
             }
-            var newResource = parseUri(res);
+            var newResource = parseUri(res || navPath);
             newResource.path[newResource.path.length - 1].get = id;
             var baseRes = buildQuery(newResource);
             resource.data = { '@odata.id': baseRes };
@@ -419,6 +424,11 @@
         // deletes a referenced entity relation
         // +++
         base.removeRef = base.deleteRef = function (navPath, res, id) {
+            if (!id) {
+                id = res;
+                res = null;
+            }
+
             removeQuery('$format');
             if (resource == null || resource.get) {
                 throwEx('You need to define a resource with the find() method to append an navigation property');
@@ -434,7 +444,7 @@
                 resource.path.push({ resource: '$ref', get: null });
             }
             if (id) {
-                var newResource = parseUri(res);
+                var newResource = parseUri(res || navPath);
                 newResource.path[newResource.path.length - 1].get = id;
                 var baseRes = buildQuery(newResource);
                 addQuery('$id', baseRes);
