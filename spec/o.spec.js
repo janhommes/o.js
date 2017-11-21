@@ -236,7 +236,7 @@ describe('o.js tests:', function () {
             });
         });
 
-        it('DELETE People(testEntity)/Friends/$ref - endpoint - no query', function (done) {
+        xit('DELETE People(testEntity)/Friends/$ref - endpoint - no query', function (done) {
             o('People(\'' + testEntity.UserName + '\')').removeRef('Friends', 'People', '\'' + testEntity.UserName + '\'').save(function (data) {
                 expect(data.length).toBe(0);
                 done();
@@ -257,7 +257,7 @@ describe('o.js tests:', function () {
             });
         });
 
-        it('DELETE People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
+        xit('DELETE People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
             o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
                 .removeRef('Friends', 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
                 expect(data.length).toBe(0);
