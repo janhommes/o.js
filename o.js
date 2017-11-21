@@ -404,19 +404,21 @@
                 throwEx('You need to define a resource with the find() method to append an navigation property');
             }
             if (base.oConfig.version < 4) {
-                resource.method = 'POST';
                 resource.path.push('$links');
                 resource.path.push({ resource: navPath, get: null });
             }
             else {
-                resource.method = 'POST';
                 resource.path.push({ resource: navPath, get: null });
                 resource.path.push({ resource: '$ref', get: null });
             }
-            var newResource = parseUri(res || navPath);
-            newResource.path[newResource.path.length - 1].get = id;
-            var baseRes = buildQuery(newResource);
-            resource.data = { '@odata.id': baseRes };
+
+            if (id) {
+                resource.method = 'POST';
+                var newResource = parseUri(res || navPath);
+                newResource.path[newResource.path.length - 1].get = id;
+                var baseRes = buildQuery(newResource);
+                resource.data = { '@odata.id': baseRes };
+            }
             return (base);
         }
 

@@ -143,6 +143,14 @@ o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(func
 
 ### Reference:
 
+To retrieve a referenced object instead of the resource, use `ref`:
+
+```javascript
+o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories').get(function(data) {
+  console.log(data); // data contains the associated category instead of the product
+});
+```
+
 To add an reference to an other resource use `ref` (to remove it simply use `removeRef` the same way):
 
 ```javascript
