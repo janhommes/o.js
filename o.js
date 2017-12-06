@@ -597,14 +597,14 @@
         // +++
         base.search = function (searchColumns, searchWord, searchFunc, isSupported) {
 
-            var searchStr = buildSearchFilter(searchColumns, searchWord, searchFunc);
-
             if (base.oConfig.version == 4 && isSupported) {
                 if (!isQueryThrowEx('$search')) {
-                    addQuery('$search', searchStr, searchStr);
+                    addQuery('$search', searchWord, searchWord);
                 }
             }
             else {
+		var searchStr = buildSearchFilter(searchColumns, searchWord, searchFunc);
+
                 if (!isQueryThrowEx('$filter')) {
                     addQuery('$filter', searchStr, searchStr, '$search');
                 }
