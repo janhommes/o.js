@@ -38,6 +38,8 @@ For all samples we are using the test odata service from [Odata.org](http://www.
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products').get(function(data) {
   console.log(data); //returns an array of Product data
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -50,6 +52,8 @@ By adding some chained functions to the o-handler you can add query options:
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products').take(5).skip(2).get(function(data) {
   console.log(data); //An array of 5 products skipped by 2
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -81,6 +85,8 @@ oHandler.get(function(data) {
   console.log(data);
   //or the saved var also contains the data:
   console.log(oHandler.data);
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -118,6 +124,8 @@ You can use the `post()` function in combination with the `save()` method to add
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products').post({Name:'Example 1',Description:'a'}).post({Name:'Example 2',Description:'b'}).save(function(data) {
   console.log("Two Products added");
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -128,6 +136,8 @@ Changing (PATCH or PUT) data is nearly the same:
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').patch({Name:'NewName'}).save(function(data) {
   console.log("Product Name changed");
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -138,6 +148,8 @@ To remove (DELETE) data you need to call `remove()`:
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').remove().save(function(data) {
   console.log("Product deleted");
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -148,6 +160,8 @@ To add an reference to an other resource use `ref` (to remove it simply use `rem
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('Categories', 2).save(function(data) {
   console.log("Products(1) associated with Categories(2)");
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -156,6 +170,8 @@ If the navigation property you are trying to set is not named the same as the co
 ```javascript
 o('http://services.odata.org/V4/OData/OData.svc/Products(1)').ref('RelatedProducts', 'Products', 2).save(function(data) {
   console.log("Products(1) associated with Products(2) using the RelatedProducts navigation property");
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -185,6 +201,8 @@ o().config({
 // after you have set an endpoint, you can shorten your queries:
 o('Products').get(function(data) {
   //same result like the first example on this page
+}, function(status) {
+  console.error(status); // error with status
 });
 ```
 
@@ -254,3 +272,5 @@ Currently the following queries are supported:
 `.put(object)` - PUT data on an endpoint
 
 `.remove(object)` - DELETE data on an endpoint (You must define only one resource: e.g: Products(1) )
+
+`.query()` - get the query as string
