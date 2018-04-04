@@ -69,7 +69,10 @@ QUnit.test('GET People - $format off - autoFormat=false', function(assert) {
 	o().config({ autoFormat: false });
 
     o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People').get(function(data) {
-        assert.ok(this.query().indexOf('$format') === -1, printResult(this, data));
+				assert.ok(this.query().indexOf('$format') === -1, printResult(this, data));
+				console.log(this);
+				console.log(data);
+				debugger;
         done();
     }, function(e) {
         assert.ok(e === 200, printResult(this, e));

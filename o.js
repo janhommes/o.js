@@ -1,5 +1,5 @@
 // +++
-// o.js  v0.3.7
+// o.js  v0.3.8
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
