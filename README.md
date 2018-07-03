@@ -1,6 +1,6 @@
 # o.js
 
-_o.js beta v0.3.8_
+_o.js beta v0.3.9_
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib.
 
@@ -274,3 +274,7 @@ Currently the following queries are supported:
 `.remove(object)` - DELETE data on an endpoint (You must define only one resource: e.g: Products(1) )
 
 `.query()` - get the query as string
+
+`.raw` - gives the raw data in a callback
+
+`.xhr` - allows access to the xhr object to get headers
