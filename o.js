@@ -1387,9 +1387,11 @@
                 if (ajaxRequest.readyState === 4) {
                     if (ajaxRequest.status >= 200 && ajaxRequest.status < 300) {
 
+                        //attaching the client
+                        tempBase.xhr = ajaxRequest;
+
                         //dealing with the response
                         if (ajaxRequest.status !== 204) {
-                            tempBase.xhr = ajaxRequest;
                             if (!isBatch) {
                                 parseResponse(ajaxRequest.responseText, tempBase);
                                 //callback.call(tempBase,tempBase.data);
