@@ -6,7 +6,7 @@
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 06/03/2018
+// Date: 08/06/2018
 // Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire), 
 //
 // --------------------
@@ -59,7 +59,7 @@
             username: null, // the basic auth username
             password: null, // the basic auth password
             isAsync: true, // set this to false to enable sync requests. Only usable without basic auth
-            isCors: true, // set this to false to disable CORS
+            isWithCredentials: false, // set this to true if used with basic auth
             openAjaxRequests: 0, // a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
             isHashRoute: true, // set this var to false to disable automatic #-hash setting on routes
             appending: '' // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
@@ -78,7 +78,7 @@
         // username: The basic auth username
         // password: The basic auth password
         // isAsync: If set to false, the request are done sync. Default is true.
-        // IsCors: set this to false to disable CORS
+        // isWithCredentials: set this to true if used with basic auth
         // +++
         base.config = function (config) {
             base.oConfig = merge(base.oConfig, config);
@@ -1455,7 +1455,7 @@
             if (base.oConfig.username && base.oConfig.password) {
                 //ajaxRequest.withCredentials=true;
                 if (isXDomainRequest) {
-                    throwEx('CORS and Basic Auth is not supported for IE <= 9. Try to set isCors:false in the OData config if you do not need CORS support.');
+                    throwEx('CORS and Basic Auth is not supported for IE <= 9. Try to set isWithCredentials:false in the OData config if you do not need CORS support.');
                 }
                 ajaxRequest.setRequestHeader('Authorization', 'Basic ' + encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
             }

@@ -30,7 +30,7 @@ function ViewModel() {
 
     //o.js init
     o().config({
-        endpoint: 'http://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
+        endpoint: 'https://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/',
         version: 4,
         strictMode: true,
         start: function () {
@@ -39,6 +39,7 @@ function ViewModel() {
         ready: function () {
             self.isLoading(false);
         },
+        
         headers: [{ name: 'If-Match', value: '*' }]
     });
 

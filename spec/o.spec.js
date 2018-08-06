@@ -75,7 +75,7 @@ describe('o.js tests:', function () {
 
         beforeAll(function (done) {
             o().config({
-                endpoint: 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
+                endpoint: 'https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/',
                 version: 4,
                 strictMode: true,
                 headers: [{ name: 'If-Match', value: '*' }]
@@ -217,7 +217,7 @@ describe('o.js tests:', function () {
 
         it('PATCH People(testEntity) - no endpoint - no query', function (done) {
             var name = 'Test_' + Math.random();
-            o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')').patch({ FirstName: name }).save(function (data) {
+            o('https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')').patch({ FirstName: name }).save(function (data) {
                 expect(data.length).toBe(0);
                 done();
             }, function (e) {
@@ -247,8 +247,8 @@ describe('o.js tests:', function () {
         });
 
         it('POST People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
-            o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
-                .ref('Friends', 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
+            o('https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
+                .ref('Friends', 'https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
                 expect(data.length).toBe(0);
                 done();
             }, function (e) {
@@ -258,8 +258,8 @@ describe('o.js tests:', function () {
         });
 
         xit('DELETE People(testEntity)/Friends/$ref - no endpoint - no query', function (done) {
-            o('http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
-                .removeRef('Friends', 'http://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
+            o('https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People(\'' + testEntity.UserName + '\')')
+                .removeRef('Friends', 'https://services.odata.org/V4/(S(ms4wufavzmwsg3fjo3eqdgak))/TripPinServiceRW/People', '\'' + testEntity.UserName + '\'').save(function (data) {
                 expect(data.length).toBe(0);
                 done();
             }, function (e) {
