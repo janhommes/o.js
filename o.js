@@ -1,18 +1,18 @@
 // +++
-// o.js  v0.3.8
+// o.js  v0.4.0
 //
 // o.js is a simple oData wrapper for JavaScript.
 // Currently supporting the following operations:
 // .get() / .post() / .put() / .delete() / .first()  / .take() / .skip() / .filter() / .orderBy() / .orderByDesc() / .count() /.search() / .select() / .any() / .ref() / .deleteRef()
 //
 // By Jan Hommes
-// Date: 11/08/2017
+// Date: 08/06/2018
 // Contributors: Matteo Antony Mistretta (https://github.com/IceOnFire), 
 //
 // --------------------
 // The MIT License (MIT)
 //
-// Copyright (c) 2017 Jan Hommes
+// Copyright (c) 2018 Jan Hommes
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 // +++
-; (function (root, factory) {
+;
+(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         define(['q'], factory);
     } else if (typeof exports === 'object') {
@@ -47,21 +48,21 @@
         //base config object
         base.oConfig = base.oConfig || {
             endpoint: null,
-            format: 'json', 	// The media format. Default is JSON.
-            autoFormat: true,   // Will always append a $format=json to each query if set to true.
-            version: 4, 		// currently only tested for Version 4. Most will work in version 3 as well.
-            strictMode: true, 	// strict mode throws exception, non strict mode only logs them
-            start: null, 		// a function which is executed on loading
-            ready: null,		// a function which is executed on ready
-            error: null,		// a function which is executed on error
-            headers: [],		// an array of additional headers [{name:'headername',value:'headervalue'}]
-            username: null, 	// the basic auth username
-            password: null,		// the basic auth password
-            isAsync: true,		// set this to false to enable sync requests. Only usable without basic auth
-            isCors: true,       // set this to false to disable CORS
-            openAjaxRequests: 0,// a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
-            isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
-            appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
+            format: 'json', // The media format. Default is JSON.
+            autoFormat: true, // Will always append a $format=json to each query if set to true.
+            version: 4, // currently only tested for Version 4. Most will work in version 3 as well.
+            strictMode: true, // strict mode throws exception, non strict mode only logs them
+            start: null, // a function which is executed on loading
+            ready: null, // a function which is executed on ready
+            error: null, // a function which is executed on error
+            headers: [], // an array of additional headers [{name:'headername',value:'headervalue'}]
+            username: null, // the basic auth username
+            password: null, // the basic auth password
+            isAsync: true, // set this to false to enable sync requests. Only usable without basic auth
+            isWithCredentials: false, // set this to true if used with basic auth
+            openAjaxRequests: 0, // a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
+            isHashRoute: true, // set this var to false to disable automatic #-hash setting on routes
+            appending: '' // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
         };
 
         // +++
@@ -77,7 +78,7 @@
         // username: The basic auth username
         // password: The basic auth password
         // isAsync: If set to false, the request are done sync. Default is true.
-        // IsCors: set this to false to disable CORS
+        // isWithCredentials: set this to true if used with basic auth
         // +++
         base.config = function (config) {
             base.oConfig = merge(base.oConfig, config);
@@ -110,8 +111,7 @@
 
         if (typeof res === 'undefined') {
             return (base);
-        }
-        else {
+        } else {
             return (new oData(res, base.oConfig));
         }
     }
@@ -123,15 +123,15 @@
         // --------------------+++ VARIABLES +++---------------------------
 
         //base internal variables
-        var resource = null; 					// the main resource string
-        var resourceList = []; 		    		// an array list of all resource used
-        var routeList = []; 					// an array list of all routes used
-        var isEndpoint = true;		    		// true if an endpoint is configured
-        var currentPromise = null;	    		// if promise (Q.js) is used, we hold it here
-        var overideLoading = null;      		// if set, this resource call don't use the global loading function
-        var isXDomainRequest = false;   		// this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
-        var beforeRoutingFunc = function () { };	// A function which is called before routing.
-        var internalParam = {}; 				// like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
+        var resource = null; // the main resource string
+        var resourceList = []; // an array list of all resource used
+        var routeList = []; // an array list of all routes used
+        var isEndpoint = true; // true if an endpoint is configured
+        var currentPromise = null; // if promise (Q.js) is used, we hold it here
+        var overideLoading = null; // if set, this resource call don't use the global loading function
+        var isXDomainRequest = false; // this is set to true in IE 9 and IE 8 to support CORS operations. No basic auth support :(
+        var beforeRoutingFunc = function () {}; // A function which is called before routing.
+        var internalParam = {}; // like base.param this object holds all parameter for a route but with the leading : for easier using in regexes
         var opertionMapping = {
             '==': 'eq',
             '===': 'eq',
@@ -153,11 +153,12 @@
 
 
         //base external variables
-        base.data = [];					//holds the data after an callback
-        base.inlinecount = null; 		//if inlinecount is set, here the counting is gold
-        base.param = {};				//this object holds all parameter for a route
-        base.oConfig = config;			//the internal config, passed over from the o function
-        base.raw = null;                //holds the data after an callback (raw data, containing also metadata)
+        base.data = []; //holds the data after an callback
+        base.inlinecount = null; //if inlinecount is set, here the counting is gold
+        base.param = {}; //this object holds all parameter for a route
+        base.oConfig = config; //the internal config, passed over from the o function
+        base.raw = null; //holds the data after an callback (raw data, containing also metadata)
+        base.xhr = null; //holds the xhr client after an callback (for getting response headers for example)
 
 
         // ---------------------+++ PUBLICS +++----------------------------
@@ -197,8 +198,7 @@
                             }
                         }, 100)
                     });
-                }
-                else {
+                } else {
                     throwEx('Routes without a callback are not supported. Please define a function like .route("YourRoute", function() { }).');
                 }
             }
@@ -277,8 +277,7 @@
             var filterVal = checkEmpty(jsToOdata(filterStr));
             if (isQuery('$filter')) {
                 appendQuery('$filter', filterVal, filterVal);
-            }
-            else {
+            } else {
                 addQuery('$filter', filterVal, filterVal);
             }
             return (base);
@@ -291,8 +290,7 @@
             var filterVal = res + '/any(x:x/' + jsToOdata(checkEmpty(filter)) + ')'
             if (isQuery('$filter')) {
                 appendQuery('$filter', filterVal, filterVal);
-            }
-            else {
+            } else {
                 addQuery('$filter', filterVal, filterVal);
             }
             return (base);
@@ -331,9 +329,11 @@
         // +++
         base.count = function () {
             if (base.oConfig.version >= 4) {
-                resource.path.push({ resource: '$count', get: null });
-            }
-            else {
+                resource.path.push({
+                    resource: '$count',
+                    get: null
+                });
+            } else {
                 removeQuery('$format');
                 addQuery('$count', 'count');
             }
@@ -349,8 +349,7 @@
                 if (!isQueryThrowEx('$count')) {
                     addQuery('$count', countOption);
                 }
-            }
-            else {
+            } else {
                 countOption = countOption || 'allpages';
                 if (!isQueryThrowEx('$inlinecount')) {
                     addQuery('$inlinecount', countOption);
@@ -382,7 +381,7 @@
         base.loading = function (func1, func2) {
             func2 = func2 || func1;
             if (!func1)
-                overideLoading = [function () { }, function () { }];
+                overideLoading = [function () {}, function () {}];
             else {
                 overideLoading = [func1, func2];
             }
@@ -406,17 +405,27 @@
             if (base.oConfig.version < 4) {
                 resource.method = 'POST';
                 resource.path.push('$links');
-                resource.path.push({ resource: navPath, get: null });
-            }
-            else {
+                resource.path.push({
+                    resource: navPath,
+                    get: null
+                });
+            } else {
                 resource.method = 'POST';
-                resource.path.push({ resource: navPath, get: null });
-                resource.path.push({ resource: '$ref', get: null });
+                resource.path.push({
+                    resource: navPath,
+                    get: null
+                });
+                resource.path.push({
+                    resource: '$ref',
+                    get: null
+                });
             }
             var newResource = parseUri(res || navPath);
             newResource.path[newResource.path.length - 1].get = id;
             var baseRes = buildQuery(newResource);
-            resource.data = { '@odata.id': baseRes };
+            resource.data = {
+                '@odata.id': baseRes
+            };
             return (base);
         }
 
@@ -436,12 +445,20 @@
             if (base.oConfig.version < 4) {
                 resource.method = 'POST';
                 resource.path.push('$links');
-                resource.path.push({ resource: navPath, get: null });
-            }
-            else {
+                resource.path.push({
+                    resource: navPath,
+                    get: null
+                });
+            } else {
                 resource.method = 'POST';
-                resource.path.push({ resource: navPath, get: null });
-                resource.path.push({ resource: '$ref', get: null });
+                resource.path.push({
+                    resource: navPath,
+                    get: null
+                });
+                resource.path.push({
+                    resource: '$ref',
+                    get: null
+                });
             }
             if (id) {
                 var newResource = parseUri(res || navPath);
@@ -603,8 +620,7 @@
                 if (!isQueryThrowEx('$search')) {
                     addQuery('$search', searchStr, searchStr);
                 }
-            }
-            else {
+            } else {
                 if (!isQueryThrowEx('$filter')) {
                     addQuery('$filter', searchStr, searchStr, '$search');
                 }
@@ -653,12 +669,10 @@
             if (typeof Q !== 'undefined') {
                 var p = Q;
                 return (p);
-            }
-            else if (typeof window === 'undefined') {
+            } else if (typeof window === 'undefined') {
                 var p = require('q');
                 return (p);
-            }
-            else {
+            } else {
                 return (null);
             }
         }
@@ -668,7 +682,8 @@
         // +++
         function buildFilterByData(column, filterList, operation, combine) {
             if (isArray(filterList)) {
-                var filterStr = "", arr = [];
+                var filterStr = "",
+                    arr = [];
                 for (i = 0; i < filterList.length; ++i) {
                     arr[i] = '(' + column + ' ' + operation + ' ' + filterList[i][column] + ')';
                 }
@@ -693,13 +708,11 @@
                     for (var m = 0; m < searchWordSplit.length; m++) {
                         if (base.oConfig.version == 4) {
                             wordArr.push(searchFunc + '(' + searchColumns[i] + ',\'' + searchWordSplit[m] + '\')');
-                        }
-                        else {
+                        } else {
                             wordArr.push(searchFunc + '(\'' + searchWordSplit[m] + '\',' + searchColumns[i] + ')');
                         }
                     }
-                }
-                else {
+                } else {
                     wordArr.push(searchColumns[i] + ' ' + searchFunc + ' \'' + searchWord + '\'');
                 }
                 columnArr.push('(' + wordArr.join(' and ') + ')');
@@ -783,8 +796,7 @@
                             param[prop.substring(1)] = matches[i];
                             i++;
                         }
-                    }
-                    else {
+                    } else {
                         for (var i = 1; i < matches.length; i++) {
                             internalParam[':' + (i - 1)] = matches[i];
                             param[(i - 1)] = matches[i];
@@ -825,7 +837,10 @@
                 }
                 routeRegex = new RegExp('^' + routeArr.join('/') + '$');
             }
-            return ({ regex: routeRegex, param: param });
+            return ({
+                regex: routeRegex,
+                param: param
+            });
         }
 
         // +++
@@ -834,8 +849,7 @@
         function deepCopy(obj) {
             if (JSON) {
                 return (JSON.parse(JSON.stringify(obj)));
-            }
-            else {
+            } else {
                 throwEx('No JSON Support.');
             }
         }
@@ -901,10 +915,14 @@
 
             //create a CORS ajax Request
             if (resourceList.length === 0 && !isSave) {
-                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false,
-                    [
-                        { name: 'Accept', value: 'application/json,text/plain' },
-                        { name: 'Content-Type', value: 'application/json' }
+                startAjaxReq(createCORSRequest('GET', buildQuery()), null, callback, errorCallback, false, [{
+                            name: 'Accept',
+                            value: 'application/json,text/plain'
+                        },
+                        {
+                            name: 'Content-Type',
+                            value: 'application/json'
+                        }
                     ],
                     param, resource.progress);
             }
@@ -917,10 +935,14 @@
                 var ajaxReq = createCORSRequest(resource.method, buildQuery());
                 //check if we only have one request or we need to force batch because of isXDomainRequest
                 if ((countMethod(['POST', 'PATCH', 'DELETE', 'PUT']) <= 1 && isSave) && !isXDomainRequest) {
-                    startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false,
-                        [
-                            { name: 'Accept', value: 'application/json' },
-                            { name: 'Content-Type', value: 'application/json' }
+                    startAjaxReq(ajaxReq, stringify(resource.data), callback, errorCallback, false, [{
+                                name: 'Accept',
+                                value: 'application/json'
+                            },
+                            {
+                                name: 'Content-Type',
+                                value: 'application/json'
+                            }
                         ],
                         param, resourceList[resourceList.length - 1].progress);
                     // because the post/put/delete is done, we remove the resource to assume that it will not be posted again
@@ -942,7 +964,10 @@
                     // start the request
                     startAjaxReq(createCORSRequest('POST', endpoint), buildBatchBody(guid, isSave), callback, errorCallback, true,
                         // add the necessary headers
-                        [{ name: 'Content-Type', value: 'multipart/mixed; boundary=batch_' + guid }],
+                        [{
+                            name: 'Content-Type',
+                            value: 'multipart/mixed; boundary=batch_' + guid
+                        }],
                         param, resourceList[resourceList.length - 1].progress);
                     if (isSave) {
                         // because the post/put/delete is done, we remove the resource to assume that it will not be posted again
@@ -974,8 +999,7 @@
             //Check if we have a endpoint and save it to the var
             if ((res.toUpperCase().indexOf('HTTP://') > -1 || res.toUpperCase().indexOf('HTTPS://') > -1)) {
                 isEndpoint = false;
-            }
-            else {
+            } else {
                 //check if endpoint is defined
                 if (!base.oConfig.endpoint) {
                     throwEx('You can not use resource query without defining your oData endpoint. Use o().config({endpoint:yourEndpoint}) to define your oData endpoint.');
@@ -998,8 +1022,7 @@
             if (isQuery('$expand')) {
                 resource.queryList[resource.query.$expand].value += ',' + expandStr;
                 resource.queryList[resource.query.$expand].original = resource.queryList[resource.query.$expand].value;
-            }
-            else {
+            } else {
                 addQuery('$expand', expandStr, expandStr);
             }
         }
@@ -1028,7 +1051,10 @@
                 var querySplit = query.split('&');
                 for (var i = 0; i < querySplit.length; i++) {
                     var pair = querySplit[i].split('=');
-                    reqObj.queryList.push({ name: pair[0], value: pair[1] });
+                    reqObj.queryList.push({
+                        name: pair[0],
+                        value: pair[1]
+                    });
                     reqObj.query[pair[0]] = reqObj.queryList.length - 1;
                 }
             }
@@ -1038,14 +1064,18 @@
             for (var i = 0; i < uriSplit.length; i++) {
                 if (startsWith(uriSplit[i], '$') && uriSplit[i] !== '$link') {
                     reqObj.appending = uriSplit[i];
-                }
-                else {
+                } else {
                     var index = uriSplit[i].split('(');
                     if (index.length === 1 || startsWith(uriSplit[i], '(')) {
-                        reqObj.path.push({ 'resource': uriSplit[i], 'get': null });
-                    }
-                    else {
-                        reqObj.path.push({ 'resource': index[0], 'get': index[1].substring(0, index[1].length - 1) });
+                        reqObj.path.push({
+                            'resource': uriSplit[i],
+                            'get': null
+                        });
+                    } else {
+                        reqObj.path.push({
+                            'resource': index[0],
+                            'get': index[1].substring(0, index[1].length - 1)
+                        });
                     }
                 }
             }
@@ -1058,7 +1088,11 @@
         // +++
         function addQuery(queryName, queryValue, queryOriginal, queryPseudonym) {
             queryOriginal = queryOriginal || null;
-            resource.queryList.push({ name: queryName, value: queryValue, original: queryOriginal });
+            resource.queryList.push({
+                name: queryName,
+                value: queryValue,
+                original: queryOriginal
+            });
             resource.query[queryPseudonym || queryName] = resource.queryList.length - 1;
         }
 
@@ -1129,7 +1163,7 @@
         }
 
         // +++
-        // Checks if a value is positiv and a integer
+        // Checks if a value is positive and an integer
         // +++
         function checkEmpty(str, throwName) {
             if (typeof str !== 'undefined' && str !== null && str.length > 0)
@@ -1344,8 +1378,7 @@
                     ajaxRequest.status = 400;
                     ajaxRequest.onreadystatechange();
                 };
-            }
-            else if (typeof progress === 'function') {
+            } else if (typeof progress === 'function') {
                 ajaxRequest.onprogress = progress;
             }
 
@@ -1353,6 +1386,9 @@
                 //check the http status
                 if (ajaxRequest.readyState === 4) {
                     if (ajaxRequest.status >= 200 && ajaxRequest.status < 300) {
+
+                        //attaching the client
+                        tempBase.xhr = ajaxRequest;
 
                         //dealing with the response
                         if (ajaxRequest.status !== 204) {
@@ -1385,8 +1421,7 @@
                         if (typeof callback === 'function') {
                             callback.call(tempBase, tempBase.data, param);
                         }
-                    }
-                    else {
+                    } else {
                         try {
                             var errResponse = ajaxRequest.responseText;
 
@@ -1396,20 +1431,17 @@
                             if (errResponse !== '' && errResponse['odata.error']) {
                                 var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
                                 throwEx(errorMsg);
-                            }
-                            else {
+                            } else {
                                 throwEx('Request to ' + buildQuery() + ' failed with HTTP status ' + (ajaxRequest.status || 404) + '.');
                             }
                         } catch (ex) {
                             endLoading(tempBase, true, ajaxRequest.status || 404, ajaxRequest.responseText);
                             if (typeof errorCallback === 'function') {
                                 errorCallback(ajaxRequest.status || 404, ex)
-                            }
-                            else if (currentPromise) {
+                            } else if (currentPromise) {
                                 ex.status = (ajaxRequest.status || 404);
                                 currentPromise.reject(ex);
-                            }
-                            else {
+                            } else {
                                 throw ex;
                             }
                         }
@@ -1423,7 +1455,7 @@
             if (base.oConfig.username && base.oConfig.password) {
                 //ajaxRequest.withCredentials=true;
                 if (isXDomainRequest) {
-                    throwEx('CORS and Basic Auth is not supported for IE <= 9. Try to set isCors:false in the OData config if you do not need CORS support.');
+                    throwEx('CORS and Basic Auth is not supported for IE <= 9. Try to set isWithCredentials:false in the OData config if you do not need CORS support.');
                 }
                 ajaxRequest.setRequestHeader('Authorization', 'Basic ' + encodeBase64(base.oConfig.username + ':' + base.oConfig.password));
             }
@@ -1477,28 +1509,24 @@
             var count = tryParseInt(response, -1);
             if (count !== -1) {
                 tempBase.data = count;
-            }
-            else {
+            } else {
                 if (JSON && response !== '') {
                     var data = JSON.parse(response);
                     tempBase.raw = data;
                     if (data.hasOwnProperty('value')) {
                         if (isQuery(['$first']) && data.value.length && data.value.length <= 1) {
                             tempBase.data = data.value[0];
-                        }
-                        else {
+                        } else {
                             tempBase.data = data.value;
                         }
                         if (data.hasOwnProperty('odata.count') || data.hasOwnProperty('@odata.count')) {
                             tempBase.inlinecount = data['odata.count'] || data['@odata.count'];
                         }
-                    }
-                    else {
+                    } else {
                         tempBase.data = data;
                     }
                     resource.data = tempBase.data;
-                }
-                else {
+                } else {
                     tempBase.data = response;
                 }
             }
@@ -1515,17 +1543,15 @@
             if (typeof window === 'undefined') {
                 var Xhr2 = require('xhr2');
                 xhr = new Xhr2();
-            }
-            else {
+            } else {
                 xhr = new XMLHttpRequest();
             }
 
             if (base.oConfig.isCors && 'withCredentials' in xhr) {
-				xhr.withCredentials=true;
+                xhr.withCredentials = true;
                 // XHR for Chrome/Firefox/Opera/Safari.
                 xhr.open(method, url, base.oConfig.isAsync);
-            }
-            else if (base.oConfig.isCors && typeof XDomainRequest !== 'undefined') {
+            } else if (base.oConfig.isCors && typeof XDomainRequest !== 'undefined') {
                 // XDomainRequest for IE.
                 xhr = new XDomainRequest();
                 // does not support PUT PATCH operations -> Switch to batch
@@ -1534,8 +1560,7 @@
                     xhr.open(method, url);
                 else
                     xhr.open('POST', url);
-            }
-            else {
+            } else {
                 // CORS not supported or forced
                 xhr.open(method, url, base.oConfig.isAsync);
             }
@@ -1612,12 +1637,10 @@
 
                         if (c < 128) {
                             utftext += String.fromCharCode(c);
-                        }
-                        else if ((c > 127) && (c < 2048)) {
+                        } else if ((c > 127) && (c < 2048)) {
                             utftext += String.fromCharCode((c >> 6) | 192);
                             utftext += String.fromCharCode((c & 63) | 128);
-                        }
-                        else {
+                        } else {
                             utftext += String.fromCharCode((c >> 12) | 224);
                             utftext += String.fromCharCode(((c >> 6) & 63) | 128);
                             utftext += String.fromCharCode((c & 63) | 128);

@@ -1,6 +1,6 @@
 # o.js
 
-_o.js beta v0.3.8_
+_o.js beta v0.4.0_
 
 o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a **standalone, lightweight and easy** to understand Odata lib.
 
@@ -223,7 +223,7 @@ o().config({
     username: null, 	// the basic auth username
     password: null,		// the basic auth password
     isAsync: true		// set this to false to enable sync requests. Only usable without basic auth
-	isCors: true,       // set this to false to disable CORS
+	  isWithCredentials: false,       // set this to true to use basic auth
     isHashRoute: true,  // set this var to false to disable automatic #-hash setting on routes
     appending: ''		// set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
 });
@@ -274,3 +274,7 @@ Currently the following queries are supported:
 `.remove(object)` - DELETE data on an endpoint (You must define only one resource: e.g: Products(1) )
 
 `.query()` - get the query as string
+
+`.raw` - gives the raw data in a callback
+
+`.xhr` - allows access to the xhr object to get headers
