@@ -71,6 +71,8 @@ describe('o.js tests:', function () {
 
     var testEntity = null;
 
+    var testName = 'Tëst_' + Math.random();
+
     describe('with endpoint:', function () {
 
         beforeAll(function (done) {
@@ -80,9 +82,7 @@ describe('o.js tests:', function () {
                 strictMode: true,
                 headers: [{ name: 'If-Match', value: '*' }]
             });
-
-            var name = 'Test_' + Math.random();
-            o('People').post({ UserName: name, FirstName: name, LastName: name }).save(function (data) {
+            o('People').post({ UserName: testName, FirstName: testName, LastName: testName }).save(function (data) {
                 testEntity = data;
                 done();
             }, function (e) {
@@ -157,10 +157,10 @@ describe('o.js tests:', function () {
             var Q = require('q');
             Q.all([
                 o('People(\'' + testEntity.UserName + '\')').get(),
-                o('People?$filter=UserName eq \'Yeah\'')
+                o('People?$filter=UserName eq \'' + testName + '\'').get()
             ]).then(function (o) {
                 expect(o[0].data.UserName).toBe(testEntity.UserName);
-                expect(o[1].data.length).toBe(0);
+                expect(o[1].data.length).toBe(1);
                 done();
             }).fail(function (err) {
                 expect(true).toBe(false);
