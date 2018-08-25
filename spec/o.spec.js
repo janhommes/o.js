@@ -157,10 +157,14 @@ describe('o.js tests:', function () {
             var Q = require('q');
             Q.all([
                 o('People(\'' + testEntity.UserName + '\')').get(),
+                o('People').filter('UserName eq \'' + testName + '\'').get(),
+                o('People').filter(`UserName eq '${testName}'`).get(),
                 o('People?$filter=UserName eq \'' + testName + '\'').get()
             ]).then(function (o) {
                 expect(o[0].data.UserName).toBe(testEntity.UserName);
                 expect(o[1].data.length).toBe(1);
+                expect(o[2].data.length).toBe(1);
+                expect(o[3].data.length).toBe(1);
                 done();
             }).fail(function (err) {
                 expect(true).toBe(false);
