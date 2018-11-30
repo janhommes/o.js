@@ -46,7 +46,7 @@ describe('o.js tests:', function () {
     it('GET Orders - JSON.parse with reviewer', function (done) {
         var url = 'http://services.odata.org/V4/Northwind/Northwind.svc';
 
-        var dateTimeReviver = (key, value) => {
+        function dateTimeReviver(key, value) {
             const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
             return (typeof value === "string" && dateFormat.test(value))
                 ? new Date(value)
