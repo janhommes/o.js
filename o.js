@@ -62,7 +62,8 @@
             isWithCredentials: false, // set this to true if used with basic auth
             openAjaxRequests: 0, // a counter for all open ajax request to determine that are all ready TODO: Move this out of the config
             isHashRoute: true, // set this var to false to disable automatic #-hash setting on routes
-            appending: '' // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
+            appending: '', // set this value to append something to a any request. eg.: [{name:'apikey', value:'xyz'}]
+            jsonParseReviver: null // sets optional function to use in JSON.Parse
         };
 
         // +++
@@ -1426,7 +1427,7 @@
                             var errResponse = ajaxRequest.responseText;
 
                             if (JSON && ajaxRequest.responseText != "")
-                                errResponse = JSON.parse(ajaxRequest.responseText);
+                                errResponse = JSON.parse(ajaxRequest.responseText, tempBase.oData.jsonParseReviver);
 
                             if (errResponse !== '' && errResponse['odata.error']) {
                                 var errorMsg = errResponse['odata.error'].message.value + ' | HTTP Status: ' + ajaxRequest.status + ' | oData Code: ' + errResponse['odata.error'].code;
@@ -1511,7 +1512,7 @@
                 tempBase.data = count;
             } else {
                 if (JSON && response !== '') {
-                    var data = JSON.parse(response);
+                    var data = JSON.parse(response, tempBase.oConfig.jsonParseReviver);
                     tempBase.raw = data;
                     if (data.hasOwnProperty('value')) {
                         if (isQuery(['$first']) && data.value.length && data.value.length <= 1) {
