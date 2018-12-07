@@ -43,6 +43,31 @@ describe('o.js tests:', function () {
         }).fail(handleErrors);
     });
 
+    it('GET Orders - JSON.parse with reviewer', function (done) {
+        var url = 'http://services.odata.org/V4/Northwind/Northwind.svc';
+
+        function dateTimeReviver(key, value) {
+            const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+            return (typeof value === "string" && dateFormat.test(value))
+                ? new Date(value)
+                : value;
+        }
+
+        o().config({
+            endpoint: url,
+            jsonParseReviewer: dateTimeReviver
+        });
+        
+        o("Orders").top(1).get().then(function (o) {                        
+            expect(o.data.length).not.toBe(0);
+            expect(o.data[0].OrderDate instanceof Date)
+            done()
+        }).fail(function(e) {
+            expect(e).toBe(200);
+            done();
+        });
+    });
+
     xit('POST with string output', function(done) {
       var url = '';
   		var data = {};
