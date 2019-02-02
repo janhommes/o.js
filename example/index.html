@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
 
     <title>o.js example page</title>
 
@@ -40,8 +39,7 @@
         <div class="spacer" data-bind="css: { opacity20: isLoading()}">
             <div class="jumbotron" data-bind="visible:route()==='Home'">
                 <h1>o.js Example</h1>
-                <p class="lead">This example shows how easy you can use o.js routing function in combination with knockout and bootstrap
-                    to make a SPA webpage.</p>
+                <p class="lead">This example shows how you can use o.js in a browser.</p>
                 <p> <a class="btn btn-lg btn-success" href="https://github.com/janhommes/o.js" role="button">Get o.js</a></p>
             </div>
 
@@ -101,33 +99,30 @@
 		  </div>
 
 		 <div class="row marketing" data-bind="visible:route()==='People'">
-			<div class="col-md-4">
-				<a data-bind="attr: { href: '#People/Page/'+(skip()-9) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
+			<div class="col-xs-4">
+				<a data-bind="attr: { href: '#People/Page/'+(skip()-6) },visible:skip()>0" class="btn btn-default" role="button">Prev</a>
 			</div>
-			<div class="col-md-4 text-center">
-				<span data-bind="text:Math.ceil((skip()/9)+1)"></span> of <span data-bind="text:Math.ceil(total()/9)"></span>
+			<div class="col-xs-4 text-center">
+				<span data-bind="text:Math.ceil((skip()/6)+1)"></span> of <span data-bind="text:Math.ceil(total()/6)"></span>
 			</div>
-			<div class="col-md-4">
-				<a data-bind="attr: { href: '#People/Page/'+(skip()+9) },visible:(skip()+9)<total()" class="btn btn-default pull-right" role="button">Next</a>
+			<div class="col-xs-4">
+				<a data-bind="attr: { href: '#People/Page/'+(skip()+6) },visible:(skip()+6)<total()" class="btn btn-default pull-right" role="button">Next</a>
 			</div>
 		</div>
 	  </div>
 
       <footer class="footer">
-        <p>&copy; Company 2015</p>
+        <p>&copy; Company 2019</p>
       </footer>
 
     </div> <!-- /container -->
 
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
 	<script src="js/q.js"></script>
-	<script src="../o.js"></script>
+	<script src="../dist/umd/o.js"></script>
 	<script src="js/knockout-3.2.0.js"></script>
 	<script src="js/ko.bindinghandler.currency.js"></script>
-	<script src="app.js"></script>
+	<script src="browser.js"></script>
   </body>
 </html>

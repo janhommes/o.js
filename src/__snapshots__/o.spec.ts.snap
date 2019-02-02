@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`initialize a new oHandler config should be default if not given 1`] = `
+Object {
+  "batch": Object {
+    "changsetBoundaryPrefix": "changset_",
+    "endpoint": "$batch",
+    "headers": Headers {
+      "map": Object {
+        "content-type": "multipart/mixed",
+      },
+    },
+    "useChangset": false,
+  },
+  "boundaryPrefix": "batch_",
+  "credentials": "omit",
+  "fragment": "value",
+  "headers": Headers {
+    "map": Object {
+      "content-type": "application/json",
+    },
+  },
+  "mode": "cors",
+  "redirect": "follow",
+  "referrer": "client",
+  "rootUrl": "http://localhost/foo",
+}
+`;
