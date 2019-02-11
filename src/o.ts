@@ -70,3 +70,13 @@ export function o(rootUrl: string | URL, config?: OdataConfig | any) {
   mergedConfig.rootUrl = rootUrl;
   return new OHandler(mergedConfig);
 }
+
+/**
+ * Default exports
+ */
+export * from "./OBatch";
+export * from "./OdataBatchConfig";
+export * from "./OdataConfig";
+export * from "./OdataQuery";
+export * from "./OHandler";
+export * from "./ORequest";

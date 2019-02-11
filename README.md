@@ -18,16 +18,16 @@ import { o } from 'odata';
 
 (async () => {
   // chaining
-  await o('http://my.url')
+  const data1 = await o('http://my.url')
     .get('resource')
     .query({ $top: 3 });
 
   // handler
   const oHandler = o('http://my.url');
-  await oHandler
+  const data2 = await oHandler
     .get('resource')
     .query({ $top: 3 });
-});
+})();
 ```
 
 ### Or in a script tag
