@@ -1,20 +1,36 @@
 {
-  "name": "o.js",
-  "description": "o.js is a client side Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.",
-  "version": "0.4.0",
-  "main": "o.js",
+  "name": "odata",
+  "description": "o.js is a isomorphic Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.",
+  "version": "1.0.0",
+  "main": "dist/cjs/o.js",
+  "browser": "dist/umd/o.js",
+  "module": "dist/es2015/o.js",
   "dependencies": {
-    "q": "^1.5.0",
-    "xhr2": "^0.1.4 "
+    "@babel/core": "^7.2.2",
+    "cross-fetch": "^3.0.0",
+    "tslib": "^1.9.3",
+    "universal-url": "2.0.0"
   },
   "devDependencies": {
-    "jslint": "^0.10.3",
-    "jasmine": "*",
-    "uglify-js": "*"
+    "@types/jest": "^23.3.10",
+    "@types/node": "^10.12.24",
+    "jest": "^23.6.0",
+    "rollup": "^0.68.2",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-typescript2": "^0.18.1",
+    "rollup-plugin-uglify-es": "0.0.1",
+    "ts-jest": "^23.10.5",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.2",
+    "whatwg-fetch": "^3.0.0"
   },
   "scripts": {
-    "test": "jasmine",
-    "uglify": "uglifyjs --compress --mangle -o o.min.js o.js"
+    "build": "rollup --config",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -24,10 +40,5 @@
   "contributors": [
     "Matteo Antony Mistretta <antony.mistretta@gmail.com> (http://www.ingloriouscoderz.it)"
   ],
-  "license": "MIT",
-  "eslintConfig": {
-    "env": {
-      "browser": true
-    }
-  }
+  "license": "MIT"
 }
