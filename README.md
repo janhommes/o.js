@@ -50,10 +50,60 @@ window.odata
 const o = require('odata');
 
 // promise example
-await o('http://my.url')
+o('http://my.url')
   .get('resource')
   .then((data) => console.log(data));
 ```
+
+## CRUD examples
+> The following examples using async/await but for simplicity we removed the async deceleration. To make that work this example must be wrapped in an async function or use promise.
+
+### **C**reate (POST):
+```javascript
+const data = {
+  FirstName: "Bar",
+  LastName: "Foo",
+  UserName: "foobar",
+}
+
+const response = await o('http://my.url')
+  .post('User', data)
+  .query(); 
+
+console.log(response); // E.g. the user 
+```
+
+### **R**ead (GET):
+```javascript
+const response = await o('http://my.url')
+  .get('User')
+  .query({$filter: `UserName eq 'foobar'`}); 
+
+console.log(response); // If one -> the exact user, otherwise an array of users
+```
+
+### **U**pdate (Patch):
+```javascript
+const data = {
+  FirstName: 'John'
+}
+
+const response = await o('http://my.url')
+  .patch(`User('foobar')`, data)
+  .query(); 
+
+console.log(response); // The result of the patch, e.g. the status code
+```
+
+### **D**elete:
+```javascript
+const response = await o('http://my.url')
+  .delete(`User('foobar')`)
+  .query(); 
+
+console.log(response); // The status code
+```
+
 
 ## Options
 You can pass as a second option into the `o` constructor options. The signature is:
