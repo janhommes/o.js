@@ -1,4 +1,5 @@
 import { OdataBatchConfig } from "./OdataBatchConfig";
+import { OHandler } from './OHandler';
 
 export type OdataConfig = RequestInit & {
   /**
@@ -26,4 +27,20 @@ export type OdataConfig = RequestInit & {
    * Set to true to disable auto polyfilling
    */
   disablePolyfill: boolean;
+
+  /**
+   * A function which is called on each start of a request
+   */
+  onStart: (oHandler: OHandler) => void;
+
+  /**
+   * A function which is called when a request has finished
+   */
+  onFinish: (oHandler: OHandler, res?: Response) => void;
+
+
+  /**
+   * A function which is called when a request has a error
+   */
+  onError: (oHandler: OHandler, res: Response) => void;
 };

@@ -130,6 +130,9 @@ Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-U
     mode: "cors",
     redirect: "follow",
     referrer: "client",
+    onStart: () => null,
+    onFinish: () => null,
+    onError: () => null,
   }
 ```
 

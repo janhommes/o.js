@@ -51,6 +51,9 @@ export function o(rootUrl: string | URL, config?: OdataConfig | any) {
     mode: "cors",
     redirect: "follow",
     referrer: "client",
+    onStart: () => null,
+    onError: () => null,
+    onFinish: () => null
   };
 
   const mergedConfig = { ...defaultConfigValues, ...config };

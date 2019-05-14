@@ -238,6 +238,17 @@ describe("GET request", () => {
     expect(typeof data).toBe("object");
   });
 
+  test("Request to $top=1 should return a array", async () => {
+    // given
+    const resource = "People";
+    // when
+    const data = await oHandler.get(resource).query({ $top: 1 });
+
+    // expect
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBe(1);
+  });
+
   test("Request multiple resources or entities", async () => {
     // given
     const resource1 = "People('russellwhyte')";

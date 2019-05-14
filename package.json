@@ -1,7 +1,7 @@
 {
   "name": "odata",
   "description": "o.js is a isomorphic Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/cjs/o.js",
   "browser": "dist/umd/o.js",
   "module": "dist/es2015/o.js",

@@ -47,14 +47,17 @@ export class OHandler {
    */
   public async query(query?: OdataQuery) {
     try {
+      this.config.onStart(this);
       const response: Response[] = await this.getFetch(query);
       const json = await Promise.all(
         response.map(
           async (res) => {
             if (res.status >= 400) {
+              this.config.onError(this, res);
               throw res;
             } else if (res.ok && res.json) {
               try {
+                this.config.onFinish(this, res);
                 const data = await res.json();
                 return data[this.config.fragment] || data;
               } catch (ex) {
@@ -83,11 +86,14 @@ export class OHandler {
    */
   public async fetch(query?: OdataQuery) {
     try {
+      this.config.onStart(this);
       const fetch = await this.getFetch(query);
       return fetch.length === 1 ? fetch[0] : fetch;
     } catch (ex) {
+      this.config.onError(this, ex);
       throw ex;
     } finally {
+      this.config.onFinish(this);
       this.requests = [];
     }
   }
