@@ -21,7 +21,7 @@ import { OHandler } from "./OHandler";
  * @param rootUrl The url to query
  * @param config The odata and fetch configuration.
  */
-export function o(rootUrl: string | URL, config?: OdataConfig | any) {
+export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
 
   // polyfill fetch if we have no fetch
   const env = typeof window !== "undefined" ? window : global;

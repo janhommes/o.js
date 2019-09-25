@@ -19,7 +19,11 @@ export class ORequest {
   public applyQuery(query?: OdataQuery) {
     for (const key in query) {
       if (query.hasOwnProperty(key)) {
-        this.url.searchParams.append(key, query[key]);
+        if (this.url.searchParams.get(key)) {
+          this.url.searchParams.set(key, query[key]);
+        } else {
+          this.url.searchParams.append(key, query[key]);
+        }
       }
     }
   }

@@ -115,6 +115,63 @@ describe("Instant request", () => {
     expect(data[0].length).toBe(2);
     expect(data[1].length).toBe(2);
   });
+
+  test("Attach the correct queries to the request", async () => {
+    // when
+    const data = await o(
+      "https://services.odata.org/TripPinRESTierService/People?$top=2",
+      {
+        query: { $top: 1, $filter: `FirstName eq 'john'` }
+      }
+    ).get().fetch();
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "People?$top=1&$filter=FirstName+eq+'john'",
+    );
+  });
+
+  test("Check right URL Params override. query-parameter in fetch()/query() wins over query-config", async () => {
+    // when
+    const data = await o(
+      "https://services.odata.org/TripPinRESTierService/People",
+      {
+        query: { $top: 1 }
+      }
+    ).get().fetch({ $top: 2 });
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "People?$top=2",
+    );
+  });
+
+  test("Check right URL Params override. query-parameter in fetch()/query() wins over baseUrl", async () => {
+    // when
+    const data = await o(
+      "https://services.odata.org/TripPinRESTierService/People?$top=1",
+    ).get().fetch({ $top: 2 });
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "People?$top=2",
+    );
+  });
+
+  test("Check right URL Params override. query-config wins over baseUrl", async () => {
+    // when
+    const data = await o(
+      "https://services.odata.org/TripPinRESTierService/People?$top=1",
+      {
+        query: { $top: 2 }
+      }
+    ).get().fetch();
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "People?$top=2",
+    );
+  });
 });
 
 describe("Request handling", () => {
@@ -433,7 +490,7 @@ describe("Batching", () => {
     // when
     const data = await oHandler
       .get(resource1)
-      .patch(resource2, { Name: "New"})
+      .patch(resource2, { Name: "New" })
       .get(resource2)
       .batch();
     // expect
@@ -455,8 +512,8 @@ describe("Batching", () => {
     };
     // when
     const result = await oHandler
-      .post(resource, data )
-      .patch("$1", { LastName: "Bar"})
+      .post(resource, data)
+      .patch("$1", { LastName: "Bar" })
       .get(`${resource}('${data.UserName}')`)
       .batch();
     // expect
