@@ -22,7 +22,6 @@ import { OHandler } from "./OHandler";
  * @param config The odata and fetch configuration.
  */
 export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
-
   // polyfill fetch if we have no fetch
   const env = typeof window !== "undefined" ? window : global;
   if (!("fetch" in env) && !config.disablePolyfill) {
@@ -38,15 +37,15 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
       changsetBoundaryPrefix: "changset_",
       endpoint: "$batch",
       headers: new Headers({
-        "Content-Type": "multipart/mixed",
+        "Content-Type": "multipart/mixed"
       }),
-      useChangset: false,
+      useChangset: false
     },
     boundaryPrefix: "batch_",
     credentials: "omit",
     fragment: "value",
     headers: new Headers({
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     }),
     mode: "cors",
     redirect: "follow",
@@ -63,11 +62,11 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
       const configUrl = mergedConfig.rootUrl || window.location.href;
       rootUrl = new URL(
         rootUrl,
-        configUrl.endsWith("/") ? configUrl : `${configUrl}/`,
+        configUrl.endsWith("/") ? configUrl : `${configUrl}/`
       );
     } catch (ex) {
       // no window?!
-      rootUrl = new URL(rootUrl, mergedConfig.rootUrl);
+      rootUrl = new URL(rootUrl as string, mergedConfig.rootUrl);
     }
   }
   mergedConfig.rootUrl = rootUrl;
