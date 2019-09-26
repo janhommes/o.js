@@ -77,7 +77,6 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
  * Default exports
  */
 export * from "./OBatch";
-export * from "./OdataBatchConfig";
 export * from "./OdataConfig";
 export * from "./OdataQuery";
 export * from "./OHandler";

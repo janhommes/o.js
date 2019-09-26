@@ -1,5 +1,12 @@
-import { OdataBatchConfig } from "./OdataBatchConfig";
-import { OHandler } from './OHandler';
+import { OHandler } from "./OHandler";
+
+export interface OdataBatchConfig {
+  endpoint?: string;
+  headers?: Headers;
+  boundaryPrefix?: string;
+  useChangset: boolean;
+  changsetBoundaryPrefix?: string;
+}
 
 export type OdataConfig = RequestInit & {
   /**
