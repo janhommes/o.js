@@ -47,7 +47,7 @@ window.odata
 
 ## Usage in node
 ```javascript
-const o = require('odata');
+const o = require('odata').o;
 
 // promise example
 o('http://my.url')
