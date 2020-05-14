@@ -154,7 +154,11 @@ $compute?: string;
 $index?: number;
 [key: string]: any; // allows to add anything that is missing
 ```
-
+NB: $count does currently not work in the query object, it has to be provided as part of the resource URL, e.g.
+```typescript
+oHandler.get('People/$count').query().then(function (count) {
+```
+   
 The queries are always attached as the [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
 
 ## Just fetching
