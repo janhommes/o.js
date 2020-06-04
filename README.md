@@ -154,7 +154,11 @@ $compute?: string;
 $index?: number;
 [key: string]: any; // allows to add anything that is missing
 ```
-
+NB: this $count flag will add an inline count property as metadata to a query response. In order to just retrieve the count, you'll have query the $count resource, such as
+```typescript
+oHandler.get('People/$count').query().then(function (count) {
+```
+   
 The queries are always attached as the [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
 
 ## Just fetching
