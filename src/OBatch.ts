@@ -2,8 +2,11 @@ import { OdataConfig } from "./OdataConfig";
 import { OdataQuery } from "./OdataQuery";
 import { ORequest } from "./ORequest";
 
+const CRLF = "\r\n";
+
 export class OBatch {
-  private batchBody: string;
+  // "" here prevents 'undefined' at start of body under some conditions.
+  private batchBody = "";
   private batchUid;
   private batchConfig: OdataConfig;
 
@@ -32,20 +35,19 @@ export class OBatch {
     let contentId = 0;
     this.batchBody += resources.map((req) => {
       contentId++;
-      return `
-Content-Type: application/http
-Content-Transfer-Encoding: binary
-Content-ID: ${contentId}
+      return [
+        "",
+        "Content-Type: application/http",
+        "Content-Transfer-Encoding: binary",
+        `Content-ID: ${contentId}`,
+        "",
+        `${req.config.method} ${req.url.href} HTTP/1.1`,
+        `${this.getHeaders(req)}`,
+        `${this.getBody(req)}`
+      ].join(CRLF);
+    }).join(`${CRLF}--${this.batchUid}`);
 
-${req.config.method} ${req.url.href} HTTP/1.1
-${this.getHeaders(req)}
-${this.getBody(req)}`;
-    }).join(`
---${this.batchUid}`);
-
-    this.batchBody += `
---${this.batchUid}--
- `;
+    this.batchBody += `${CRLF}--${this.batchUid}--${CRLF}`;
   }
 
   public async fetch(url: URL) {
@@ -105,10 +107,12 @@ ${this.getBody(req)}`;
     const changeRes = this.getChangeResources(resources);
 
     if (this.changeset) {
-      this.batchBody += `
-Content-Type: multipart/mixed; boundary=${this.batchUid}
-
---${this.batchUid}`;
+      this.batchBody += [
+        "",
+        `Content-Type: multipart/mixed; boundary=${this.batchUid}`,
+        "",
+        `--${this.batchUid}`
+      ].join(CRLF);
     } else if (changeRes.length > 0) {
       this.batchBody = `--${this.batchUid}`;
       this.batchBody += new OBatch(
@@ -134,10 +138,7 @@ Content-Type: multipart/mixed; boundary=${this.batchUid}
 
   private getBody(req: ORequest) {
     if (req.config.body) {
-      return `
-      ${req.config.body}
-
-      `;
+      return `${CRLF}${req.config.body}${CRLF}${CRLF}`;
     }
     return "";
   }
@@ -159,6 +160,6 @@ Content-Type: multipart/mixed; boundary=${this.batchUid}
   private getHeaders(req: ORequest) {
     return Object.keys(req.config.headers)
       .map((name) => `${name}:${req.config.headers[name]}`)
-      .join("\n");
+      .join(CRLF);
   }
 }
