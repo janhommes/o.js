@@ -3,6 +3,7 @@
 exports[`initialize a new oHandler config should be default if not given 1`] = `
 Object {
   "batch": Object {
+    "boundaryPrefix": "batch_",
     "changsetBoundaryPrefix": "changset_",
     "endpoint": "$batch",
     "headers": Headers {
@@ -12,7 +13,6 @@ Object {
     },
     "useChangset": false,
   },
-  "boundaryPrefix": "batch_",
   "credentials": "omit",
   "fragment": "value",
   "headers": Headers {

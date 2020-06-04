@@ -114,6 +114,7 @@ Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-U
 ```
 {
     batch: {
+      boundaryPrefix: "batch_",
       changsetBoundaryPrefix: "changset_",
       endpoint: "$batch",
       headers: new Headers({
@@ -121,7 +122,6 @@ Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-U
       }),
       useChangset: false,
     },
-    boundaryPrefix: "batch_",
     credentials: "omit",
     fragment: "value",
     headers: new Headers({

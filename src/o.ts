@@ -34,6 +34,7 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
   // set the default configuration values
   const defaultConfigValues = {
     batch: {
+      boundaryPrefix: "batch_",
       changsetBoundaryPrefix: "changset_",
       endpoint: "$batch",
       headers: new Headers({
@@ -41,7 +42,6 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
       }),
       useChangset: false
     },
-    boundaryPrefix: "batch_",
     credentials: "omit",
     fragment: "value",
     headers: new Headers({
