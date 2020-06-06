@@ -20,7 +20,7 @@ export class OBatch {
     this.batchUid = this.getUid();
     (this.batchConfig.headers as Headers).set(
       "Content-Type",
-      `multipart/mixed; boundary=${this.batchUid}`,
+      `multipart/mixed;boundary=${this.batchUid}`,
     );
 
     if (this.batchConfig.batch.useChangset) {
@@ -109,7 +109,7 @@ export class OBatch {
     if (this.changeset) {
       this.batchBody += [
         "",
-        `Content-Type: multipart/mixed; boundary=${this.batchUid}`,
+        `Content-Type: multipart/mixed;boundary=${this.batchUid}`,
         "",
         `--${this.batchUid}`
       ].join(CRLF);
@@ -138,7 +138,7 @@ export class OBatch {
 
   private getBody(req: ORequest) {
     if (req.config.body) {
-      return `${CRLF}${req.config.body}${CRLF}${CRLF}`;
+      return `${req.config.body}${CRLF}${CRLF}`;
     }
     return "";
   }
@@ -157,9 +157,19 @@ export class OBatch {
     }${uuid}`;
   }
 
-  private getHeaders(req: ORequest) {
-    return Object.keys(req.config.headers)
-      .map((name) => `${name}:${req.config.headers[name]}`)
-      .join(CRLF);
+  private getHeaders(req: ORequest): string {
+    // Request headers can be Headers | string[][] | Record<string, string>.
+    // A new Headers instance around them allows treatment of all three types
+    // to be the same. This also applies security last two could bypass.
+    const headers = new Headers(req.config.headers || undefined) as any;
+    // Convert each header to single string.
+    // Headers is iterable. Array.from is needed instead of Object.keys.
+    const mapped = Array.from(headers).map(([k, v]) => `${k}: ${v}`);
+    if (mapped.length) {
+      // Need to ensure a blank line between HEADERS and BODY. When there are
+      // headers, it must be added here. Otherwise blank is added in ctor.
+      mapped.push("");
+    }
+    return mapped.join(CRLF);
   }
 }
