@@ -12,6 +12,7 @@ Object {
       },
     },
     "useChangset": false,
+    "useRelativeURLs": false,
   },
   "credentials": "omit",
   "fragment": "value",
