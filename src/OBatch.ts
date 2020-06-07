@@ -41,7 +41,7 @@ export class OBatch {
         "Content-Transfer-Encoding: binary",
         `Content-ID: ${contentId}`,
         "",
-        `${req.config.method} ${req.url.href} HTTP/1.1`,
+        `${req.config.method} ${this.getRequestURL(req)} HTTP/1.1`,
         `${this.getHeaders(req)}`,
         `${this.getBody(req)}`
       ].join(CRLF);
@@ -171,5 +171,14 @@ export class OBatch {
       mapped.push("");
     }
     return mapped.join(CRLF);
+  }
+
+  private getRequestURL(req: ORequest): string {
+    let href = req.url.href;
+    if (this.batchConfig.batch.useRelativeURLs) {
+      // Strip away matching root from request.
+      href = href.replace(this.batchConfig.rootUrl.href, '');
+    }
+    return href;
   }
 }

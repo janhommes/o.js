@@ -121,6 +121,7 @@ Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-U
         "Content-Type": "multipart/mixed",
       }),
       useChangset: false,
+      useRelativeURLs: false,
     },
     credentials: "omit",
     fragment: "value",

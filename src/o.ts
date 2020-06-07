@@ -40,7 +40,8 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
       headers: new Headers({
         "Content-Type": "multipart/mixed"
       }),
-      useChangset: false
+      useChangset: false,
+      useRelativeURLs: false
     },
     credentials: "omit",
     fragment: "value",

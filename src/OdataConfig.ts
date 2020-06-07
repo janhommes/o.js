@@ -6,6 +6,10 @@ export interface OdataBatchConfig {
   boundaryPrefix?: string;
   useChangset: boolean;
   changsetBoundaryPrefix?: string;
+  /**
+   * When truthy, relative URL's will be used in batch elements
+   */
+  useRelativeURLs: boolean;
 }
 
 export type OdataConfig = RequestInit & {
