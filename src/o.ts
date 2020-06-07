@@ -81,3 +81,4 @@ export * from "./OdataConfig";
 export * from "./OdataQuery";
 export * from "./OHandler";
 export * from "./ORequest";
+export * from "./$filter";
