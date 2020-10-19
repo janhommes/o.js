@@ -499,21 +499,25 @@ describe("Batching", () => {
     expect(data[2].Name).toBe("New");
   });
 
-  test("Batch multiple GET requests and patch something with useChangeset", async () => {
+  test("Batch POST and PATCH with useChangeset=true", async () => {
     oHandler.config.batch.useChangset = true;
 
-      // given
+    // given
     const [resource1, resource2] = ["People", "Airlines('AA')"];
+    const resouce1data = {
+      FirstName: "Bar",
+      LastName: "Foo",
+      UserName: "foobar" + Math.random(),
+    };
     // when
     const request = oHandler
-        .get(resource1)
-        .patch(resource2, { Name: "New" })
-        .get(resource2);
+        .post(resource1, resouce1data)
+        .patch(resource2, { Name: "New" });
     const batch = new OBatch(request.requests, request.config, null);
-    window.console.log(batch.getBatchBody());
     const data = await request.batch();
+    console.log(JSON.stringify(data, null, 2));
     // expect
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(2); // we only expect a result of 2 because the changeset returns only not GET requests
     expect(data[1]).toBe(204);
     expect(data[2].Name).toBe("New");
   });
