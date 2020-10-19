@@ -83,11 +83,21 @@ export class OBatch {
     const splitData = responseData.split(`--${boundary}`);
     splitData.shift();
     splitData.pop();
+    let wasWithChangesetresponse = false;
     const parsedData = splitData.map((data) => {
       const dataSegments = data.trim().split("\r\n\r\n");
-      if (dataSegments.length === 0 || dataSegments.length > 3) {
+      if (dataSegments.length === 0) {
         // we are unable to parse -> return all
         return data;
+      } else if (dataSegments.length > 3) {
+        const header = dataSegments.find(
+            (x) => x.startsWith("Content-Type: ") && x.includes("boundary=changesetresponse_"));
+        if (!header) {
+          return data;
+        }
+        dataSegments.shift();
+        wasWithChangesetresponse = true;
+        return this.parseResponse(dataSegments.join("\r\n\r\n"), header);
       } else if (dataSegments.length === 3) {
         // if length >= 3 we have a body, try to parse if JSON and return that!
         try {
@@ -102,6 +112,9 @@ export class OBatch {
         return +dataSegments[1].split(" ")[1];
       }
     });
+    if (wasWithChangesetresponse) {
+        return parsedData[0];
+    }
     return parsedData;
   }
 

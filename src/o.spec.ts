@@ -506,7 +506,7 @@ describe("Batching", () => {
     const [resource1, resource2] = ["People", "Airlines('AA')"];
     const resouce1data = {
       FirstName: "Bar",
-      LastName: "Foo",
+      LastName: "Foo is cool",
       UserName: "foobar" + Math.random(),
     };
     // when
@@ -515,11 +515,10 @@ describe("Batching", () => {
         .patch(resource2, { Name: "New" });
     const batch = new OBatch(request.requests, request.config, null);
     const data = await request.batch();
-    console.log(JSON.stringify(data, null, 2));
     // expect
-    expect(data.length).toBe(2); // we only expect a result of 2 because the changeset returns only not GET requests
+    expect(data.length).toBe(2);
+    expect(data[0].LastName).toBe(resouce1data.LastName);
     expect(data[1]).toBe(204);
-    expect(data[2].Name).toBe("New");
   });
 
   // Content ID seems to have a problem in the test implementation (or I don't get the right implementation)
