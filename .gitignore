@@ -49,3 +49,6 @@ npm-debug.log
 
 dist
 .rpt2_cache
+
+# WebStorm & IntelliJ Platfrom
+.idea/

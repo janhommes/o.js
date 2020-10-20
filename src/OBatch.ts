@@ -19,8 +19,8 @@ export class OBatch {
     this.batchConfig = { ...config, ...config.batch };
     this.batchUid = this.getUid();
     (this.batchConfig.headers as Headers).set(
-      "Content-Type",
-      `multipart/mixed;boundary=${this.batchUid}`,
+       "Content-Type",
+       `multipart/mixed; boundary=${this.batchUid}`,
     );
 
     if (this.batchConfig.batch.useChangset) {
@@ -48,6 +48,12 @@ export class OBatch {
     }).join(`${CRLF}--${this.batchUid}`);
 
     this.batchBody += `${CRLF}--${this.batchUid}--${CRLF}`;
+    if(!changeset){
+      (this.batchConfig.headers as Headers).set(
+        "Content-Type",
+        `multipart/mixed;boundary=${this.batchUid}`,
+      );
+    }
   }
 
   public async fetch(url: URL) {
@@ -77,11 +83,21 @@ export class OBatch {
     const splitData = responseData.split(`--${boundary}`);
     splitData.shift();
     splitData.pop();
+    let wasWithChangesetresponse = false;
     const parsedData = splitData.map((data) => {
       const dataSegments = data.trim().split("\r\n\r\n");
-      if (dataSegments.length === 0 || dataSegments.length > 3) {
+      if (dataSegments.length === 0) {
         // we are unable to parse -> return all
         return data;
+      } else if (dataSegments.length > 3) {
+        const header = dataSegments.find(
+            (x) => x.startsWith("Content-Type: ") && x.includes("boundary=changesetresponse_"));
+        if (!header) {
+          return data;
+        }
+        dataSegments.shift();
+        wasWithChangesetresponse = true;
+        return this.parseResponse(dataSegments.join("\r\n\r\n"), header);
       } else if (dataSegments.length === 3) {
         // if length >= 3 we have a body, try to parse if JSON and return that!
         try {
@@ -96,6 +112,9 @@ export class OBatch {
         return +dataSegments[1].split(" ")[1];
       }
     });
+    if (wasWithChangesetresponse) {
+        return parsedData[0];
+    }
     return parsedData;
   }
 
@@ -158,27 +177,27 @@ export class OBatch {
   }
 
   private getHeaders(req: ORequest): string {
-    // Request headers can be Headers | string[][] | Record<string, string>.
-    // A new Headers instance around them allows treatment of all three types
-    // to be the same. This also applies security last two could bypass.
-    const headers = new Headers(req.config.headers || undefined) as any;
-    // Convert each header to single string.
-    // Headers is iterable. Array.from is needed instead of Object.keys.
-    const mapped = Array.from(headers).map(([k, v]) => `${k}: ${v}`);
-    if (mapped.length) {
-      // Need to ensure a blank line between HEADERS and BODY. When there are
-      // headers, it must be added here. Otherwise blank is added in ctor.
-      mapped.push("");
-    }
-    return mapped.join(CRLF);
+  // Request headers can be Headers | string[][] | Record<string, string>.
+  // A new Headers instance around them allows treatment of all three types
+  // to be the same. This also applies security last two could bypass.
+  const headers = new Headers(req.config.headers || undefined) as any;
+  // Convert each header to single string.
+  // Headers is iterable. Array.from is needed instead of Object.keys.
+  const mapped = Array.from(headers).map(([k, v]) => `${k}: ${v}`);
+  if (mapped.length) {
+    // Need to ensure a blank line between HEADERS and BODY. When there are
+    // headers, it must be added here. Otherwise blank is added in ctor.
+    mapped.push("");
+  }
+  return mapped.join(CRLF);
   }
 
   private getRequestURL(req: ORequest): string {
-    let href = req.url.href;
-    if (this.batchConfig.batch.useRelativeURLs) {
-      // Strip away matching root from request.
-      href = href.replace(this.batchConfig.rootUrl.href, '');
-    }
-    return href;
+  let href = req.url.href;
+  if (this.batchConfig.batch.useRelativeURLs) {
+    // Strip away matching root from request.
+    href = href.replace(this.batchConfig.rootUrl.href, '');
+  }
+  return href;
   }
 }
