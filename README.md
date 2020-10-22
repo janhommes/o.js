@@ -170,4 +170,4 @@ The lib tries to parse the data on each request. Sometimes that is not wanted (e
 By default o.js chains request in sequent. You can batch them together by using `batch()`. They are then send to the defined batch endpoint in the config. Changsets are at the moment in a experimental phase and needs to be enabled in the config.
 
 ## Polyfills
-Polyfills are automatically added for `fetch()` and `URL()` if needed. The automatic polyfilling can be disabled in the options.
+Polyfills are automatically added for node.js. If you like polyfills to support IE11 please include the `dist/umd/o.polyfill.js` file.
