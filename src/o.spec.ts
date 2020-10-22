@@ -1,4 +1,4 @@
-import { o } from "./o";
+import {o, OBatch} from "./o";
 
 describe("initialize a new oHandler", () => {
   test("url with string", () => {
@@ -358,7 +358,7 @@ describe("Create, Update and Delete request", () => {
   beforeAll(async () => {
     // Use the non restier service as it has CORS enabled
     const response: Response = await o(
-      "https://services.odata.org/V4/TripPinServiceRW/",
+      "http://services.odata.org/V4/TripPinServiceRW/",
     )
       .get()
       .fetch() as Response;
@@ -497,6 +497,28 @@ describe("Batching", () => {
     expect(data.length).toBe(3);
     expect(data[1]).toBe(204);
     expect(data[2].Name).toBe("New");
+  });
+
+  test("Batch POST and PATCH with useChangeset=true", async () => {
+    oHandler.config.batch.useChangset = true;
+
+    // given
+    const [resource1, resource2] = ["People", "Airlines('AA')"];
+    const resouce1data = {
+      FirstName: "Bar",
+      LastName: "Foo is cool",
+      UserName: "foobar" + Math.random(),
+    };
+    // when
+    const request = oHandler
+        .post(resource1, resouce1data)
+        .patch(resource2, { Name: "New" });
+    const batch = new OBatch(request.requests, request.config, null);
+    const data = await request.batch();
+    // expect
+    expect(data.length).toBe(2);
+    expect(data[0].LastName).toBe(resouce1data.LastName);
+    expect(data[1]).toBe(204);
   });
 
   // Content ID seems to have a problem in the test implementation (or I don't get the right implementation)
