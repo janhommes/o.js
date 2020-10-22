@@ -24,10 +24,39 @@ import { OHandler } from "./OHandler";
 export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
   // polyfill fetch if we have no fetch
   const env = typeof window !== "undefined" ? window : global;
-  if (!("fetch" in env) && !config.disablePolyfill) {
+  if (
+    !("fetch" in env) &&
+    !config.disablePolyfill &&
+    typeof window !== "undefined"
+  ) {
+    throw new Error(
+      "No polyfill found for fetch(). You need to include dist/umd/o.polyfill.js to work with older browsers"
+    );
+  }
+
+  if (
+    !("fetch" in env) &&
+    !config.disablePolyfill &&
+    typeof window === "undefined"
+  ) {
     require("cross-fetch/polyfill");
   }
-  if (!("URL" in env) && !config.disablePolyfill) {
+
+  if (
+    !("URL" in env) &&
+    !config.disablePolyfill &&
+    typeof window !== "undefined"
+  ) {
+    throw new Error(
+      "No polyfill found for URL(). You need to include dist/umd/o.polyfill.js to work with older browsers"
+    );
+  }
+
+  if (
+    !("URL" in env) &&
+    !config.disablePolyfill &&
+    typeof window === "undefined"
+  ) {
     require("universal-url").shim();
   }
 
@@ -38,22 +67,22 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
       changsetBoundaryPrefix: "changset_",
       endpoint: "$batch",
       headers: new Headers({
-        "Content-Type": "multipart/mixed"
+        "Content-Type": "multipart/mixed",
       }),
       useChangset: false,
-      useRelativeURLs: false
+      useRelativeURLs: false,
     },
     credentials: "omit",
     fragment: "value",
     headers: new Headers({
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     }),
     mode: "cors",
     redirect: "follow",
     referrer: "client",
     onStart: () => null,
     onError: () => null,
-    onFinish: () => null
+    onFinish: () => null,
   };
 
   const mergedConfig = { ...defaultConfigValues, ...config };

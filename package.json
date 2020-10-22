@@ -1,7 +1,7 @@
 {
-  "name": "o.js",
+  "name": "odata",
   "description": "o.js is a isomorphic Odata Javascript library to simplify the request of data. The main goal is to build a standalone, lightweight and easy to understand Odata lib.",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "main": "dist/cjs/o.js",
   "browser": "dist/umd/o.js",
   "module": "dist/es2015/o.js",
@@ -10,7 +10,7 @@
     "node": ">=10.0"
   },
   "dependencies": {
-    "cross-fetch": "^3.0.0",
+    "cross-fetch": "^3.0.6",
     "tslib": "^1.9.3",
     "universal-url": "2.0.0"
   },
@@ -28,8 +28,9 @@
     "rollup-plugin-uglify-es": "0.0.1",
     "ts-jest": "^26.1.0",
     "tslint": "^5.12.1",
-    "typescript": "^3.2.2",
-    "whatwg-fetch": "^3.0.0"
+    "typescript": "^3.9.7",
+    "whatwg-fetch": "^3.4.1",
+    "url-polyfill": "^1.1.11"
   },
   "scripts": {
     "build": "rollup --config",
