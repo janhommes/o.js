@@ -196,7 +196,7 @@ export class OBatch {
   let href = req.url.href;
   if (this.batchConfig.batch.useRelativeURLs) {
     // Strip away matching root from request.
-    href = href.replace(this.batchConfig.rootUrl.href, '');
+    href = href.replace((this.batchConfig.rootUrl as URL).href, "");
   }
   return href;
   }

@@ -1,4 +1,5 @@
 import { OHandler } from "./OHandler";
+import { OdataQuery } from "./OdataQuery";
 
 export interface OdataBatchConfig {
   endpoint?: string;
@@ -16,15 +17,15 @@ export type OdataConfig = RequestInit & {
   /**
    * The URL to request data from
    */
-  rootUrl: URL;
+  rootUrl?: URL | string;
 
   /**
    * An default query
    */
-  query?: URLSearchParams;
+  query?: URLSearchParams | OdataQuery;
 
   /**
-   * The fragment to parse data from 
+   * The fragment to parse data from
    * Default is: value
    */
   fragment: string;
@@ -37,21 +38,20 @@ export type OdataConfig = RequestInit & {
   /**
    * Set to true to disable auto polyfilling
    */
-  disablePolyfill: boolean;
+  disablePolyfill?: boolean;
 
   /**
    * A function which is called on each start of a request
    */
-  onStart: (oHandler: OHandler) => void;
+  onStart: (oHandler: OHandler) => null;
 
   /**
    * A function which is called when a request has finished
    */
-  onFinish: (oHandler: OHandler, res?: Response) => void;
-
+  onFinish: (oHandler: OHandler, res?: Response) => null;
 
   /**
    * A function which is called when a request has a error
    */
-  onError: (oHandler: OHandler, res: Response) => void;
+  onError: (oHandler: OHandler, res: Response) => null;
 };

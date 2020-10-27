@@ -1,4 +1,5 @@
-import {o, OBatch} from "./o";
+import { o, OBatch } from "./o";
+import { OdataConfig } from "./OdataConfig";
 
 describe("initialize a new oHandler", () => {
   test("url with string", () => {
@@ -9,7 +10,7 @@ describe("initialize a new oHandler", () => {
     const when = o(url);
 
     // expect
-    expect(when.config.rootUrl.href).toEqual(url);
+    expect((when.config.rootUrl as URL).href).toEqual(url);
   });
 
   test("url with string and root config", () => {
@@ -21,7 +22,7 @@ describe("initialize a new oHandler", () => {
     const when = o(url, config);
 
     // expect
-    expect(when.config.rootUrl.href).toEqual(url);
+    expect((when.config.rootUrl as URL).href).toEqual(url);
   });
 
   test("only with rootUrl config", () => {
@@ -33,7 +34,7 @@ describe("initialize a new oHandler", () => {
     const when = o(url, config);
 
     // expect
-    expect(when.config.rootUrl.href).toEqual(config.rootUrl);
+    expect((when.config.rootUrl as URL).href).toEqual(config.rootUrl);
   });
 
   test("only with rootUrl and a given url", () => {
@@ -45,7 +46,7 @@ describe("initialize a new oHandler", () => {
     const when = o(url, config);
 
     // expect
-    expect(when.config.rootUrl.href).toEqual(`${config.rootUrl}foo`);
+    expect((when.config.rootUrl as URL).href).toEqual(`${config.rootUrl}foo`);
   });
 
   test("no rootUrl given and url given not a valid url (should switch to window.location.href)", () => {
@@ -56,7 +57,7 @@ describe("initialize a new oHandler", () => {
     const when = o(url);
 
     // expect
-    expect(when.config.rootUrl.href).toEqual(`http://localhost/foo`);
+    expect((when.config.rootUrl as URL).href).toEqual(`http://localhost/foo`);
   });
 
   test("config should be default if not given", () => {
@@ -74,7 +75,7 @@ describe("initialize a new oHandler", () => {
   test("config should be extended if something given.", () => {
     // given
     const url = "foo";
-    const config = {
+    const config: Partial<OdataConfig> = {
       mode: "no-cors",
       rootUrl: "http://bar.de/foo",
     };
@@ -86,7 +87,7 @@ describe("initialize a new oHandler", () => {
     expect(when.config).toBeDefined();
     expect(when.config.mode).toBe("no-cors");
     expect(when.config.referrer).toBe("client");
-    expect(when.config.rootUrl.href).toBe("http://bar.de/foo/foo");
+    expect((when.config.rootUrl as URL).href).toBe("http://bar.de/foo/foo");
   });
 });
 
@@ -94,7 +95,7 @@ describe("Instant request", () => {
   test("Request any thing that is put in the init request", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=2",
+      "https://services.odata.org/TripPinRESTierService/People?$top=2"
     )
       .get()
       .query();
@@ -121,13 +122,15 @@ describe("Instant request", () => {
     const data = await o(
       "https://services.odata.org/TripPinRESTierService/People?$top=2",
       {
-        query: { $top: 1, $filter: `FirstName eq 'john'` }
+        query: { $top: 1, $filter: `FirstName eq 'john'` },
       }
-    ).get().fetch();
+    )
+      .get()
+      .fetch();
 
     // expect
     expect(decodeURIComponent((data as Response).url)).toContain(
-      "People?$top=1&$filter=FirstName+eq+'john'",
+      "People?$top=1&$filter=FirstName+eq+'john'"
     );
   });
 
@@ -136,25 +139,29 @@ describe("Instant request", () => {
     const data = await o(
       "https://services.odata.org/TripPinRESTierService/People",
       {
-        query: { $top: 1 }
+        query: { $top: 1 },
       }
-    ).get().fetch({ $top: 2 });
+    )
+      .get()
+      .fetch({ $top: 2 });
 
     // expect
     expect(decodeURIComponent((data as Response).url)).toContain(
-      "People?$top=2",
+      "People?$top=2"
     );
   });
 
   test("Check right URL Params override. query-parameter in fetch()/query() wins over baseUrl", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=1",
-    ).get().fetch({ $top: 2 });
+      "https://services.odata.org/TripPinRESTierService/People?$top=1"
+    )
+      .get()
+      .fetch({ $top: 2 });
 
     // expect
     expect(decodeURIComponent((data as Response).url)).toContain(
-      "People?$top=2",
+      "People?$top=2"
     );
   });
 
@@ -163,13 +170,15 @@ describe("Instant request", () => {
     const data = await o(
       "https://services.odata.org/TripPinRESTierService/People?$top=1",
       {
-        query: { $top: 2 }
+        query: { $top: 2 },
       }
-    ).get().fetch();
+    )
+      .get()
+      .fetch();
 
     // expect
     expect(decodeURIComponent((data as Response).url)).toContain(
-      "People?$top=2",
+      "People?$top=2"
     );
   });
 });
@@ -198,10 +207,7 @@ describe("Request handling", () => {
     // given
     const resource = "People";
     // when
-    await oHandler
-      .get(resource)
-      .get(resource)
-      .query();
+    await oHandler.get(resource).get(resource).query();
     // expect
     expect(oHandler.pending).toBe(0);
   });
@@ -210,10 +216,7 @@ describe("Request handling", () => {
     // given
     const resource = "People";
     // when
-    await oHandler
-      .get(resource)
-      .get(resource)
-      .fetch();
+    await oHandler.get(resource).get(resource).fetch();
     // expect
     expect(oHandler.pending).toBe(0);
   });
@@ -223,10 +226,7 @@ describe("Request handling", () => {
     const resource = "People";
     // when
     try {
-      await oHandler
-        .get(resource)
-        .get(resource)
-        .batch();
+      await oHandler.get(resource).get(resource).batch();
     } catch (ex) {
       // intended empty
     }
@@ -247,7 +247,7 @@ describe("Request handling", () => {
 
     // expect
     expect(decodeURIComponent(req[0].url)).toContain(
-      "People?$top=1&$filter=FirstName+eq+'john'",
+      "People?$top=1&$filter=FirstName+eq+'john'"
     );
   });
 
@@ -311,10 +311,7 @@ describe("GET request", () => {
     const resource1 = "People('russellwhyte')";
     const resource2 = "People";
     // when
-    const data = await oHandler
-      .get(resource1)
-      .get(resource2)
-      .query();
+    const data = await oHandler.get(resource1).get(resource2).query();
 
     // expect
     expect(Array.isArray(data)).toBe(true);
@@ -341,10 +338,7 @@ describe("GET request", () => {
     const resource2 = "People('unknown')";
     // when
     try {
-      await oHandler
-        .get(resource1)
-        .get(resource2)
-        .query();
+      await oHandler.get(resource1).get(resource2).query();
     } catch (res) {
       // expect
       expect(res.status).toBe(404);
@@ -356,13 +350,7 @@ describe("Create, Update and Delete request", () => {
   let oHandler;
 
   beforeAll(async () => {
-    // Use the non restier service as it has CORS enabled
-    const response: Response = await o(
-      "http://services.odata.org/V4/TripPinServiceRW/",
-    )
-      .get()
-      .fetch() as Response;
-    oHandler = o(response.url, {
+    oHandler = o('https://services.odata.org/V4/TripPinServiceRW/(S(ojstest))/', {
       headers: { "If-match": "*", "Content-Type": "application/json" },
     });
   });
@@ -448,11 +436,11 @@ describe("Batching", () => {
 
   beforeAll(async () => {
     // Use the non restier service as it has CORS enabled
-    const response: Response = await o(
-      "https://services.odata.org/V4/TripPinServiceRW/",
+    const response: Response = (await o(
+      "https://services.odata.org/V4/TripPinServiceRW/"
     )
       .get()
-      .fetch() as Response;
+      .fetch()) as Response;
 
     oHandler = o(response.url, {
       headers: { "If-match": "*", "Content-Type": "application/json" },
@@ -463,10 +451,7 @@ describe("Batching", () => {
     // given
     const [resource1, resource2] = ["People", "Airlines"];
     // when
-    const data = await oHandler
-      .get(resource1)
-      .get(resource2)
-      .batch();
+    const data = await oHandler.get(resource1).get(resource2).batch();
     // expect
     expect(data.length).toBe(2);
     expect(data[0].length).toBeDefined();
@@ -511,8 +496,8 @@ describe("Batching", () => {
     };
     // when
     const request = oHandler
-        .post(resource1, resouce1data)
-        .patch(resource2, { Name: "New" });
+      .post(resource1, resouce1data)
+      .patch(resource2, { Name: "New" });
     const batch = new OBatch(request.requests, request.config, null);
     const data = await request.batch();
     // expect

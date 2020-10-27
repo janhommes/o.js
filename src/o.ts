@@ -21,7 +21,10 @@ import { OHandler } from "./OHandler";
  * @param rootUrl The url to query
  * @param config The odata and fetch configuration.
  */
-export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
+export function o(
+  rootUrl: string | URL,
+  config: Partial<OdataConfig> = {}
+) {
   // polyfill fetch if we have no fetch
   const env = typeof window !== "undefined" ? window : global;
   if (
@@ -61,7 +64,7 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
   }
 
   // set the default configuration values
-  const defaultConfigValues = {
+  const defaultConfigValues: OdataConfig = {
     batch: {
       boundaryPrefix: "batch_",
       changsetBoundaryPrefix: "changset_",
@@ -85,11 +88,12 @@ export function o(rootUrl: string | URL, config: OdataConfig | any = {}) {
     onFinish: () => null,
   };
 
-  const mergedConfig = { ...defaultConfigValues, ...config };
+  const mergedConfig: OdataConfig = { ...defaultConfigValues, ...config };
   if (typeof rootUrl === "string") {
     try {
       // we assuming a resource
-      const configUrl = mergedConfig.rootUrl || window.location.href;
+      const configUrl = (mergedConfig.rootUrl ||
+        window.location.href) as string;
       rootUrl = new URL(
         rootUrl,
         configUrl.endsWith("/") ? configUrl : `${configUrl}/`
