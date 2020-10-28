@@ -7,7 +7,7 @@
   "module": "dist/es2015/o.js",
   "types": "dist/types/o.d.ts",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=10.4"
   },
   "dependencies": {
     "cross-fetch": "^3.0.6",
