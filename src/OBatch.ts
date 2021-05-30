@@ -72,7 +72,7 @@ export class OBatch {
         const error = await res.json();
         throw { res, error };
       } catch (ex) {
-        throw res;
+        throw typeof ex.error !== 'undefined' ? ex : res;
       }
     }
   }
@@ -98,18 +98,27 @@ export class OBatch {
         dataSegments.shift();
         wasWithChangesetresponse = true;
         return this.parseResponse(dataSegments.join("\r\n\r\n"), header);
-      } else if (dataSegments.length === 3) {
-        // if length >= 3 we have a body, try to parse if JSON and return that!
-        try {
-          const parsed = JSON.parse(dataSegments[2]);
-          const hasFragment = parsed[this.batchConfig.fragment];
-          return hasFragment || parsed;
-        } catch (ex) {
-          return dataSegments[2];
-        }
       } else {
-        // it seems like we have no body, return the status code
-        return +dataSegments[1].split(" ")[1];
+        var contentIdHeader = dataSegments[0].split("\r\n").find(function (x) { return x.startsWith("Content-ID: "); });
+        if (contentIdHeader) {
+          try {
+            var contentId = parseInt(contentIdHeader.substring(12), 10);
+          } catch (ex) {
+          }
+        }
+        var status = +dataSegments[1].split(" ")[1];
+        if (dataSegments.length === 3) {
+          // if length == 3 we have a body, try to parse if JSON and return that!
+          var body;
+          try {
+            const parsed = JSON.parse(dataSegments[2]);
+            const hasFragment = parsed[this.batchConfig.fragment];
+            body = hasFragment || parsed;
+          } catch (ex) {
+            body = dataSegments[2];
+          }
+        }
+        return { contentId, status, body };
       }
     });
     if (wasWithChangesetresponse) {
