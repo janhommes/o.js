@@ -67,13 +67,7 @@ export class OBatch {
       const data = await res.text();
       return this.parseResponse(data, res.headers.get("Content-Type"));
     } else {
-      // check if return is JSON
-      try {
-        const error = await res.json();
-        throw { res, error };
-      } catch (ex) {
-        throw typeof ex.error !== 'undefined' ? ex : res;
-      }
+      throw res;
     }
   }
 
