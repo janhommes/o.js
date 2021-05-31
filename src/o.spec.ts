@@ -95,7 +95,7 @@ describe("Instant request", () => {
   test("Request any thing that is put in the init request", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=2"
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=2"
     )
       .get()
       .query();
@@ -107,7 +107,7 @@ describe("Instant request", () => {
     // given
     const [resource1, resource2] = ["People", "Airlines"];
     // when
-    const data = await o("https://services.odata.org/TripPinRESTierService/")
+    const data = await o("https://services.odata.org/V4/TripPinServiceRW/")
       .get(resource1)
       .get(resource2)
       .query({ $top: 2 });
@@ -120,7 +120,7 @@ describe("Instant request", () => {
   test("Attach the correct queries to the request", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=2",
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=2",
       {
         query: { $top: 1, $filter: `FirstName eq 'john'` },
       }
@@ -137,7 +137,7 @@ describe("Instant request", () => {
   test("Check right URL Params override. query-parameter in fetch()/query() wins over query-config", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People",
+      "https://services.odata.org/V4/TripPinServiceRW/People",
       {
         query: { $top: 1 },
       }
@@ -154,7 +154,7 @@ describe("Instant request", () => {
   test("Check right URL Params override. query-parameter in fetch()/query() wins over baseUrl", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=1"
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=1"
     )
       .get()
       .fetch({ $top: 2 });
@@ -168,7 +168,7 @@ describe("Instant request", () => {
   test("Check right URL Params override. query-config wins over baseUrl", async () => {
     // when
     const data = await o(
-      "https://services.odata.org/TripPinRESTierService/People?$top=1",
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=1",
       {
         query: { $top: 2 },
       }
@@ -187,7 +187,7 @@ describe("Request handling", () => {
   let oHandler;
 
   beforeEach(() => {
-    oHandler = o("https://services.odata.org/TripPinRESTierService/");
+    oHandler = o("https://services.odata.org/V4/TripPinServiceRW/");
   });
 
   test("Queue requests", () => {
@@ -268,7 +268,7 @@ describe("GET request", () => {
   let oHandler;
 
   beforeAll(() => {
-    oHandler = o("https://services.odata.org/TripPinRESTierService/");
+    oHandler = o("https://services.odata.org/V4/TripPinServiceRW/");
   });
 
   test("Request to a resource should return an array", async () => {
