@@ -454,7 +454,7 @@ describe("Batching", () => {
     const data = await oHandler.get(resource1).get(resource2).batch();
     // expect
     expect(data.length).toBe(2);
-    expect(data[0].length).toBeDefined();
+    expect(data[0].body.length).toBeDefined();
   });
 
   test("Batch multiple GET requests and allow to add a query", async () => {
@@ -466,7 +466,7 @@ describe("Batching", () => {
       .get(resource2)
       .batch({ $top: 2 });
     // expect
-    expect(data[0].length).toBe(2);
+    expect(data[0].body.length).toBe(2);
   });
 
   test("Batch multiple GET requests and patch something", async () => {
@@ -480,8 +480,8 @@ describe("Batching", () => {
       .batch();
     // expect
     expect(data.length).toBe(3);
-    expect(data[1]).toBe(204);
-    expect(data[2].Name).toBe("New");
+    expect(data[1].status).toBe(204);
+    expect(data[2].body.Name).toBe("New");
   });
 
   test("Batch POST and PATCH with useChangeset=true", async () => {
@@ -502,8 +502,8 @@ describe("Batching", () => {
     const data = await request.batch();
     // expect
     expect(data.length).toBe(2);
-    expect(data[0].LastName).toBe(resouce1data.LastName);
-    expect(data[1]).toBe(204);
+    expect(data[0].body.LastName).toBe(resouce1data.LastName);
+    expect(data[1].status).toBe(204);
   });
 
   // Content ID seems to have a problem in the test implementation (or I don't get the right implementation)
@@ -525,7 +525,7 @@ describe("Batching", () => {
       .batch();
     // expect
     expect(result.length).toBe(3);
-    expect(result[1]).toBe(204);
-    expect(result[2].LastName).toBe("Bar");
+    expect(result[1].status).toBe(204);
+    expect(result[2].body.LastName).toBe("Bar");
   });
 });
