@@ -1,4 +1,19 @@
+import { ApplyQuery } from "./OdataConfig";
 import { OdataQuery } from "./OdataQuery";
+
+const defaultApplyQuery: ApplyQuery = (url, query) => {
+  for (const key in query) {
+    if (query.hasOwnProperty(key)) {
+      if (url.searchParams.get(key)) {
+        url.searchParams.set(key, query[key]);
+      } else {
+        url.searchParams.append(key, query[key]);
+      }
+    }
+  }
+
+  return url;
+};
 
 export class ORequest {
   public url: URL;
@@ -16,15 +31,8 @@ export class ORequest {
     return fetch(req, this.config);
   }
 
-  public applyQuery(query?: OdataQuery) {
-    for (const key in query) {
-      if (query.hasOwnProperty(key)) {
-        if (this.url.searchParams.get(key)) {
-          this.url.searchParams.set(key, query[key]);
-        } else {
-          this.url.searchParams.append(key, query[key]);
-        }
-      }
-    }
+  public applyQuery(query: OdataQuery, applyQueryFn = defaultApplyQuery) {
+    applyQueryFn(this.url, query);
+    return this;
   }
 }

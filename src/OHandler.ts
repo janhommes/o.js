@@ -220,13 +220,13 @@ export class OHandler {
     if (this.pending > 1) {
       const result: Response[] = [];
       for (const req of this.requests) {
-        req.applyQuery({ ...this.config.query, ...query });
+        req.applyQuery({ ...this.config.query, ...query }, this.config.applyQuery);
         const request = await req.fetch;
         result.push(request);
       }
       return result;
     } else {
-      this.requests[0].applyQuery({ ...this.config.query, ...query });
+      this.requests[0].applyQuery({ ...this.config.query, ...query }, this.config.applyQuery);
       return [await this.requests[0].fetch];
     }
   }

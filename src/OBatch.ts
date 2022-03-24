@@ -30,7 +30,7 @@ export class OBatch {
     }
 
     resources.forEach(
-      (req) => req.config.method === "GET" && req.applyQuery(query),
+      (req) => req.config.method === "GET" && req.applyQuery(query, config.applyQuery),
     );
     let contentId = 0;
     this.batchBody += resources.map((req) => {
@@ -43,12 +43,12 @@ export class OBatch {
         "",
         `${req.config.method} ${this.getRequestURL(req)} HTTP/1.1`,
         `${this.getHeaders(req)}`,
-        `${this.getBody(req)}`
+        `${this.getBody(req)}`,
       ].join(CRLF);
     }).join(`${CRLF}--${this.batchUid}`);
 
     this.batchBody += `${CRLF}--${this.batchUid}--${CRLF}`;
-    if(!changeset){
+    if (!changeset) {
       (this.batchConfig.headers as Headers).set(
         "Content-Type",
         `multipart/mixed;boundary=${this.batchUid}`,
@@ -133,7 +133,7 @@ export class OBatch {
         "",
         `Content-Type: multipart/mixed;boundary=${this.batchUid}`,
         "",
-        `--${this.batchUid}`
+        `--${this.batchUid}`,
       ].join(CRLF);
     } else if (changeRes.length > 0) {
       this.batchBody = `--${this.batchUid}`;
@@ -180,27 +180,27 @@ export class OBatch {
   }
 
   private getHeaders(req: ORequest): string {
-  // Request headers can be Headers | string[][] | Record<string, string>.
-  // A new Headers instance around them allows treatment of all three types
-  // to be the same. This also applies security last two could bypass.
-  const headers = new Headers(req.config.headers || undefined) as any;
-  // Convert each header to single string.
-  // Headers is iterable. Array.from is needed instead of Object.keys.
-  const mapped = Array.from(headers).map(([k, v]) => `${k}: ${v}`);
-  if (mapped.length) {
-    // Need to ensure a blank line between HEADERS and BODY. When there are
-    // headers, it must be added here. Otherwise blank is added in ctor.
-    mapped.push("");
-  }
-  return mapped.join(CRLF);
+    // Request headers can be Headers | string[][] | Record<string, string>.
+    // A new Headers instance around them allows treatment of all three types
+    // to be the same. This also applies security last two could bypass.
+    const headers = new Headers(req.config.headers || undefined) as any;
+    // Convert each header to single string.
+    // Headers is iterable. Array.from is needed instead of Object.keys.
+    const mapped = Array.from(headers).map(([k, v]) => `${k}: ${v}`);
+    if (mapped.length) {
+      // Need to ensure a blank line between HEADERS and BODY. When there are
+      // headers, it must be added here. Otherwise blank is added in ctor.
+      mapped.push("");
+    }
+    return mapped.join(CRLF);
   }
 
   private getRequestURL(req: ORequest): string {
-  let href = req.url.href;
-  if (this.batchConfig.batch.useRelativeURLs) {
-    // Strip away matching root from request.
-    href = href.replace((this.batchConfig.rootUrl as URL).href, "");
-  }
-  return href;
+    let href = req.url.href;
+    if (this.batchConfig.batch.useRelativeURLs) {
+      // Strip away matching root from request.
+      href = href.replace((this.batchConfig.rootUrl as URL).href, "");
+    }
+    return href;
   }
 }

@@ -1,5 +1,5 @@
-import { OHandler } from "./OHandler";
 import { OdataQuery } from "./OdataQuery";
+import { OHandler } from "./OHandler";
 
 export interface OdataBatchConfig {
   endpoint?: string;
@@ -12,6 +12,8 @@ export interface OdataBatchConfig {
    */
   useRelativeURLs: boolean;
 }
+
+export type ApplyQuery = (url: URL, query: OdataQuery) => URL;
 
 export type OdataConfig = RequestInit & {
   /**
@@ -54,4 +56,9 @@ export type OdataConfig = RequestInit & {
    * A function which is called when a request has a error
    */
   onError: (oHandler: OHandler, res: Response) => null;
+
+  /**
+   * An option to apply the query parameters to a URL in a custom way
+   */
+  applyQuery?: ApplyQuery;
 };
