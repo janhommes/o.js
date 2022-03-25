@@ -130,7 +130,7 @@ describe("Instant request", () => {
 
     // expect
     expect(decodeURIComponent((data as Response).url)).toContain(
-      "People?$top=1&$filter=FirstName+eq+'john'"
+      "People?$top=1&$filter=FirstName eq 'john'"
     );
   });
 
@@ -247,7 +247,7 @@ describe("Request handling", () => {
 
     // expect
     expect(decodeURIComponent(req[0].url)).toContain(
-      "People?$top=1&$filter=FirstName+eq+'john'"
+      "People?$top=1&$filter=FirstName eq 'john'"
     );
   });
 
