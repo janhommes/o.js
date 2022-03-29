@@ -21,10 +21,7 @@ import { OHandler } from "./OHandler";
  * @param rootUrl The url to query
  * @param config The odata and fetch configuration.
  */
-export function o(
-  rootUrl: string | URL,
-  config: Partial<OdataConfig> = {}
-) {
+export function o(rootUrl: string | URL, config: Partial<OdataConfig> = {}) {
   // polyfill fetch if we have no fetch
   const env = typeof window !== "undefined" ? window : global;
   if (
@@ -42,7 +39,7 @@ export function o(
     !config.disablePolyfill &&
     typeof window === "undefined"
   ) {
-    require("cross-fetch/polyfill");
+    module[`require`]("cross-fetch/polyfill");
   }
 
   if (
@@ -60,7 +57,7 @@ export function o(
     !config.disablePolyfill &&
     typeof window === "undefined"
   ) {
-    require("universal-url").shim();
+    module[`require`]("universal-url").shim();
   }
 
   // set the default configuration values

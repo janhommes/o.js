@@ -3,7 +3,7 @@ import { OdataConfig } from "./OdataConfig";
 import { OdataQuery } from "./OdataQuery";
 import { ORequest } from "./ORequest";
 
-type BodyType = Blob | BufferSource | FormData | URLSearchParams | string | object;
+type BodyType = Blob | BufferSource | FormData | URLSearchParams | string | object | Object;
 
 export class OHandler {
   private requests: ORequest[] = [];
@@ -232,7 +232,7 @@ export class OHandler {
   }
 
   private getBody(body: BodyType): any {
-    if (typeof body === "object") {
+    if (body instanceof Object) {
       return JSON.stringify(body);
     }
     return body;

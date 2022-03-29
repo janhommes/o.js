@@ -350,9 +350,12 @@ describe("Create, Update and Delete request", () => {
   let oHandler;
 
   beforeAll(async () => {
-    oHandler = o('https://services.odata.org/V4/TripPinServiceRW/(S(ojstest))/', {
-      headers: { "If-match": "*", "Content-Type": "application/json" },
-    });
+    oHandler = o(
+      "https://services.odata.org/V4/TripPinServiceRW/(S(ojstest))/",
+      {
+        headers: { "If-match": "*", "Content-Type": "application/json" },
+      }
+    );
   });
 
   test("POST a person and request it afterwards", async () => {
@@ -428,6 +431,24 @@ describe("Create, Update and Delete request", () => {
     expect(response[0].LastName).toBe(data.LastName);
     expect(response[1].status).toBe(204);
     expect(response[2].FirstName).toBe(data.LastName);
+  });
+
+  test("POST a person with FormData", async () => {
+    // given
+    const resource = "People";
+    const data = new FormData();
+    data.append("FirstName", "Bar");
+    
+
+    // when
+    try {
+    const response = await oHandler
+      .post(resource, data)
+      .query();
+    } catch (ex) {
+      // expect: FormData is not supported, so this error code is correct
+      expect(ex.status).toBe(415);
+    }
   });
 });
 
