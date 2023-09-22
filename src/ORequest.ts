@@ -1,5 +1,11 @@
 import { OdataQuery } from "./OdataQuery";
 
+const encodeURIComponentStrict = (str: string) =>
+  encodeURIComponent(str).replace(
+    /[!'()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+
 export class ORequest {
   public url: URL;
 
@@ -16,15 +22,29 @@ export class ORequest {
     return fetch(req, this.config);
   }
 
-  public applyQuery(query?: OdataQuery) {
-    for (const key in query) {
-      if (query.hasOwnProperty(key)) {
-        if (this.url.searchParams.get(key)) {
-          this.url.searchParams.set(key, query[key]);
-        } else {
-          this.url.searchParams.append(key, query[key]);
-        }
+  public applyStringQuery(query: string, configQuery: URLSearchParams | OdataQuery = {}) {
+    const searchParams = new URLSearchParams(query);
+    searchParams.forEach((value, key) => {
+      if (!query.hasOwnProperty(key)) {
+        configQuery[key] = value;
       }
-    }
+    });
+    return this.applyQuery(configQuery);
+  }
+
+  public applyQuery(query: OdataQuery = {}) {
+    this.url.searchParams.forEach((value, key) => {
+      if (!query.hasOwnProperty(key)) {
+        query[key] = value;
+      }
+    });
+
+    this.url.search = Object.entries(query)
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponentStrict(key)}=${encodeURIComponentStrict(value)}`
+      )
+      .join("&");
+    return this;
   }
 }

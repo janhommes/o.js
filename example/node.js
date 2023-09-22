@@ -1,4 +1,4 @@
-const odata = require('odata');
+const odata = require('../dist/cjs/o.js');
 
 
 const oHandler = odata.o('https://services.odata.org/V4/%28S%28wptr35qf3bz4kb5oatn432ul%29%29/TripPinServiceRW/', {
