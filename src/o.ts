@@ -21,48 +21,7 @@ import { OHandler } from "./OHandler";
  * @param rootUrl The url to query
  * @param config The odata and fetch configuration.
  */
-export function o(
-  rootUrl: string | URL,
-  config: Partial<OdataConfig> = {}
-) {
-  // polyfill fetch if we have no fetch
-  const env = typeof window !== "undefined" ? window : global;
-  if (
-    !("fetch" in env) &&
-    !config.disablePolyfill &&
-    typeof window !== "undefined"
-  ) {
-    throw new Error(
-      "No polyfill found for fetch(). You need to include dist/umd/o.polyfill.js to work with older browsers"
-    );
-  }
-
-  if (
-    !("fetch" in env) &&
-    !config.disablePolyfill &&
-    typeof window === "undefined"
-  ) {
-    require("cross-fetch/polyfill");
-  }
-
-  if (
-    !("URL" in env) &&
-    !config.disablePolyfill &&
-    typeof window !== "undefined"
-  ) {
-    throw new Error(
-      "No polyfill found for URL(). You need to include dist/umd/o.polyfill.js to work with older browsers"
-    );
-  }
-
-  if (
-    !("URL" in env) &&
-    !config.disablePolyfill &&
-    typeof window === "undefined"
-  ) {
-    require("universal-url").shim();
-  }
-
+export function o(rootUrl: string | URL, config: Partial<OdataConfig> = {}) {
   // set the default configuration values
   const defaultConfigValues: OdataConfig = {
     batch: {
@@ -82,7 +41,7 @@ export function o(
     }),
     mode: "cors",
     redirect: "follow",
-    referrer: "client",
+    referrer: typeof window === "undefined" ? undefined : "client",
     onStart: () => null,
     onError: () => null,
     onFinish: () => null,

@@ -1,5 +1,6 @@
 import { o, OBatch } from "./o";
 import { OdataConfig } from "./OdataConfig";
+import buildQuery from "odata-query";
 
 describe("initialize a new oHandler", () => {
   test("url with string", () => {
@@ -134,6 +135,63 @@ describe("Instant request", () => {
     );
   });
 
+  test("Attach the correct queries to the request if a string is used", async () => {
+    // when
+    const data = await o(
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=2"
+    )
+      .get()
+      .fetch("?$top=1&$filter=FirstName eq 'john'");
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "People?$top=1&$filter=FirstName eq 'john'"
+    );
+  });
+
+  test("Attach the correct queries to the request if a odata-query is used", async () => {
+    // given
+    const filter = {
+      not: {
+        and: [{ FirstName: 'John' }, { LastName: 'Foo' }],
+      },
+    };
+
+    // when
+    const data = await o(
+      "https://services.odata.org/V4/TripPinServiceRW/People?$top=2"
+    )
+      .get()
+      .fetch(buildQuery({ filter }));
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "$filter=not(((FirstName eq 'John') and (LastName eq 'Foo')))&$top=2"
+    );
+  });
+
+  test("Use buildQuery in get", async () => {
+    // given
+    const key = '1'
+    const filter = {
+      not: {
+        and: [{ FirstName: 'John' }, { LastName: 'Foo' }],
+      },
+    };
+
+    // when
+    const data = await o(
+      "https://services.odata.org/V4/TripPinServiceRW/"
+    )
+      .get('People' + buildQuery({ key, filter, top: 3 }))
+      .fetch();
+
+    // expect
+    expect(decodeURIComponent((data as Response).url)).toContain(
+      "/People('1')?$filter=not(((FirstName eq 'John') and (LastName eq 'Foo')))&$top=3"
+    );
+  });
+
   test("Check right URL Params override. query-parameter in fetch()/query() wins over query-config", async () => {
     // when
     const data = await o(
@@ -212,22 +270,14 @@ describe("Request handling", () => {
     expect(oHandler.pending).toBe(0);
   });
 
-  test("Clean queued request after fetch", async () => {
-    // given
-    const resource = "People";
-    // when
-    await oHandler.get(resource).get(resource).fetch();
-    // expect
-    expect(oHandler.pending).toBe(0);
-  });
-
   test("Clean queued request after batch", async () => {
     // given
     const resource = "People";
     // when
     try {
-      await oHandler.get(resource).get(resource).batch();
+      await oHandler.get(resource).get(resource).query();
     } catch (ex) {
+      console.log(ex);
       // intended empty
     }
     // expect
@@ -438,13 +488,10 @@ describe("Create, Update and Delete request", () => {
     const resource = "People";
     const data = new FormData();
     data.append("FirstName", "Bar");
-    
 
     // when
     try {
-    const response = await oHandler
-      .post(resource, data)
-      .query();
+      const response = await oHandler.post(resource, data).query();
     } catch (ex) {
       // expect: FormData is not supported, so this error code is correct
       expect(ex.status).toBe(415);
@@ -525,6 +572,15 @@ describe("Batching", () => {
     expect(data.length).toBe(2);
     expect(data[0].body.LastName).toBe(resouce1data.LastName);
     expect(data[1].status).toBe(204);
+  });
+
+  test("Clean queued request after batch", async () => {
+    // given
+    const [resource1, resource2] = ["People", "Airlines"];
+    // when
+    await oHandler.get(resource1).get(resource2).batch();
+    // expect
+    expect(oHandler.pending).toBe(0);
   });
 
   // Content ID seems to have a problem in the test implementation (or I don't get the right implementation)

@@ -3,7 +3,14 @@ import { OdataConfig } from "./OdataConfig";
 import { OdataQuery } from "./OdataQuery";
 import { ORequest } from "./ORequest";
 
-type BodyType = Blob | BufferSource | FormData | URLSearchParams | string | object | Object;
+type BodyType =
+  | Blob
+  | BufferSource
+  | FormData
+  | URLSearchParams
+  | string
+  | object
+  | Object;
 
 export class OHandler {
   private requests: ORequest[] = [];
@@ -19,7 +26,7 @@ export class OHandler {
    * @example
    * ```typescript
    *  const russell = await o('https://services.odata.org/TripPinRESTierService/')
-   *  .get('People('russellwhyte')
+   *  .get('People("russellwhyte"))
    *  .query();
    *
    *  console.log(russell); // shows: { FirstName: "Russell", LastName: "Whyte" [...] }
@@ -32,7 +39,7 @@ export class OHandler {
    * ```typescript
    *  try {
    *    const unknown = await o('https://services.odata.org/TripPinRESTierService/')
-   *      .get('People('unknown')
+   *      .get('People("unknown"))
    *      .query();
    *  } catch(res) { // Response
    *    console.log(res.status); // 404
@@ -40,34 +47,32 @@ export class OHandler {
    * ```
    *
    * @param query The URLSearchParams that are added to the question mark on the url.
-   *              That are usually the odata queries like $filter, $top, etc...
+   *              That are usually the odata queries like $filter, $top, etc... or a string of parameters.
    * @returns Either an array or a object with the given entities. If multiple
    *          resources are fetched, this method returns a array of array/object. If there
    *          is no content (e.g. for delete) this method returns the Response
    */
-  public async query(query?: OdataQuery) {
+  public async query(query?: OdataQuery | string) {
     try {
       this.config.onStart(this);
       const response: Response[] = await this.getFetch(query);
       const json = await Promise.all(
-        response.map(
-          async (res) => {
-            if (res.status >= 400) {
-              this.config.onError(this, res);
-              throw res;
-            } else if (res.ok && res.json) {
-              try {
-                this.config.onFinish(this, res);
-                const data = await res.json();
-                return data[this.config.fragment] || data;
-              } catch (ex) {
-                return res;
-              }
-            } else {
-              return await res.text();
+        response.map(async (res) => {
+          if (res.status >= 400) {
+            this.config.onError(this, res);
+            throw res;
+          } else if (res.ok && res.json) {
+            try {
+              this.config.onFinish(this, res);
+              const data = await res.json();
+              return data[this.config.fragment] || data;
+            } catch (ex) {
+              return res;
             }
-          },
-        ),
+          } else {
+            return await res.text();
+          }
+        })
       );
       return json.length > 1 ? json : json[0];
     } catch (ex) {
@@ -84,7 +89,7 @@ export class OHandler {
    * @param query The URLSearchParams that are added to the question mark on the url.
    *              That are usually the odata queries like $filter, $top, etc...
    */
-  public async fetch(query?: OdataQuery) {
+  public async fetch(query?: OdataQuery | string) {
     try {
       this.config.onStart(this);
       const fetch = await this.getFetch(query);
@@ -138,7 +143,11 @@ export class OHandler {
    */
   public post(resource: string = "", body: BodyType) {
     const url = this.getUrl(resource);
-    const request = new ORequest(url, { ...this.config, method: "POST", body: this.getBody(body) });
+    const request = new ORequest(url, {
+      ...this.config,
+      method: "POST",
+      body: this.getBody(body),
+    });
     this.requests.push(request);
     return this;
   }
@@ -151,7 +160,11 @@ export class OHandler {
    */
   public put(resource: string = "", body: BodyType) {
     const url = this.getUrl(resource);
-    const request = new ORequest(url, { ...this.config, method: "PUT", body: this.getBody(body) });
+    const request = new ORequest(url, {
+      ...this.config,
+      method: "PUT",
+      body: this.getBody(body),
+    });
     this.requests.push(request);
     return this;
   }
@@ -199,6 +212,7 @@ export class OHandler {
    */
   public request(req: ORequest) {
     this.requests.push(req);
+    return this;
   }
 
   /**
@@ -216,17 +230,25 @@ export class OHandler {
     return new URL(resource, this.config.rootUrl);
   }
 
-  private async getFetch(query: OdataQuery) {
+  private async getFetch(query: OdataQuery | string) {
     if (this.pending > 1) {
       const result: Response[] = [];
       for (const req of this.requests) {
-        req.applyQuery({ ...this.config.query, ...query });
+        if (typeof query === "string") {
+          req.applyStringQuery(query, this.config.query);
+        } else {
+          req.applyQuery({ ...this.config.query, ...query });
+        }
         const request = await req.fetch;
         result.push(request);
       }
       return result;
     } else {
-      this.requests[0].applyQuery({ ...this.config.query, ...query });
+      if (typeof query === "string") {
+        this.requests[0].applyStringQuery(query, this.config.query);
+      } else {
+        this.requests[0].applyQuery({ ...this.config.query, ...query });
+      }
       return [await this.requests[0].fetch];
     }
   }

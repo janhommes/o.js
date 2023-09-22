@@ -110,6 +110,35 @@ You can pass as a second option into the `o` constructor options. The signature 
 ```typescript
 function o(rootUrl: string | URL, config?: OdataConfig | any)
 ```
+
+The `rootUrl` can be used to directly query a resource:
+```javascript
+o('http://my.url/some-resource').query().then();
+``` 
+
+But mostly better is to create a handler with a `rootUrl` in the configuration. Then you are able to use the handler multiple times:
+
+```javascript
+const oHandler = o('', { rootUrl: 'http://my.url' });
+// requesting http://my.url/some-resource
+oHandler.get('some-resource').query().then();
+``` 
+
+When creating a oHandler with a configured `rootUrl` in config and as first property, the two are getting merged:
+
+```javascript
+const oHandler = o('v1', { rootUrl: 'http://my.url' });
+// requesting http://my.url/v1/some-resource
+oHandler.get('some-resource').query().then();
+``` 
+
+In a browser you can also use only a resource and the `rootUrl` tries pointing to the current browser:
+```javascript
+const oHandler = o('v1');
+// requesting http://current-url/v1/some-resource
+oHandler.get('some-resource').query().then();
+``` 
+
 Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) and additional [odata config](src/OdataConfig.ts). By default o.js sets the following values:
 ```
 {
@@ -138,6 +167,33 @@ Basic configuration is based on [RequestInit](https://developer.mozilla.org/en-U
 ```
 
 ## Query
+> Since version 2.0.0 we support the use of [odata-query](https://www.npmjs.com/package/odata-query). You can simply add a
+`buildQuery` property to any `query()` and `fetch()` request (if only used as filter):
+
+```typescript
+import buildQuery from 'odata-query'
+
+const filter = {
+  not: {
+    and:[
+      { SomeProp: 1 }, 
+      { AnotherProp: 2 }
+    ]
+  }
+};
+
+// using only filter in query() or fetch():
+oHandler.get('People')
+  .query(buildQuery({ filter }))
+  .then((filteredPeople) => {});
+
+
+// using more features of odata-query in get:
+oHandler.get('People' + buildQuery({ filter, key: 1, top: 10 }))
+  .query()
+  .then((filteredPeople) => {});
+``
+
 The following query options are supported by `query()`, `fetch()` and `batch()` by simply adding them as object:
 
 ```typescript
@@ -170,4 +226,4 @@ The lib tries to parse the data on each request. Sometimes that is not wanted (e
 By default o.js chains request in sequent. You can batch them together by using `batch()`. They are then send to the defined batch endpoint in the config. Changsets are at the moment in a experimental phase and needs to be enabled in the config.
 
 ## Polyfills
-Polyfills are automatically added for node.js. If you like polyfills to support IE11 please include the `dist/umd/o.polyfill.js` file.
+If you like polyfills to support IE11 please include the `dist/umd/o.polyfill.js` file. Version < 2 adds polyfills for node automatically. Version 2.0.0 and bigger only supports node 18 and higher where fetch and URL is included.
