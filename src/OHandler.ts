@@ -59,7 +59,6 @@ export class OHandler {
       const json = await Promise.all(
         response.map(async (res) => {
           if (res.status >= 400) {
-            this.config.onError(this, res);
             throw res;
           } else if (res.ok && res.json) {
             try {
@@ -76,6 +75,7 @@ export class OHandler {
       );
       return json.length > 1 ? json : json[0];
     } catch (ex) {
+      this.config.onError(this, ex);
       throw ex;
     } finally {
       this.requests = [];
@@ -117,6 +117,7 @@ export class OHandler {
       const data = await batch.fetch(url);
       return data;
     } catch (ex) {
+      this.config.onError(this, ex);
       throw ex;
     } finally {
       this.requests = [];

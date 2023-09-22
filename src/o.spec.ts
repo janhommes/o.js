@@ -396,6 +396,50 @@ describe("GET request", () => {
   });
 });
 
+describe("Error handling", () => {
+  let oHandler;
+  let onError;
+
+  beforeEach(() => {
+    onError = jest.fn();
+    oHandler = o("https://services.odata.org/V4/TripPinServiceRW/", { onError });
+  });
+
+  afterEach(() => {
+      jest.restoreAllMocks();
+  });
+
+  test.each([
+      "query",
+      "fetch",
+      "batch",
+  ])("Callback onError is called in %s when network call fails", async (method) => {
+    // given
+    const resource = "People";
+    const fetchError = new TypeError("Failed to fetch");
+
+    jest
+        .spyOn(window, "fetch")
+        .mockRejectedValue(fetchError);
+
+    // when / expect
+    await expect(async () => await oHandler.get(resource)[method]()).rejects.toBe(fetchError);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(oHandler, fetchError);
+  });
+
+  // Unlike fetch and batch methods, query is the only one that analyze the response status code and throws an error
+  // if the status code is not 2xx.
+  test("Callback onError is called in query when response code is 404", async () => {
+    // given
+    const resource = "UnknownResource";
+    // when / expect
+    await expect(async () => await oHandler.get(resource).query()).rejects.toMatchObject({ status: 404 });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(oHandler, expect.objectContaining({ status: 404 }));
+  });
+});
+
 describe("Create, Update and Delete request", () => {
   let oHandler;
 
