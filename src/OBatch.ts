@@ -63,7 +63,7 @@ export class OBatch {
       method: "POST",
     });
     const res: Response = await req.fetch;
-    if (res.status === 200) {
+    if (res.ok) {
       const data = await res.text();
       return this.parseResponse(data, res.headers.get("Content-Type"));
     } else {
