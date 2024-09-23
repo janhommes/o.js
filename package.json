@@ -20,7 +20,7 @@
     "@types/jest": "^26.0.15",
     "@types/node": "^10.12.24",
     "jest": "^26.6.1",
-    "rollup": "^0.68.2",
+    "rollup": "^3.29.5",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
